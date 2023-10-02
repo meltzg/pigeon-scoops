@@ -22,3 +22,11 @@
                                    :recipe/amount-unit
                                    :recipe/ingredients]
                              :opt [:recipe/source]))
+
+(defn add-recipe [recipes new-recipe]
+  (let [recipe-id (or (:recipe/id new-recipe)
+                      (java.util.UUID/randomUUID))
+        conformed-recipe (s/conform :recipe/entry (assoc new-recipe :recipe/id recipe-id))]
+    (if (s/invalid? conformed-recipe)
+      recipes
+      (conj (remove #(= (:recipe/id %) recipe-id) recipes) conformed-recipe))))
