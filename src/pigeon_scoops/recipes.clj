@@ -3,6 +3,7 @@
             [pigeon-scoops.basic-spec]
             [pigeon-scoops.units.volume :as vol]))
 
+(s/def :recipe/id uuid?)
 (s/def :recipe/name :basic-spec/non-empty-string)
 (s/def :recipe/instructions :basic-spec/non-empty-string)
 (s/def :recipe/amount pos-int?)
