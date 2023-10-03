@@ -1,13 +1,15 @@
 (ns pigeon-scoops.recipes
-  (:require [clojure.spec.alpha :as s]
+  (:require [clojure.set :refer [union]]
+            [clojure.spec.alpha :as s]
             [pigeon-scoops.basic-spec]
+            [pigeon-scoops.units.other :as other]
             [pigeon-scoops.units.volume :as vol]))
 
 (s/def :recipe/id uuid?)
 (s/def :recipe/name :basic-spec/non-empty-string)
-(s/def :recipe/instructions :basic-spec/non-empty-string)
-(s/def :recipe/amount pos-int?)
-(s/def :recipe/amount-unit vol/all-liquids)
+(s/def :recipe/instructions (s/coll-of :basic-spec/non-empty-string))
+(s/def :recipe/amount pos?)
+(s/def :recipe/amount-unit (union other/other-units vol/all-liquids))
 (s/def :recipe/source :basic-spec/non-empty-string)
 
 (s/def :recipe/ingredient-type #(= "ingredient" (namespace %)))
