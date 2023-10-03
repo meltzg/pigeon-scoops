@@ -3,13 +3,14 @@
             [clojure.spec.alpha :as s]
             [pigeon-scoops.basic-spec]
             [pigeon-scoops.units.other :as other]
+            [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.units.volume :as vol]))
 
 (s/def :recipe/id uuid?)
 (s/def :recipe/name :basic-spec/non-empty-string)
 (s/def :recipe/instructions (s/coll-of :basic-spec/non-empty-string))
 (s/def :recipe/amount pos?)
-(s/def :recipe/amount-unit (union other/other-units vol/all-liquids))
+(s/def :recipe/amount-unit (union other/other-units vol/all-liquids mass/all-mass))
 (s/def :recipe/source :basic-spec/non-empty-string)
 
 (s/def :recipe/ingredient-type #(= "ingredient" (namespace %)))
@@ -18,7 +19,8 @@
                                         :recipe/amount-unit]))
 (s/def :recipe/ingredients (s/coll-of :recipe/ingredient))
 
-(s/def :recipe/entry (s/keys :req [:recipe/name
+(s/def :recipe/entry (s/keys :req [:recipe/id
+                                   :recipe/name
                                    :recipe/instructions
                                    :recipe/amount
                                    :recipe/amount-unit
