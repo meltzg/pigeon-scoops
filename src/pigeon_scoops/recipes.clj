@@ -4,7 +4,8 @@
             [pigeon-scoops.basic-spec]
             [pigeon-scoops.units.common :as common]
             [pigeon-scoops.units.mass :as mass]
-            [pigeon-scoops.units.volume :as vol]))
+            [pigeon-scoops.units.volume :as vol])
+  (:import (java.util UUID)))
 
 (s/def :recipe/id uuid?)
 (s/def :recipe/name :basic-spec/non-empty-string)
@@ -29,7 +30,7 @@
 
 (defn add-recipe [recipes new-recipe]
   (let [recipe-id (or (:recipe/id new-recipe)
-                      (java.util.UUID/randomUUID))
+                      (UUID/randomUUID))
         conformed-recipe (s/conform :recipe/entry (assoc new-recipe :recipe/id recipe-id))]
     (if (s/invalid? conformed-recipe)
       recipes
