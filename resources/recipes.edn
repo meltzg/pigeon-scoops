@@ -1,4 +1,4 @@
-(#:recipe{:name "Strawberry",
+(#:recipe{:name        "Strawberry",
           :instructions
           ["Bring cream, milk, and salt to simmer over medium heat"
            "Whisk yolks with 2/3rds of the sugar"
@@ -7,56 +7,56 @@
            "Pour mix through strainer and chill"
            "Mash strawberries with rest of sugar and lemon juice and chill"
            "Mix and churn"],
-          :amount 1,
-          :amount-unit :volume/quart,
+          :amount      1,
+          :amount-unit :volume/qt,
           :ingredients
           [#:recipe{:ingredient-type :ingredient/milk,
-                    :amount 0.75,
-                    :amount-unit :volume/cup}
+                    :amount          0.75,
+                    :amount-unit     :volume/c}
            #:recipe{:ingredient-type :ingredient/heavy-cream,
-                    :amount 1,
-                    :amount-unit :volume/cup}
+                    :amount          1,
+                    :amount-unit     :volume/c}
            #:recipe{:ingredient-type :ingredient/sugar,
-                    :amount 0.75,
-                    :amount-unit :volume/cup}
+                    :amount          0.75,
+                    :amount-unit     :volume/c}
            #:recipe{:ingredient-type :ingredient/salt,
-                    :amount 1,
-                    :amount-unit :other/pinch}
+                    :amount          1,
+                    :amount-unit     :common/pinch}
            #:recipe{:ingredient-type :ingredient/strawberry,
                     :amount 1,
                     :amount-unit :mass/lb}
            #:recipe{:ingredient-type :ingredient/egg-yolk,
-                    :amount 2,
-                    :amount-unit :other/unit}
+                    :amount          2,
+                    :amount-unit     :common/unit}
            #:recipe{:ingredient-type :ingredient/lemon-juice,
                     :amount 1,
                     :amount-unit :volume/tbsp}],
-          :id #uuid "cc8a4ad9-468d-4154-a845-0d9c8c08bb37"}
- #:recipe{:name "Peanut Butter",
+          :id          #uuid "cc8a4ad9-468d-4154-a845-0d9c8c08bb37"}
+ #:recipe{:name        "Peanut Butter",
           :instructions
           ["Puree peanut butter, salt, vanilla, half-and-half, and sugar in blender"
            "Chill"
            "Churn"],
-          :amount 1,
-          :amount-unit :volume/quart,
+          :amount      1,
+          :amount-unit :volume/qt,
           :ingredients
           [#:recipe{:ingredient-type :ingredient/sugar,
                     :amount 14,
                     :amount-unit :volume/tbsp}
            #:recipe{:ingredient-type :ingredient/salt,
-                    :amount 1,
-                    :amount-unit :other/pinch}
+                    :amount          1,
+                    :amount-unit     :common/pinch}
            #:recipe{:ingredient-type :ingredient/half-and-half,
-                    :amount 8/3,
-                    :amount-unit :volume/cup}
+                    :amount          8/3,
+                    :amount-unit     :volume/c}
            #:recipe{:ingredient-type :ingredient/smooth-peanut-butter,
-                    :amount 0.75,
-                    :amount-unit :volume/cup}
+                    :amount          0.75,
+                    :amount-unit     :volume/c}
            #:recipe{:ingredient-type :ingredient/vanilla-extract,
                     :amount 0.125,
                     :amount-unit :volume/tsp}],
-          :id #uuid "0fdf6d7a-ad4e-43f7-af56-48e68fd2bc6c"}
- #:recipe{:name "Vanilla",
+          :id          #uuid "0fdf6d7a-ad4e-43f7-af56-48e68fd2bc6c"}
+ #:recipe{:name        "Vanilla",
           :instructions
           ["Warm milk, sugar, pinch of salt, half the cream"
            "Scrape the seeds from vanilla beans into warm milk and add the bean. Cover, remove from heat, steep for 30 minutes"
@@ -66,32 +66,32 @@
            "Pour mix through strainer"
            "Chill"
            "Churn"],
-          :amount 1,
-          :amount-unit :volume/quart,
+          :amount      1,
+          :amount-unit :volume/qt,
           :ingredients
           [#:recipe{:ingredient-type :ingredient/milk,
-                    :amount 1,
-                    :amount-unit :volume/cup}
+                    :amount          1,
+                    :amount-unit     :volume/c}
            #:recipe{:ingredient-type :ingredient/heavy-cream,
-                    :amount 2,
-                    :amount-unit :volume/cup}
+                    :amount          2,
+                    :amount-unit     :volume/c}
            #:recipe{:ingredient-type :ingredient/sugar,
-                    :amount 0.75,
-                    :amount-unit :volume/cup}
+                    :amount          0.75,
+                    :amount-unit     :volume/c}
            #:recipe{:ingredient-type :ingredient/salt,
-                    :amount 1,
-                    :amount-unit :other/pinch}
+                    :amount          1,
+                    :amount-unit     :common/pinch}
            #:recipe{:ingredient-type :ingredient/vanilla-bean,
-                    :amount 1,
-                    :amount-unit :other/unit}
+                    :amount          1,
+                    :amount-unit     :common/unit}
            #:recipe{:ingredient-type :ingredient/egg-yolk,
-                    :amount 6,
-                    :amount-unit :other/unit}
+                    :amount          6,
+                    :amount-unit     :common/unit}
            #:recipe{:ingredient-type :ingredient/vanilla-extract,
                     :amount 0.75,
                     :amount-unit :volume/tsp}],
-          :id #uuid "d6a1c831-8779-41d6-a9c0-415ff23fa604"}
- #:recipe{:name "Chocolate",
+          :id          #uuid "d6a1c831-8779-41d6-a9c0-415ff23fa604"}
+ #:recipe{:name        "Chocolate",
           :instructions
           ["Warm half the cream with cocoa powder in medium saucepan, whisking constantly. Whisking constantly, bring to boil, lower heat, and let simmer for 30 seconds"
            "Remove from heat, add chocolate, stir till smooth, and add remaining cream. Pour into bowl with mesh strainer"
@@ -101,24 +101,24 @@
            "Pour mix through strainer"
            "Chill"
            "Churn"],
-          :amount 1,
-          :amount-unit :volume/quart,
+          :amount      1,
+          :amount-unit :volume/qt,
           :ingredients
           [#:recipe{:ingredient-type :ingredient/milk,
-                    :amount 1,
-                    :amount-unit :volume/cup}
+                    :amount          1,
+                    :amount-unit     :volume/c}
            #:recipe{:ingredient-type :ingredient/heavy-cream,
-                    :amount 2,
-                    :amount-unit :volume/cup}
+                    :amount          2,
+                    :amount-unit     :volume/c}
            #:recipe{:ingredient-type :ingredient/sugar,
-                    :amount 0.75,
-                    :amount-unit :volume/cup}
+                    :amount          0.75,
+                    :amount-unit     :volume/c}
            #:recipe{:ingredient-type :ingredient/salt,
-                    :amount 1,
-                    :amount-unit :other/pinch}
+                    :amount          1,
+                    :amount-unit     :common/pinch}
            #:recipe{:ingredient-type :ingredient/egg-yolk,
-                    :amount 5,
-                    :amount-unit :other/unit}
+                    :amount          5,
+                    :amount-unit     :common/unit}
            #:recipe{:ingredient-type :ingredient/vanilla-extract,
                     :amount 0.5,
                     :amount-unit :volume/tsp}
@@ -128,4 +128,4 @@
            #:recipe{:ingredient-type :ingredient/semisweet-chocolate,
                     :amount 5,
                     :amount-unit :mass/oz}],
-          :id #uuid "4776fb5f-9137-41e2-a8db-fbbd0a50762d"})
+          :id          #uuid "4776fb5f-9137-41e2-a8db-fbbd0a50762d"})

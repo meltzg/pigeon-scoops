@@ -3,7 +3,7 @@
             [clojure.spec.alpha :as s]
             [pigeon-scoops.basic-spec]
             [pigeon-scoops.units.mass :as mass]
-            [pigeon-scoops.units.other :as other]
+            [pigeon-scoops.units.common :as common]
             [pigeon-scoops.units.volume :as vol]))
 
 (s/def :ingredient/type #(= "ingredient" (namespace %)))
@@ -11,9 +11,9 @@
 
 (s/def :ingredient/source :basic-spec/non-empty-string)
 (s/def :ingredient/unit-volume pos?)
-(s/def :ingredient/unit-volume-type (union other/other-units vol/all-liquids))
+(s/def :ingredient/unit-volume-type (union common/other-units vol/all-liquids))
 (s/def :ingredient/unit-mass pos?)
-(s/def :ingredient/unit-mass-type (union other/other-units mass/all-mass))
+(s/def :ingredient/unit-mass-type (union common/other-units mass/all-mass))
 (s/def :ingredient/unit-cost pos?)
 
 (s/def :ingredient/unit (s/keys :req [:ingredient/source

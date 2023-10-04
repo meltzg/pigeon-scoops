@@ -2,7 +2,7 @@
   (:require [clojure.set :refer [union]]
             [clojure.spec.alpha :as s]
             [pigeon-scoops.basic-spec]
-            [pigeon-scoops.units.other :as other]
+            [pigeon-scoops.units.common :as common]
             [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.units.volume :as vol]))
 
@@ -10,7 +10,7 @@
 (s/def :recipe/name :basic-spec/non-empty-string)
 (s/def :recipe/instructions (s/coll-of :basic-spec/non-empty-string))
 (s/def :recipe/amount pos?)
-(s/def :recipe/amount-unit (union other/other-units vol/all-liquids mass/all-mass))
+(s/def :recipe/amount-unit (union common/other-units vol/all-liquids mass/all-mass))
 (s/def :recipe/source :basic-spec/non-empty-string)
 
 (s/def :recipe/ingredient-type #(= "ingredient" (namespace %)))

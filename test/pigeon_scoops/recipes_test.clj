@@ -5,13 +5,13 @@
 (def recipe-no-id {:recipe/name         "foobar"
                    :recipe/instructions ["mix it all together"]
                    :recipe/amount       1
-                   :recipe/amount-unit  :volume/quart
+                   :recipe/amount-unit  :volume/qt
                    :recipe/ingredients  [{:recipe/ingredient-type :ingredient/milk
                                           :recipe/amount          1
-                                          :recipe/amount-unit     :volume/cup}
+                                          :recipe/amount-unit     :volume/c}
                                          {:recipe/ingredient-type :ingredient/heavy-cream
                                           :recipe/amount          2
-                                          :recipe/amount-unit     :volume/cup}]})
+                                          :recipe/amount-unit     :volume/c}]})
 
 (def recipe-with-id
   (assoc recipe-no-id :recipe/id (java.util.UUID/randomUUID)

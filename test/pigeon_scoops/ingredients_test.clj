@@ -8,15 +8,15 @@
    :ingredient/units       [{:ingredient/source           "dark market"
                              :ingredient/unit-cost        6.5
                              :ingredient/unit-mass        3.9
-                             :ingredient/unit-mass-type   :mass/kilogram
+                             :ingredient/unit-mass-type   :mass/kg
                              :ingredient/unit-volume      1.0
-                             :ingredient/unit-volume-type :volume/gallon}
+                             :ingredient/unit-volume-type :volume/gal}
                             {:ingredient/source           "dark market"
                              :ingredient/unit-cost        3.25
                              :ingredient/unit-mass        1.95
-                             :ingredient/unit-mass-type   :mass/kilogram
+                             :ingredient/unit-mass-type   :mass/kg
                              :ingredient/unit-volume      0.5
-                             :ingredient/unit-volume-type :volume/gallon}]})
+                             :ingredient/unit-volume-type :volume/gal}]})
 
 (def another-ingredient
   (assoc ingredient :ingredient/type :ingredient/heavy-cream
