@@ -1,4 +1,5 @@
 (#:recipe{:name "Strawberry",
+          :type :recipe/ice-cream,
           :instructions
           ["Bring cream, milk, and salt to simmer over medium heat"
            "Whisk yolks with 2/3rds of the sugar"
@@ -58,7 +59,8 @@
            #:recipe{:ingredient-type :ingredient/vanilla-extract,
                     :amount 0.125,
                     :amount-unit :volume/tsp}],
-          :id #uuid "0fdf6d7a-ad4e-43f7-af56-48e68fd2bc6c"}
+          :id #uuid "0fdf6d7a-ad4e-43f7-af56-48e68fd2bc6c",
+          :type :recipe/ice-cream}
  #:recipe{:name "Vanilla",
           :instructions
           ["Warm milk, sugar, pinch of salt, half the cream"
@@ -94,7 +96,8 @@
            #:recipe{:ingredient-type :ingredient/vanilla-extract,
                     :amount 0.75,
                     :amount-unit :volume/tsp}],
-          :id #uuid "d6a1c831-8779-41d6-a9c0-415ff23fa604"}
+          :id #uuid "d6a1c831-8779-41d6-a9c0-415ff23fa604",
+          :type :recipe/ice-cream}
  #:recipe{:name "Chocolate",
           :instructions
           ["Warm half the cream with cocoa powder in medium saucepan, whisking constantly. Whisking constantly, bring to boil, lower heat, and let simmer for 30 seconds"
@@ -133,4 +136,5 @@
            #:recipe{:ingredient-type :ingredient/semisweet-chocolate,
                     :amount 5,
                     :amount-unit :mass/oz}],
-          :id #uuid "4776fb5f-9137-41e2-a8db-fbbd0a50762d"})
+          :id #uuid "4776fb5f-9137-41e2-a8db-fbbd0a50762d",
+          :type :recipe/ice-cream})
