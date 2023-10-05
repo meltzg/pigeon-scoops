@@ -3,6 +3,7 @@
             [pigeon-scoops.recipes :as r]))
 
 (def recipe-no-id {:recipe/name         "foobar"
+                   :recipe/type         :recipe/ice-cream
                    :recipe/instructions ["mix it all together"]
                    :recipe/amount       1
                    :recipe/amount-unit  :volume/qt

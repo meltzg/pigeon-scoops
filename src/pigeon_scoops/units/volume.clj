@@ -1,6 +1,4 @@
-(ns pigeon-scoops.units.volume
-  (:require [clojure.set :as set-op]
-            [pigeon-scoops.units.common :as common]))
+(ns pigeon-scoops.units.volume)
 
 (def floz-to-ml 29.5735)
 
@@ -15,6 +13,4 @@
 (def metric-liquid {:volume/l  1000
                     :volume/ml 1})
 
-(def all-liquids (apply set-op/union (map (comp set keys) [us-liquid metric-liquid])))
-
-(def convert (partial common/convert (merge us-liquid metric-liquid)))
+(def conversion-map (merge us-liquid metric-liquid))

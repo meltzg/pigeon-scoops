@@ -12,7 +12,9 @@
 (s/def :recipe/name :basic-spec/non-empty-string)
 (s/def :recipe/instructions (s/coll-of :basic-spec/non-empty-string))
 (s/def :recipe/amount pos?)
-(s/def :recipe/amount-unit (union common/other-units vol/all-liquids mass/all-mass))
+(s/def :recipe/amount-unit (union common/other-units
+                                  (set (keys vol/conversion-map))
+                                  (set (keys mass/conversion-map))))
 (s/def :recipe/source :basic-spec/non-empty-string)
 
 (s/def :recipe/ingredient-type #(= "ingredient" (namespace %)))

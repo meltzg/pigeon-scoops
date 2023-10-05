@@ -1,6 +1,4 @@
-(ns pigeon-scoops.units.mass
-  (:require [clojure.set :as set-op]
-            [pigeon-scoops.units.common :as common]))
+(ns pigeon-scoops.units.mass)
 
 (def oz-to-g 28.3495)
 
@@ -11,6 +9,4 @@
                   :mass/g  1
                   :mass/mg (/ 1 1000)})
 
-(def all-mass (apply set-op/union (map (comp set keys) [us-mass metric-mass])))
-
-(def convert (partial common/convert (merge us-mass metric-mass)))
+(def conversion-map (merge us-mass metric-mass))
