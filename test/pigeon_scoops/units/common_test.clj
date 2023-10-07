@@ -23,17 +23,19 @@
                                 1 :volume/tbsp :volume/tsp 3
                                 768 :volume/tsp :volume/gal 1
                                 1 :volume/l :volume/ml 1000
-                                1 :volume/l :volume/gal 0.2642)))
+                                1 :volume/l :volume/gal 0.2642
+                                2 :common/unit :common/unit 2)))
 
 (deftest convert-invalid-test
   (testing "invalid conversions return nil"
     (are [from to] (nil? (units/convert 8 from to))
-                   :mass/oz :other/pinch
-                   :other/pinch :mass/oz
-                   :volume/tbsp :other/pinch
-                   :other/pinch :volume/tbsp
+                   :mass/oz :common/pinch
+                   :common/pinch :mass/oz
+                   :volume/tbsp :common/pinch
+                   :common/pinch :volume/tbsp
                    :volume/c :mass/g
-                   :mass/kg :volume/floz)))
+                   :mass/kg :volume/floz
+                   :common/pinch :common/unit)))
 
 (deftest scale-factor-test
   (testing "can find scale factor from one amount in one unit to another amount in another unit"
@@ -46,4 +48,8 @@
                                                             2 :volume/l 5 :volume/c 2.36588
                                                             2 :mass/lb 4 :mass/oz 0.5
                                                             2 :mass/lb 2 :volume/l nil
-                                                            2 :volume/c 2 :mass/g nil)))
+                                                            2 :volume/c 2 :mass/g nil
+                                                            2 :common/pinch 3 :common/pinch 1.5
+                                                            2 :common/pinch 3 :common/unit nil
+                                                            2 :common/pinch 3 :volume/c nil
+                                                            2 :volume/c 3 :common/unit nil)))
