@@ -17,3 +17,7 @@
       (let [standard-mass (* val (from conversion-map))
             conversion-factor (to conversion-map)]
         (/ standard-mass conversion-factor)))))
+
+(defn scale-factor [amount-from unit-from amount-to unit-to]
+  (when-let [conversion-factor (convert 1 unit-to unit-from)]
+    (* amount-from amount-to conversion-factor)))

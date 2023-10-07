@@ -34,3 +34,16 @@
                    :other/pinch :volume/tbsp
                    :volume/c :mass/g
                    :mass/kg :volume/floz)))
+
+(deftest scale-factor-test
+  (testing "can find scale factor from one amount in one unit to another amount in another unit"
+    (are [amount-from unit-from amount-to unit-to expected] (let [actual (units/scale-factor amount-from unit-from amount-to unit-to)]
+                                                              (if expected
+                                                                (< (abs (- expected actual)) tolerance)
+                                                                (nil? actual)))
+                                                            1 :volume/qt 2 :volume/gal 8.0
+                                                            1 :volume/qt 0.125 :volume/gal 0.5
+                                                            2 :volume/l 5 :volume/c 2.36588
+                                                            2 :mass/lb 4 :mass/oz 0.5
+                                                            2 :mass/lb 2 :volume/l nil
+                                                            2 :volume/c 2 :mass/g nil)))

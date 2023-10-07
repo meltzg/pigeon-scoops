@@ -40,14 +40,13 @@
       recipes
       (conj (remove #(= (:recipe/id %) recipe-id) recipes) conformed-recipe))))
 
-(defn scale-ingredient-for-recipe [recipe-unit scale-amount scale-unit ingredient]
-  (update ingredient :recipe/amount (partial * scale-amount (units/convert 1 scale-unit recipe-unit))))
-
 (defn scale-recipe [recipe amount amount-unit]
-  (assoc (update recipe
-                 :recipe/ingredients
-                 (partial map
-                          (partial scale-ingredient-for-recipe
-                                   (:recipe/amount-unit recipe) amount amount-unit)))
-    :recipe/amount amount
-    :recipe/amount-unit amount-unit))
+  (let [scale-factor (units/scale-factor (:recipe/amount recipe)
+                                         (:recipe/amount-unit recipe)
+                                         amount
+                                         amount-unit)]
+    (assoc (update recipe
+                   :recipe/ingredients
+                   (partial map #(update % :recipe/amount * scale-factor)))
+      :recipe/amount amount
+      :recipe/amount-unit amount-unit)))

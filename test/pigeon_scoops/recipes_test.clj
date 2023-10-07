@@ -44,22 +44,6 @@
                (contains? added-recipe :recipe/id)
                (= (dissoc added-recipe :recipe/id) recipe-no-id))))))
 
-(deftest scale-ingredient-for-recipe-test
-  (testing "An ingredient can be scaled based on recipe scaling up and down as well as across systems of measure"
-    (are [amount amount-unit expected] (= (r/scale-ingredient-for-recipe (:recipe/amount-unit recipe-no-id) amount amount-unit (last (:recipe/ingredients recipe-no-id))) expected)
-                                       3 :volume/qt {:recipe/ingredient-type :ingredient/heavy-cream
-                                                     :recipe/amount          6.0
-                                                     :recipe/amount-unit     :volume/c}
-                                       0.5 :volume/qt {:recipe/ingredient-type :ingredient/heavy-cream
-                                                       :recipe/amount          1.0
-                                                       :recipe/amount-unit     :volume/c}
-                                       4 :volume/c {:recipe/ingredient-type :ingredient/heavy-cream
-                                                    :recipe/amount          2.0
-                                                    :recipe/amount-unit     :volume/c}
-                                       2 :volume/l {:recipe/ingredient-type :ingredient/heavy-cream
-                                                    :recipe/amount          (* 2 2 (u/convert 1 :volume/l :volume/qt))
-                                                    :recipe/amount-unit     :volume/c})))
-
 (deftest scale-recipe-test
   (testing "A recipe can be scaled up and down"
     (are [recipe amount amount-unit expected] (= (r/scale-recipe recipe amount amount-unit) expected)
@@ -95,4 +79,15 @@
                                                                                                :recipe/amount-unit     :volume/c}
                                                                                               {:recipe/ingredient-type :ingredient/heavy-cream
                                                                                                :recipe/amount          2.0
+                                                                                               :recipe/amount-unit     :volume/c}]}
+                                              recipe-no-id 2 :volume/l {:recipe/name         "foobar"
+                                                                        :recipe/type         :recipe/ice-cream
+                                                                        :recipe/instructions ["mix it all together"]
+                                                                        :recipe/amount       2
+                                                                        :recipe/amount-unit  :volume/l
+                                                                        :recipe/ingredients  [{:recipe/ingredient-type :ingredient/milk
+                                                                                               :recipe/amount          (* 1 2 (u/convert 1 :volume/l :volume/qt))
+                                                                                               :recipe/amount-unit     :volume/c}
+                                                                                              {:recipe/ingredient-type :ingredient/heavy-cream
+                                                                                               :recipe/amount          (* 2 2 (u/convert 1 :volume/l :volume/qt))
                                                                                                :recipe/amount-unit     :volume/c}]})))
