@@ -1,7 +1,7 @@
 (ns pigeon-scoops.units.common-test
   (:require [clojure.test :refer :all]
-            [pigeon-scoops.units.common :as units]
-            [pigeon-scoops.common-test :refer [tolerance]]))
+            [pigeon-scoops.common-test :refer [tolerance]]
+            [pigeon-scoops.units.common :as units]))
 
 (deftest convert-test
   (testing "can convert units correctly and can be converted back"

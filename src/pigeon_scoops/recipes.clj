@@ -2,6 +2,7 @@
   (:require [clojure.set :refer [union]]
             [clojure.spec.alpha :as s]
             [pigeon-scoops.basic-spec]
+            [pigeon-scoops.ingredients]
             [pigeon-scoops.units.common :as units]
             [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.units.volume :as vol])
@@ -17,7 +18,7 @@
                                   (set (keys mass/conversion-map))))
 (s/def :recipe/source :basic-spec/non-empty-string)
 
-(s/def :recipe/ingredient-type #(= "ingredient" (namespace %)))
+(s/def :recipe/ingredient-type :ingredient/type)
 (s/def :recipe/ingredient (s/keys :req [:recipe/ingredient-type
                                         :recipe/amount
                                         :recipe/amount-unit]))
@@ -50,3 +51,12 @@
                    (partial map #(update % :recipe/amount * scale-factor)))
       :recipe/amount amount
       :recipe/amount-unit amount-unit)))
+
+(defn merge-recipe-ingredients [recipes]
+  (->> (mapcat :recipe/ingredients recipes)
+       (group-by #(list (:recipe/ingredient-type %) (namespace (:recipe/amount-unit %))))
+       vals
+       (map #(reduce (fn [acc ingredient]
+                       (update acc :recipe/amount + (units/convert (:recipe/amount ingredient)
+                                                                   (:recipe/amount-unit ingredient)
+                                                                   (:recipe/amount-unit acc)))) %))))

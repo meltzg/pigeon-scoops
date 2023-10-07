@@ -15,6 +15,17 @@
                                           :recipe/amount          2
                                           :recipe/amount-unit     :volume/c}]})
 
+(def recipe-no-id-different-ingredients
+  (assoc recipe-no-id :recipe/ingredients [{:recipe/ingredient-type :ingredient/milk
+                                            :recipe/amount          1
+                                            :recipe/amount-unit     :volume/pt}
+                                           {:recipe/ingredient-type :ingredient/heavy-cream
+                                            :recipe/amount          2
+                                            :recipe/amount-unit     :volume/pt}
+                                           {:recipe/ingredient-type :ingredient/salt
+                                            :recipe/amount          1
+                                            :recipe/amount-unit     :common/pinch}]))
+
 (def recipe-with-id
   (assoc recipe-no-id :recipe/id (java.util.UUID/randomUUID)
                       :recipe/name "fizzbuz"))
@@ -91,3 +102,22 @@
                                                                                               {:recipe/ingredient-type :ingredient/heavy-cream
                                                                                                :recipe/amount          (* 2 2 (u/convert 1 :volume/l :volume/qt))
                                                                                                :recipe/amount-unit     :volume/c}]})))
+
+(deftest merge-recipe-ingredients-test
+  (testing "a list of ingredients can be made from combining several recipes"
+    (are [recipes expected] (= (r/merge-recipe-ingredients recipes) expected)
+                            [recipe-no-id (r/scale-recipe recipe-no-id 2 :volume/qt)] [{:recipe/ingredient-type :ingredient/milk
+                                                                                        :recipe/amount          3.0
+                                                                                        :recipe/amount-unit     :volume/c}
+                                                                                       {:recipe/ingredient-type :ingredient/heavy-cream
+                                                                                        :recipe/amount          6.0
+                                                                                        :recipe/amount-unit     :volume/c}]
+                            [recipe-no-id recipe-no-id-different-ingredients] [{:recipe/ingredient-type :ingredient/milk
+                                                                                :recipe/amount          3.0
+                                                                                :recipe/amount-unit     :volume/c}
+                                                                               {:recipe/ingredient-type :ingredient/heavy-cream
+                                                                                :recipe/amount          6.0
+                                                                                :recipe/amount-unit     :volume/c}
+                                                                               {:recipe/ingredient-type :ingredient/salt
+                                                                                :recipe/amount          1
+                                                                                :recipe/amount-unit     :common/pinch}])))
