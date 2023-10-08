@@ -1,6 +1,5 @@
 (ns pigeon-scoops.ingredients
-  (:require [clojure.set :refer [union]]
-            [clojure.spec.alpha :as s]
+  (:require [clojure.spec.alpha :as s]
             [pigeon-scoops.basic-spec]
             [pigeon-scoops.units.common :as common]
             [pigeon-scoops.units.mass :as mass]
@@ -11,22 +10,26 @@
 
 (s/def :ingredient/source :basic-spec/non-empty-string)
 (s/def :ingredient/unit-volume pos?)
-(s/def :ingredient/unit-volume-type (union common/other-units (set (keys vol/conversion-map))))
+(s/def :ingredient/unit-volume-type (set (keys vol/conversion-map)))
 (s/def :ingredient/unit-mass pos?)
-(s/def :ingredient/unit-mass-type (union common/other-units (set (keys mass/conversion-map))))
+(s/def :ingredient/unit-mass-type (set (keys mass/conversion-map)))
+(s/def :ingredient/unit-common pos?)
+(s/def :ingredient/unit-common-type common/other-units)
 (s/def :ingredient/unit-cost pos?)
 
 (s/def :ingredient/unit (s/keys :req [:ingredient/source
-                                      :ingredient/unit-mass
+                                      :ingredient/unit-cost]
+                                :opt [:ingredient/unit-mass
                                       :ingredient/unit-mass-type
                                       :ingredient/unit-volume
                                       :ingredient/unit-volume-type
-                                      :ingredient/unit-cost]))
+                                      :ingredient/unit-common
+                                      :ingredient/unit-common-type]))
 (s/def :ingredient/units (s/coll-of :ingredient/unit))
 
 (s/def :ingredient/entry (s/keys :req [:ingredient/type
-                                       :ingredient/description
-                                       :ingredient/units]))
+                                       :ingredient/units]
+                                 :opt [:ingredient/description]))
 
 (defn add-ingredient [ingredients new-ingredient]
   (let [conformed-ingredient (s/conform :ingredient/entry new-ingredient)]

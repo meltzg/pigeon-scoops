@@ -7,16 +7,12 @@
    :ingredient/description "moo moo juice"
    :ingredient/units       [{:ingredient/source           "dark market"
                              :ingredient/unit-cost        6.5
-                             :ingredient/unit-mass        3.9
-                             :ingredient/unit-mass-type   :mass/kg
                              :ingredient/unit-volume      1.0
                              :ingredient/unit-volume-type :volume/gal}
                             {:ingredient/source           "dark market"
                              :ingredient/unit-cost        3.25
                              :ingredient/unit-mass        1.95
-                             :ingredient/unit-mass-type   :mass/kg
-                             :ingredient/unit-volume      0.5
-                             :ingredient/unit-volume-type :volume/gal}]})
+                             :ingredient/unit-mass-type   :mass/kg}]})
 
 (def another-ingredient
   (assoc ingredient :ingredient/type :ingredient/heavy-cream
@@ -34,4 +30,4 @@
                                                ;; add duplicate type keeps new
                                                [ingredient] (assoc ingredient :ingredient/description "duplicate type") [(assoc ingredient :ingredient/description "duplicate type")]
                                                ;; add invalid does not add
-                                               [ingredient] (dissoc another-ingredient :ingredient/description) [ingredient])))
+                                               [ingredient] (dissoc another-ingredient :ingredient/type) [ingredient])))
