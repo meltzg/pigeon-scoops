@@ -60,3 +60,7 @@
                        (update acc :recipe/amount + (units/convert (:recipe/amount ingredient)
                                                                    (:recipe/amount-unit ingredient)
                                                                    (:recipe/amount-unit acc)))) %))))
+
+(defn to-grocery-units [{:recipe/keys [amount amount-unit]} {:grocery/keys [units] :as grocery-item}]
+  (loop [acc []
+         amount-left amount]))

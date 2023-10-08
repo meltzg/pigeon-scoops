@@ -1,4 +1,27 @@
-(#:grocery{:units
+(#:grocery{:type :grocery/semisweet-chocolate,
+           :units
+           [#:grocery{:source "star market",
+                      :unit-mass 4,
+                      :unit-mass-type :mass/oz,
+                      :unit-cost 2.49}]}
+ #:grocery{:type :grocery/egg-yolk,
+           :description "need to figure out what to do with whites",
+           :units
+           [#:grocery{:source "star market",
+                      :unit-common 18,
+                      :unit-common-type :common/unit,
+                      :unit-cost 7.39}
+            #:grocery{:source "star market",
+                      :unit-common 12,
+                      :unit-common-type :common/unit,
+                      :unit-cost 4.99}]}
+ #:grocery{:type :grocery/vanilla-bean,
+           :units
+           [#:grocery{:source "star market",
+                      :unit-common 1,
+                      :unit-common-type :common/unit,
+                      :unit-cost 9.99}]}
+ #:grocery{:units
            [#:grocery{:source "star market",
                       :unit-mass 44.36029,
                       :unit-mass-type :mass/g,

@@ -36,3 +36,11 @@
     (if (s/invalid? conformed-ingredient)
       groceries
       (conj (remove #(= (:grocery/type %) (:grocery/type new-grocery-item)) groceries) conformed-ingredient))))
+
+(defn get-grocery-unit-for-amount [amount amount-unit {:grocery/keys [units] :as grocery-item}]
+  (cond (some #{amount-unit} common/other-units)
+        (or (first (filter #(and (= (:grocery/unit-common-type %) amount-unit)
+                                 (>= (:grocery/unit-common %) amount))
+                           (sort-by :grocery/unit-common units)))
+            (first (filter #(= (:grocery/unit-common-type %) amount-unit)
+                           (sort-by (comp - :grocery/unit-common) units))))))
