@@ -2,7 +2,7 @@
   (:require [clojure.set :refer [union]]
             [clojure.spec.alpha :as s]
             [pigeon-scoops.basic-spec]
-            [pigeon-scoops.ingredients]
+            [pigeon-scoops.groceries]
             [pigeon-scoops.units.common :as units]
             [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.units.volume :as vol])
@@ -18,7 +18,7 @@
                                   (set (keys mass/conversion-map))))
 (s/def :recipe/source :basic-spec/non-empty-string)
 
-(s/def :recipe/ingredient-type :ingredient/type)
+(s/def :recipe/ingredient-type :grocery/type)
 (s/def :recipe/ingredient (s/keys :req [:recipe/ingredient-type
                                         :recipe/amount
                                         :recipe/amount-unit]))
