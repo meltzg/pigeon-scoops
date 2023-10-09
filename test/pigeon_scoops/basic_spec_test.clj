@@ -9,9 +9,10 @@
 
 (deftest non-empty-string?-invalid
   (testing "Invalid values are false"
-    (are [value] (false? (s/valid? :basic-spec/non-empty-string value))
-                 ""
-                 42
-                 []
-                 :foo
-                 nil)))
+    (are [value]
+      (false? (s/valid? :basic-spec/non-empty-string value))
+      ""
+      42
+      []
+      :foo
+      nil)))

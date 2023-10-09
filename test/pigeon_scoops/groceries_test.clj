@@ -15,21 +15,49 @@
                                     :unit-mass-type :mass/kg}]})
 
 (def eggs-12
-  #:grocery{:source           "star market",
-            :unit-common      12,
-            :unit-common-type :common/unit,
+  #:grocery{:source           "star market"
+            :unit-common      12
+            :unit-common-type :common/unit
             :unit-cost        4.99})
 
 (def eggs-18
-  #:grocery{:source           "star market",
-            :unit-common      18,
-            :unit-common-type :common/unit,
+  #:grocery{:source           "star market"
+            :unit-common      18
+            :unit-common-type :common/unit
             :unit-cost        7.39})
 
 (def common-unit-grocery-item
-  #:grocery{:type        :grocery/egg-yolk,
-            :description "need to figure out what to do with whites",
+  #:grocery{:type        :grocery/egg-yolk
+            :description "need to figure out what to do with whites"
             :units       [eggs-12 eggs-18]})
+
+(def half-gal
+  #:grocery{:source           "star market"
+            :unit-volume      0.5
+            :unit-volume-type :volume/gal
+            :unit-mass        1.94
+            :unit-mass-type   :mass/kg
+            :unit-cost        7})
+
+(def quart
+  #:grocery{:source           "star market"
+            :unit-volume      1
+            :unit-volume-type :volume/qt
+            :unit-mass        968
+            :unit-mass-type   :mass/g
+            :unit-cost        4.5})
+
+(def pint
+  #:grocery{:source           "star market"
+            :unit-volume      1
+            :unit-volume-type :volume/pt
+            :unit-mass        484
+            :unit-mass-type   :mass/g
+            :unit-cost        2.8})
+
+(def mass-volume-unit-grocery-item
+  #:grocery{:units [half-gal quart pint]
+            :type  :grocery/half-and-half})
 
 (def another-grocery-item
   (assoc grocery-item :grocery/type :grocery/heavy-cream
@@ -59,12 +87,14 @@
       12 :common/unit common-unit-grocery-item eggs-12
       13 :common/unit common-unit-grocery-item eggs-18
       20 :common/unit common-unit-grocery-item eggs-18
-      36 :common/unit common-unit-grocery-item eggs-18)))
+      36 :common/unit common-unit-grocery-item eggs-18
+      1 :volume/c mass-volume-unit-grocery-item pint
+      4 :mass/kg mass-volume-unit-grocery-item half-gal)))
 
 (deftest divide-grocery-test
   (testing "an amount can be divided into a set of unit amounts"
     (are [amount amount-unit item expected]
-      (= (g/divide-grocery amount amount-unit item) (assoc common-unit-grocery-item :grocery/units expected))
+      (= (g/divide-grocery amount amount-unit item) (assoc item :grocery/units expected))
       0 :common/unit common-unit-grocery-item nil
       -1 :common/unit common-unit-grocery-item nil
       1 :common/unit common-unit-grocery-item [(assoc eggs-12 :grocery/unit-purchase-quantity 1)]
@@ -72,4 +102,7 @@
       13 :common/unit common-unit-grocery-item [(assoc eggs-18 :grocery/unit-purchase-quantity 1)]
       20 :common/unit common-unit-grocery-item [(assoc eggs-18 :grocery/unit-purchase-quantity 1)
                                                 (assoc eggs-12 :grocery/unit-purchase-quantity 1)]
-      36 :common/unit common-unit-grocery-item [(assoc eggs-18 :grocery/unit-purchase-quantity 2)])))
+      36 :common/unit common-unit-grocery-item [(assoc eggs-18 :grocery/unit-purchase-quantity 2)]
+      1 :volume/c mass-volume-unit-grocery-item [(assoc pint :grocery/unit-purchase-quantity 1)]
+      4 :mass/kg mass-volume-unit-grocery-item [(assoc half-gal :grocery/unit-purchase-quantity 2)
+                                                (assoc pint :grocery/unit-purchase-quantity 1)])))

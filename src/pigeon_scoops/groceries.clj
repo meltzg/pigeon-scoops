@@ -40,12 +40,12 @@
       (conj (remove #(= (:grocery/type %) (:grocery/type new-grocery-item)) groceries) conformed-ingredient))))
 
 (defn get-grocery-unit-for-amount [amount amount-unit {:grocery/keys [units]}]
-  (cond (some #{amount-unit} units/other-units)
-        (or (first (filter #(and (= (:grocery/unit-common-type %) amount-unit)
-                                 (>= (:grocery/unit-common %) amount))
-                           (sort-by :grocery/unit-common units)))
-            (first (filter #(= (:grocery/unit-common-type %) amount-unit)
-                           (sort-by (comp - :grocery/unit-common) units))))))
+  (let [unit-key (keyword "grocery" (str "unit-" (namespace amount-unit)))
+        unit-type-key (keyword "grocery" (str "unit-" (namespace amount-unit) "-type"))
+        unit-comparator #(units/to-comparable (unit-key %) (unit-type-key %))]
+    (or (first (filter #(>= (units/convert (unit-key %) (unit-type-key %) amount-unit) amount)
+                   (sort-by unit-comparator units)))
+        (first (sort-by (comp - unit-comparator) units)))))
 
 (defn divide-grocery [amount amount-unit grocery-item]
   (->> (loop [grocery-units {}

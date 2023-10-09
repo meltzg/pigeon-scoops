@@ -27,3 +27,12 @@
     (/ amount-to amount-from)
     (when-let [conversion-factor (convert 1 unit-to unit-from)]
       (* amount-from amount-to conversion-factor))))
+
+(defn to-comparable [amount amount-unit]
+  (cond
+    (some #{amount-unit} (keys mass/conversion-map))
+    (convert amount amount-unit :mass/g)
+    (some #{amount-unit} (keys vol/conversion-map))
+    (convert amount amount-unit :volume/ml)
+    :otherwise
+    amount))
