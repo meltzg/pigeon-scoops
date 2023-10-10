@@ -14,8 +14,10 @@
                            mass/conversion-map
                            (some #{from} (keys vol/conversion-map))
                            vol/conversion-map)]
-      (if (not (and (from conversion-map)
-                    (to conversion-map)))
+      (if (or (nil? from)
+              (nil? to)
+              (not (and (from conversion-map)
+                        (to conversion-map))))
         nil
         (let [standard-mass (* val (from conversion-map))
               conversion-factor (to conversion-map)]

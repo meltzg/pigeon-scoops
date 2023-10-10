@@ -3,6 +3,36 @@
             [pigeon-scoops.recipes :as r]
             [pigeon-scoops.units.common :as u]))
 
+(def groceries '(#:grocery{:units
+                           [#:grocery{:source           "star market"
+                                      :unit-volume      1
+                                      :unit-volume-type :volume/gal
+                                      :unit-mass        3.9
+                                      :unit-mass-type   :mass/kg
+                                      :unit-cost        5.0}
+                            #:grocery{:source           "star market"
+                                      :unit-volume      0.5
+                                      :unit-volume-type :volume/gal
+                                      :unit-mass        1.95
+                                      :unit-mass-type   :mass/kg
+                                      :unit-cost        3.5}]
+                           :type :grocery/milk}
+                  #:grocery{:units
+                            [#:grocery{:source           "star market"
+                                       :unit-volume      1
+                                       :unit-volume-type :volume/qt
+                                       :unit-mass        968
+                                       :unit-mass-type   :mass/g
+                                       :unit-cost        7.5}
+                             #:grocery{:source           "star market"
+                                       :unit-volume      1
+                                       :unit-volume-type :volume/pt
+                                       :unit-mass        484
+                                       :unit-mass-type   :mass/g
+                                       :unit-cost        5.5}]
+                            :type :grocery/heavy-cream}
+                  #:grocery{:units [] :type :grocery/salt}))
+
 (def recipe-no-id {:recipe/name         "foobar"
                    :recipe/type         :recipe/ice-cream
                    :recipe/instructions ["mix it all together"]
@@ -124,3 +154,37 @@
                                                          {:recipe/ingredient-type :grocery/salt
                                                           :recipe/amount          1
                                                           :recipe/amount-unit     :common/pinch}])))
+
+(deftest to-grocery-purchase-list-test
+  (testing "recipe ingredients can be turned into grocery lists"
+    (is (= (r/to-grocery-purchase-list
+             (r/merge-recipe-ingredients
+               [(r/scale-recipe recipe-no-id-different-ingredients 1 :volume/gal)
+                recipe-no-id])
+             groceries)
+           {:purchase-list '(#:grocery{:type  :grocery/milk
+                                       :units (#:grocery{:source                 "star market"
+                                                         :unit-cost              5.0
+                                                         :unit-mass              3.9
+                                                         :unit-mass-type         :mass/kg
+                                                         :unit-purchase-quantity 1
+                                                         :unit-volume            1
+                                                         :unit-volume-type       :volume/gal})}
+                              #:grocery{:type  :grocery/heavy-cream
+                                        :units (#:grocery{:source                 "star market"
+                                                          :unit-cost              7.5
+                                                          :unit-mass              968
+                                                          :unit-mass-type         :mass/g
+                                                          :unit-purchase-quantity 4
+                                                          :unit-volume            1
+                                                          :unit-volume-type       :volume/qt}
+                                                 #:grocery{:source                 "star market"
+                                                           :unit-cost              5.5
+                                                           :unit-mass              484
+                                                           :unit-mass-type         :mass/g
+                                                           :unit-purchase-quantity 1
+                                                           :unit-volume            1
+                                                           :unit-volume-type       :volume/pt})}
+                              #:grocery{:type  :grocery/salt
+                                        :units nil})
+            :total-cost    40.5}))))

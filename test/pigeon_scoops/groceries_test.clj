@@ -59,6 +59,9 @@
   #:grocery{:units [half-gal quart pint]
             :type  :grocery/half-and-half})
 
+(def no-units-grocery-item
+  #:grocery{:units [] :type :grocery/salt})
+
 (def another-grocery-item
   (assoc grocery-item :grocery/type :grocery/heavy-cream
                       :grocery/description "heavy moo moo juice"))
@@ -89,7 +92,8 @@
       20 :common/unit common-unit-grocery-item eggs-18
       36 :common/unit common-unit-grocery-item eggs-18
       1 :volume/c mass-volume-unit-grocery-item pint
-      4 :mass/kg mass-volume-unit-grocery-item half-gal)))
+      4 :mass/kg mass-volume-unit-grocery-item half-gal
+      4 :common/pinch no-units-grocery-item nil)))
 
 (deftest divide-grocery-test
   (testing "an amount can be divided into a set of unit amounts"
@@ -97,6 +101,7 @@
       (= (g/divide-grocery amount amount-unit item) (assoc item :grocery/units expected))
       0 :common/unit common-unit-grocery-item nil
       -1 :common/unit common-unit-grocery-item nil
+      4 :common/pinch no-units-grocery-item nil
       1 :common/unit common-unit-grocery-item [(assoc eggs-12 :grocery/unit-purchase-quantity 1)]
       12 :common/unit common-unit-grocery-item [(assoc eggs-12 :grocery/unit-purchase-quantity 1)]
       13 :common/unit common-unit-grocery-item [(assoc eggs-18 :grocery/unit-purchase-quantity 1)]

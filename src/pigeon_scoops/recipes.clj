@@ -2,7 +2,7 @@
   (:require [clojure.set :refer [union]]
             [clojure.spec.alpha :as s]
             [pigeon-scoops.basic-spec]
-            [pigeon-scoops.groceries]
+            [pigeon-scoops.groceries :as g]
             [pigeon-scoops.units.common :as units]
             [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.units.volume :as vol])
@@ -61,6 +61,12 @@
                                                                    (:recipe/amount-unit ingredient)
                                                                    (:recipe/amount-unit acc)))) %))))
 
-(defn to-grocery-units [{:recipe/keys [amount amount-unit]} {:grocery/keys [units] :as grocery-item}]
-  (loop [acc []
-         amount-left amount]))
+(defn to-grocery-purchase-list [recipe-ingredients groceries]
+  (let [grocery-map (into {} (map #(vec [(:grocery/type %) %]) groceries))
+        purchase-list (map #(g/divide-grocery (:recipe/amount %)
+                                              (:recipe/amount-unit %)
+                                              ((:recipe/ingredient-type %) grocery-map))
+                           recipe-ingredients)]
+    {:purchase-list purchase-list
+     :total-cost    (apply + (map #(* (:grocery/unit-cost %) (:grocery/unit-purchase-quantity %))
+                                  (mapcat :grocery/units purchase-list)))}))
