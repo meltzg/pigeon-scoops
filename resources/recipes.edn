@@ -1,5 +1,160 @@
-(#:recipe{:name        "Strawberry",
-          :type        :recipe/ice-cream,
+(#:recipe{:type :recipe/ice-cream,
+          :name "Pesto",
+          :instructions
+          ["Combine basil, pine nuts, and garlic in food processor and process until finely minced"
+           "While running, slowly drizzle oil and process until smooth"
+           "Add cheese and process just long enough to combine"
+           "Warm milk, sugar, pinch of salt, half the cream"
+           "Pour other half of cream into a container with mesh strainer"
+           "Whisk egg yolks in separate bowl. Slowly pour warm milk mix into bowl, whisking constantly"
+           "Pour mix into saucepan an stir constantly over medium heat until mix reaches 175F"
+           "Pour mix through strainer"
+           "Whisk in pesto"
+           "Chill"
+           "Churn"],
+          :source "modified The Perfect Scoop p. 90",
+          :amount 1,
+          :amount-unit :volume/qt,
+          :ingredients
+          [#:recipe{:ingredient-type :grocery/milk,
+                    :amount 1.333,
+                    :amount-unit :volume/c}
+           #:recipe{:ingredient-type :grocery/heavy-cream,
+                    :amount 1,
+                    :amount-unit :volume/c}
+           #:recipe{:ingredient-type :grocery/sugar,
+                    :amount 0.5,
+                    :amount-unit :volume/c}
+           #:recipe{:ingredient-type :grocery/salt,
+                    :amount 1,
+                    :amount-unit :common/pinch}
+           #:recipe{:ingredient-type :grocery/egg-yolk,
+                    :amount 6,
+                    :amount-unit :common/unit}
+           #:recipe{:ingredient-type :grocery/fresh-basil,
+                    :amount 0.5,
+                    :amount-unit :volume/c}
+           #:recipe{:ingredient-type :grocery/pine-nuts,
+                    :amount 1.5,
+                    :amount-unit :volume/tsp}
+           #:recipe{:ingredient-type :grocery/garlic-clove,
+                    :amount 1,
+                    :amount-unit :common/unit}
+           #:recipe{:ingredient-type :grocery/olive-oil,
+                    :amount 2,
+                    :amount-unit :volume/tbsp}
+           #:recipe{:ingredient-type :grocery/grated-parmesan,
+                    :amount 2,
+                    :amount-unit :volume/tbsp}],
+          :id #uuid "6f8c07c1-afeb-4162-8aef-9ff32088591c"}
+ #:recipe{:type :recipe/ice-cream,
+          :name "Black Sesame",
+          :instructions
+          ["Combine brown sugar, egg yolks, and salt"
+           "Whisk in cream and milk"
+           "Warm over medium-low heat until warm to the touch"
+           "Increase head to medium, stirring constantly until mixture is 155F"
+           "Turn off heat, whisk in black sesame paste"
+           "Chill"
+           "Churn"],
+          :source
+          "https://www.seriouseats.com/black-sesame-ice-cream-recipe",
+          :amount 1,
+          :amount-unit :volume/qt,
+          :ingredients
+          [#:recipe{:ingredient-type :grocery/milk,
+                    :amount 8,
+                    :amount-unit :mass/oz}
+           #:recipe{:ingredient-type :grocery/heavy-cream,
+                    :amount 7,
+                    :amount-unit :mass/oz}
+           #:recipe{:ingredient-type :grocery/light-brown-sugar,
+                    :amount 6,
+                    :amount-unit :mass/oz}
+           #:recipe{:ingredient-type :grocery/salt,
+                    :amount 2,
+                    :amount-unit :mass/g}
+           #:recipe{:ingredient-type :grocery/egg-yolk,
+                    :amount 7,
+                    :amount-unit :common/unit}
+           #:recipe{:ingredient-type :grocery/black-sesame-paste,
+                    :amount 6,
+                    :amount-unit :mass/oz}],
+          :id #uuid "2f851376-c188-404a-8aeb-20e30f07566b"}
+ #:recipe{:type :recipe/ice-cream,
+          :name "Ube",
+          :instructions
+          ["Warm milk, sugar, pinch of salt, half the cream"
+           "Pour other half of cream into a container with mesh strainer"
+           "Whisk egg yolks in separate bowl. Slowly pour warm milk mix into bowl, whisking constantly"
+           "Pour mix into saucepan an stir constantly over medium heat until mix reaches 175F"
+           "Pour mix through strainer"
+           "Add ube jam and extract. Mix with immersion blender."
+           "Chill"
+           "Churn"],
+          :source "modified The Perfect Scoop p. 28",
+          :amount 1,
+          :amount-unit :volume/qt,
+          :ingredients
+          [#:recipe{:ingredient-type :grocery/milk,
+                    :amount 1,
+                    :amount-unit :volume/c}
+           #:recipe{:ingredient-type :grocery/heavy-cream,
+                    :amount 2,
+                    :amount-unit :volume/c}
+           #:recipe{:ingredient-type :grocery/sugar,
+                    :amount 0.75,
+                    :amount-unit :volume/c}
+           #:recipe{:ingredient-type :grocery/salt,
+                    :amount 1,
+                    :amount-unit :common/pinch}
+           #:recipe{:ingredient-type :grocery/egg-yolk,
+                    :amount 6,
+                    :amount-unit :common/unit}
+           #:recipe{:ingredient-type :grocery/ube-halaya,
+                    :amount 0.5,
+                    :amount-unit :volume/c}
+           #:recipe{:ingredient-type :grocery/ube-extract,
+                    :amount 2,
+                    :amount-unit :volume/tsp}],
+          :id #uuid "c2803314-631e-49ff-9982-1378b34205ff"}
+ #:recipe{:type :recipe/ice-cream,
+          :name "Mint",
+          :instructions
+          ["Warm milk, sugar, pinch of salt, half the cream"
+           "Add mint and stir until leaves are fully submerged. Remove from heat and steep for 1 hour"
+           "Strain mix into saucepan and squeeze as much liquid from the mint leaves. Discard mint and rewarm the mix"
+           "Pour other half of cream into a container with mesh strainer"
+           "Whisk egg yolks in separate bowl. Slowly pour warm milk mix into bowl, whisking constantly"
+           "Pour mix into saucepan an stir constantly over medium heat until mix reaches 175F"
+           "Pour mix through strainer"
+           "Chill"
+           "Churn"],
+          :source "The Perfect Scoop p. 106",
+          :amount 1,
+          :amount-unit :volume/qt,
+          :ingredients
+          [#:recipe{:ingredient-type :grocery/milk,
+                    :amount 1,
+                    :amount-unit :volume/c}
+           #:recipe{:ingredient-type :grocery/heavy-cream,
+                    :amount 2,
+                    :amount-unit :volume/c}
+           #:recipe{:ingredient-type :grocery/sugar,
+                    :amount 0.75,
+                    :amount-unit :volume/c}
+           #:recipe{:ingredient-type :grocery/salt,
+                    :amount 1,
+                    :amount-unit :common/pinch}
+           #:recipe{:ingredient-type :grocery/egg-yolk,
+                    :amount 5,
+                    :amount-unit :common/unit}
+           #:recipe{:ingredient-type :grocery/fresh-mint,
+                    :amount 40,
+                    :amount-unit :mass/g}],
+          :id #uuid "6224c92e-15d1-4877-b68e-90bd1f2902a7"}
+ #:recipe{:name "Strawberry",
+          :type :recipe/ice-cream,
           :instructions
           ["Bring cream, milk, and salt to simmer over medium heat"
            "Whisk yolks with 2/3rds of the sugar"
@@ -10,131 +165,131 @@
            "Mix and churn"],
           :source
           "https://wearenotmartha.com/strawberry-mint-milkshakes/",
-          :amount      1,
+          :amount 1,
           :amount-unit :volume/qt,
           :ingredients
           [#:recipe{:ingredient-type :grocery/milk,
-                    :amount          0.75,
-                    :amount-unit     :volume/c}
+                    :amount 0.75,
+                    :amount-unit :volume/c}
            #:recipe{:ingredient-type :grocery/heavy-cream,
-                    :amount          1,
-                    :amount-unit     :volume/c}
+                    :amount 1,
+                    :amount-unit :volume/c}
            #:recipe{:ingredient-type :grocery/sugar,
-                    :amount          0.75,
-                    :amount-unit     :volume/c}
+                    :amount 0.75,
+                    :amount-unit :volume/c}
            #:recipe{:ingredient-type :grocery/salt,
-                    :amount          1,
-                    :amount-unit     :common/pinch}
+                    :amount 1,
+                    :amount-unit :common/pinch}
            #:recipe{:ingredient-type :grocery/strawberry,
-                    :amount          1,
-                    :amount-unit     :mass/lb}
+                    :amount 1,
+                    :amount-unit :mass/lb}
            #:recipe{:ingredient-type :grocery/egg-yolk,
-                    :amount          2,
-                    :amount-unit     :common/unit}
+                    :amount 2,
+                    :amount-unit :common/unit}
            #:recipe{:ingredient-type :grocery/lemon-juice,
-                    :amount          1,
-                    :amount-unit     :volume/tbsp}],
-          :id          #uuid "cc8a4ad9-468d-4154-a845-0d9c8c08bb37"}
-  #:recipe{:name        "Peanut Butter",
-           :instructions
-           ["Puree peanut butter, salt, vanilla, half-and-half, and sugar in blender"
-            "Chill"
-            "Churn"],
-           :source      "The Perfect Scoop p. 59",
-           :amount      1,
-           :amount-unit :volume/qt,
-           :ingredients
-           [#:recipe{:ingredient-type :grocery/sugar,
-                     :amount          14,
-                     :amount-unit     :volume/tbsp}
-            #:recipe{:ingredient-type :grocery/salt,
-                     :amount          1,
-                     :amount-unit     :common/pinch}
-            #:recipe{:ingredient-type :grocery/half-and-half,
-                     :amount          8/3,
-                     :amount-unit     :volume/c}
-            #:recipe{:ingredient-type :grocery/smooth-peanut-butter,
-                     :amount          0.75,
-                     :amount-unit     :volume/c}
-            #:recipe{:ingredient-type :grocery/vanilla-extract,
-                     :amount          0.125,
-                     :amount-unit     :volume/tsp}],
-           :id          #uuid "0fdf6d7a-ad4e-43f7-af56-48e68fd2bc6c",
-           :type        :recipe/ice-cream}
-  #:recipe{:name        "Vanilla",
-           :instructions
-           ["Warm milk, sugar, pinch of salt, half the cream"
-            "Scrape the seeds from vanilla beans into warm milk and add the bean. Cover, remove from heat, steep for 30 minutes"
-            "Pour other half of cream into a container with mesh strainer"
-            "Whisk egg yolks in separate bowl. Slowly pour warm milk mix into bowl, whisking constantly"
-            "Pour mix into saucepan an stir constantly over medium heat until mix reaches 175F"
-            "Pour mix through strainer"
-            "Chill"
-            "Churn"],
-           :source      "The Perfect Scoop p. 28",
-           :amount      1,
-           :amount-unit :volume/qt,
-           :ingredients
-           [#:recipe{:ingredient-type :grocery/milk,
-                     :amount          1,
-                     :amount-unit     :volume/c}
-            #:recipe{:ingredient-type :grocery/heavy-cream,
-                     :amount          2,
-                     :amount-unit     :volume/c}
-            #:recipe{:ingredient-type :grocery/sugar,
-                     :amount          0.75,
-                     :amount-unit     :volume/c}
-            #:recipe{:ingredient-type :grocery/salt,
-                     :amount          1,
-                     :amount-unit     :common/pinch}
-            #:recipe{:ingredient-type :grocery/vanilla-bean,
-                     :amount          1,
-                     :amount-unit     :common/unit}
-            #:recipe{:ingredient-type :grocery/egg-yolk,
-                     :amount          6,
-                     :amount-unit     :common/unit}
-            #:recipe{:ingredient-type :grocery/vanilla-extract,
-                     :amount          0.75,
-                     :amount-unit     :volume/tsp}],
-           :id          #uuid "d6a1c831-8779-41d6-a9c0-415ff23fa604",
-           :type        :recipe/ice-cream}
-  #:recipe{:name        "Chocolate",
-           :instructions
-           ["Warm half the cream with cocoa powder in medium saucepan, whisking constantly. Whisking constantly, bring to boil, lower heat, and let simmer for 30 seconds"
-            "Remove from heat, add chocolate, stir till smooth, and add remaining cream. Pour into bowl with mesh strainer"
-            "Warm milk, sugar, pinch of salt"
-            "Whisk egg yolks in separate bowl. Slowly pour warm milk mix into bowl, whisking constantly"
-            "Pour mix into saucepan an stir constantly over medium heat until mix reaches 175F"
-            "Pour mix through strainer"
-            "Chill"
-            "Churn"],
-           :source      "The Perfect Scoop p. 30",
-           :amount      1,
-           :amount-unit :volume/qt,
-           :ingredients
-           [#:recipe{:ingredient-type :grocery/milk,
-                     :amount          1,
-                     :amount-unit     :volume/c}
-            #:recipe{:ingredient-type :grocery/heavy-cream,
-                     :amount          2,
-                     :amount-unit     :volume/c}
-            #:recipe{:ingredient-type :grocery/sugar,
-                     :amount          0.75,
-                     :amount-unit     :volume/c}
-            #:recipe{:ingredient-type :grocery/salt,
-                     :amount          1,
-                     :amount-unit     :common/pinch}
-            #:recipe{:ingredient-type :grocery/egg-yolk,
-                     :amount          5,
-                     :amount-unit     :common/unit}
-            #:recipe{:ingredient-type :grocery/vanilla-extract,
-                     :amount          0.5,
-                     :amount-unit     :volume/tsp}
-            #:recipe{:ingredient-type :grocery/dutch-process-cocoa,
-                     :amount          3,
-                     :amount-unit     :volume/tbsp}
-            #:recipe{:ingredient-type :grocery/semisweet-chocolate,
-                     :amount          5,
-                     :amount-unit     :mass/oz}],
-           :id          #uuid "4776fb5f-9137-41e2-a8db-fbbd0a50762d",
-           :type        :recipe/ice-cream})
+                    :amount 1,
+                    :amount-unit :volume/tbsp}],
+          :id #uuid "cc8a4ad9-468d-4154-a845-0d9c8c08bb37"}
+ #:recipe{:name "Peanut Butter",
+          :instructions
+          ["Puree peanut butter, salt, vanilla, half-and-half, and sugar in blender"
+           "Chill"
+           "Churn"],
+          :source "The Perfect Scoop p. 59",
+          :amount 1,
+          :amount-unit :volume/qt,
+          :ingredients
+          [#:recipe{:ingredient-type :grocery/sugar,
+                    :amount 14,
+                    :amount-unit :volume/tbsp}
+           #:recipe{:ingredient-type :grocery/salt,
+                    :amount 1,
+                    :amount-unit :common/pinch}
+           #:recipe{:ingredient-type :grocery/half-and-half,
+                    :amount 8/3,
+                    :amount-unit :volume/c}
+           #:recipe{:ingredient-type :grocery/smooth-peanut-butter,
+                    :amount 0.75,
+                    :amount-unit :volume/c}
+           #:recipe{:ingredient-type :grocery/vanilla-extract,
+                    :amount 0.125,
+                    :amount-unit :volume/tsp}],
+          :id #uuid "0fdf6d7a-ad4e-43f7-af56-48e68fd2bc6c",
+          :type :recipe/ice-cream}
+ #:recipe{:name "Vanilla",
+          :instructions
+          ["Warm milk, sugar, pinch of salt, half the cream"
+           "Scrape the seeds from vanilla beans into warm milk and add the bean. Cover, remove from heat, steep for 30 minutes"
+           "Pour other half of cream into a container with mesh strainer"
+           "Whisk egg yolks in separate bowl. Slowly pour warm milk mix into bowl, whisking constantly"
+           "Pour mix into saucepan an stir constantly over medium heat until mix reaches 175F"
+           "Pour mix through strainer"
+           "Chill"
+           "Churn"],
+          :source "The Perfect Scoop p. 28",
+          :amount 1,
+          :amount-unit :volume/qt,
+          :ingredients
+          [#:recipe{:ingredient-type :grocery/milk,
+                    :amount 1,
+                    :amount-unit :volume/c}
+           #:recipe{:ingredient-type :grocery/heavy-cream,
+                    :amount 2,
+                    :amount-unit :volume/c}
+           #:recipe{:ingredient-type :grocery/sugar,
+                    :amount 0.75,
+                    :amount-unit :volume/c}
+           #:recipe{:ingredient-type :grocery/salt,
+                    :amount 1,
+                    :amount-unit :common/pinch}
+           #:recipe{:ingredient-type :grocery/vanilla-bean,
+                    :amount 1,
+                    :amount-unit :common/unit}
+           #:recipe{:ingredient-type :grocery/egg-yolk,
+                    :amount 6,
+                    :amount-unit :common/unit}
+           #:recipe{:ingredient-type :grocery/vanilla-extract,
+                    :amount 0.75,
+                    :amount-unit :volume/tsp}],
+          :id #uuid "d6a1c831-8779-41d6-a9c0-415ff23fa604",
+          :type :recipe/ice-cream}
+ #:recipe{:name "Chocolate",
+          :instructions
+          ["Warm half the cream with cocoa powder in medium saucepan, whisking constantly. Whisking constantly, bring to boil, lower heat, and let simmer for 30 seconds"
+           "Remove from heat, add chocolate, stir till smooth, and add remaining cream. Pour into bowl with mesh strainer"
+           "Warm milk, sugar, pinch of salt"
+           "Whisk egg yolks in separate bowl. Slowly pour warm milk mix into bowl, whisking constantly"
+           "Pour mix into saucepan an stir constantly over medium heat until mix reaches 175F"
+           "Pour mix through strainer"
+           "Chill"
+           "Churn"],
+          :source "The Perfect Scoop p. 30",
+          :amount 1,
+          :amount-unit :volume/qt,
+          :ingredients
+          [#:recipe{:ingredient-type :grocery/milk,
+                    :amount 1,
+                    :amount-unit :volume/c}
+           #:recipe{:ingredient-type :grocery/heavy-cream,
+                    :amount 2,
+                    :amount-unit :volume/c}
+           #:recipe{:ingredient-type :grocery/sugar,
+                    :amount 0.75,
+                    :amount-unit :volume/c}
+           #:recipe{:ingredient-type :grocery/salt,
+                    :amount 1,
+                    :amount-unit :common/pinch}
+           #:recipe{:ingredient-type :grocery/egg-yolk,
+                    :amount 5,
+                    :amount-unit :common/unit}
+           #:recipe{:ingredient-type :grocery/vanilla-extract,
+                    :amount 0.5,
+                    :amount-unit :volume/tsp}
+           #:recipe{:ingredient-type :grocery/dutch-process-cocoa,
+                    :amount 3,
+                    :amount-unit :volume/tbsp}
+           #:recipe{:ingredient-type :grocery/semisweet-chocolate,
+                    :amount 5,
+                    :amount-unit :mass/oz}],
+          :id #uuid "4776fb5f-9137-41e2-a8db-fbbd0a50762d",
+          :type :recipe/ice-cream})

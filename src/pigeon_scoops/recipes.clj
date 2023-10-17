@@ -9,7 +9,7 @@
   (:import (java.util UUID)))
 
 (s/def :recipe/id uuid?)
-(s/def :recipe/type #{:recipe/ice-cream :recipe/mixin})
+(s/def :recipe/type #{:recipe/ice-cream :recipe/sorbet :recipe/mixin})
 (s/def :recipe/name :basic-spec/non-empty-string)
 (s/def :recipe/instructions (s/coll-of :basic-spec/non-empty-string))
 (s/def :recipe/amount pos?)
