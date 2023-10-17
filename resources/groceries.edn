@@ -1,152 +1,236 @@
-(#:grocery{:type :grocery/smooth-peanut-butter,
+(#:grocery{:type :grocery/fresh-basil,
            :units
-           [#:grocery{:source           "star market",
-                      :unit-mass        64,
-                      :unit-mass-type   :mass/oz,
-                      :unit-volume      114,
+           [#:grocery{:source "star market",
+                      :unit-cost 3.59,
+                      :unit-volume 1,
+                      :unit-volume-type :volume/c,
+                      :unit-mass 1.25,
+                      :unit-mass-type :mass/oz}]}
+ #:grocery{:type :grocery/fresh-mint,
+           :units
+           [#:grocery{:source "star market",
+                      :unit-cost 2.99,
+                      :unit-volume 0.5,
+                      :unit-volume-type :volume/c,
+                      :unit-mass 0.66,
+                      :unit-mass-type :mass/oz}]}
+ #:grocery{:type :grocery/black-sesame-paste,
+           :units
+           [#:grocery{:source "h-mart",
+                      :unit-cost 12.49,
+                      :unit-mass 16,
+                      :unit-mass-type :mass/oz}]}
+ #:grocery{:type :grocery/pine-nuts,
+           :units
+           [#:grocery{:source "star market",
+                      :unit-cost 5.99,
+                      :unit-mass 2.25,
+                      :unit-mass-type :mass/oz,
+                      :unit-volume 0.5,
+                      :unit-volume-type :volume/c}]}
+ #:grocery{:type :grocery/garlic-clove,
+           :units
+           [#:grocery{:source "star market",
+                      :unit-cost 0.99,
+                      :unit-common 10,
+                      :unit-common-type :common/unit}]}
+ #:grocery{:type :grocery/olive-oil,
+           :units
+           [#:grocery{:source "star market",
+                      :unit-cost 8.99,
+                      :unit-volume 16.9,
+                      :unit-volume-type :volume/floz,
+                      :unit-mass 16.69,
+                      :unit-mass-type :mass/oz}]}
+ #:grocery{:type :grocery/grated-parmesan,
+           :units
+           [#:grocery{:source "star market",
+                      :unit-cost 6.99,
+                      :unit-volume 2.75,
+                      :unit-volume-type :volume/c,
+                      :unit-mass 8,
+                      :unit-mass-type :mass/oz}]}
+ #:grocery{:type :grocery/light-brown-sugar,
+           :units
+           [#:grocery{:source "star market",
+                      :unit-cost 2.69,
+                      :unit-volume 7.125,
+                      :unit-volume-type :volume/c,
+                      :unit-mass 1,
+                      :unit-mass-type :mass/lb}
+            #:grocery{:source "star market",
+                      :unit-cost 3.99,
+                      :unit-volume 14.25,
+                      :unit-volume-type :volume/c,
+                      :unit-mass 2,
+                      :unit-mass-type :mass/lb}]}
+ #:grocery{:type :grocery/ube-halaya,
+           :units
+           [#:grocery{:source "https://a.co/d/1Gk4PIP",
+                      :unit-cost 25.85,
+                      :unit-volume 2.25,
+                      :unit-volume-type :volume/c,
+                      :unit-mass 24,
+                      :unit-mass-type :mass/oz}]}
+ #:grocery{:type :grocery/ube-extract,
+           :units
+           [#:grocery{:source "https://a.co/d/9y1FvdF",
+                      :unit-cost 59.95,
+                      :unit-volume 980,
+                      :unit-volume-type :volume/ml}
+            #:grocery{:source "https://a.co/d/cUXhkjp",
+                      :unit-cost 9.95,
+                      :unit-volume 70,
+                      :unit-volume-type :volume/ml}]}
+ #:grocery{:type :grocery/smooth-peanut-butter,
+           :units
+           [#:grocery{:source "star market",
+                      :unit-mass 64,
+                      :unit-mass-type :mass/oz,
+                      :unit-volume 114,
                       :unit-volume-type :volume/tbsp,
-                      :unit-cost        9.99}
-            #:grocery{:source           "star market",
-                      :unit-mass        28,
-                      :unit-mass-type   :mass/oz,
-                      :unit-volume      50,
+                      :unit-cost 9.99}
+            #:grocery{:source "star market",
+                      :unit-mass 28,
+                      :unit-mass-type :mass/oz,
+                      :unit-volume 50,
                       :unit-volume-type :volume/tbsp,
-                      :unit-cost        4.99}
-            #:grocery{:source           "star market",
-                      :unit-mass        16,
-                      :unit-mass-type   :mass/oz,
-                      :unit-volume      28,
+                      :unit-cost 4.99}
+            #:grocery{:source "star market",
+                      :unit-mass 16,
+                      :unit-mass-type :mass/oz,
+                      :unit-volume 28,
                       :unit-volume-type :volume/tbsp,
-                      :unit-cost        2.5}]}
-  #:grocery{:type :grocery/semisweet-chocolate,
-            :units
-            [#:grocery{:source         "star market",
-                       :unit-mass      4,
-                       :unit-mass-type :mass/oz,
-                       :unit-cost      2.49}]}
-  #:grocery{:type        :grocery/egg-yolk,
-            :description "need to figure out what to do with whites",
-            :units
-            [#:grocery{:source           "star market",
-                       :unit-common      18,
-                       :unit-common-type :common/unit,
-                       :unit-cost        7.39}
-             #:grocery{:source           "star market",
-                       :unit-common      12,
-                       :unit-common-type :common/unit,
-                       :unit-cost        4.99}]}
-  #:grocery{:type :grocery/vanilla-bean,
-            :units
-            [#:grocery{:source           "star market",
-                       :unit-common      1,
-                       :unit-common-type :common/unit,
-                       :unit-cost        9.99}]}
-  #:grocery{:units
-            [#:grocery{:source           "star market",
-                       :unit-mass        44.36029,
-                       :unit-mass-type   :mass/g,
-                       :unit-volume      3,
-                       :unit-volume-type :volume/tbsp,
-                       :unit-cost        0.88}],
-            :type        :grocery/lemon-juice,
-            :description "Fresh squeezed lemon"}
-  #:grocery{:units
-            [#:grocery{:source           "star market",
-                       :unit-volume      0.5,
-                       :unit-volume-type :volume/gal,
-                       :unit-mass        1.94,
-                       :unit-mass-type   :mass/kg,
-                       :unit-cost        6.99}
-             #:grocery{:source           "star market",
-                       :unit-volume      1,
-                       :unit-volume-type :volume/qt,
-                       :unit-mass        968,
-                       :unit-mass-type   :mass/g,
-                       :unit-cost        4.29}
-             #:grocery{:source           "star market",
-                       :unit-volume      1,
-                       :unit-volume-type :volume/pt,
-                       :unit-mass        484,
-                       :unit-mass-type   :mass/g,
-                       :unit-cost        2.79}],
-            :type :grocery/half-and-half}
-  #:grocery{:units [], :type :grocery/salt}
-  #:grocery{:units
-            [#:grocery{:source           "star market",
-                       :unit-mass        8,
-                       :unit-mass-type   :mass/oz,
-                       :unit-volume      2.8125,
-                       :unit-volume-type :volume/c,
-                       :unit-cost        4.99}],
-            :type :grocery/dutch-process-cocoa}
-  #:grocery{:units
-            [#:grocery{:source           "star market",
-                       :unit-volume      1,
-                       :unit-volume-type :volume/qt,
-                       :unit-mass        968,
-                       :unit-mass-type   :mass/g,
-                       :unit-cost        7.49}
-             #:grocery{:source           "star market",
-                       :unit-volume      1,
-                       :unit-volume-type :volume/pt,
-                       :unit-mass        484,
-                       :unit-mass-type   :mass/g,
-                       :unit-cost        5.49}],
-            :type :grocery/heavy-cream}
-  #:grocery{:units
-            [#:grocery{:source           "star market",
-                       :unit-volume      1,
-                       :unit-volume-type :volume/gal,
-                       :unit-mass        3.9,
-                       :unit-mass-type   :mass/kg,
-                       :unit-cost        4.99}
-             #:grocery{:source           "star market",
-                       :unit-volume      0.5,
-                       :unit-volume-type :volume/gal,
-                       :unit-mass        1.95,
-                       :unit-mass-type   :mass/kg,
-                       :unit-cost        3.39}],
-            :type :grocery/milk}
-  #:grocery{:units
-            [#:grocery{:source           "star market",
-                       :unit-mass        2,
-                       :unit-mass-type   :mass/lb,
-                       :unit-volume      7.5,
-                       :unit-volume-type :volume/c,
-                       :unit-cost        6.99}
-             #:grocery{:source           "star market",
-                       :unit-mass        1,
-                       :unit-mass-type   :mass/lb,
-                       :unit-volume      3.75,
-                       :unit-volume-type :volume/c,
-                       :unit-cost        3.99}],
-            :type        :grocery/strawberry,
-            :description "fresh"}
-  #:grocery{:units
-            [#:grocery{:source           "star market",
-                       :unit-volume      2,
-                       :unit-volume-type :volume/floz,
-                       :unit-mass        52,
-                       :unit-mass-type   :mass/g,
-                       :unit-cost        7.99}],
-            :type :grocery/vanilla-extract}
-  #:grocery{:units
-            [#:grocery{:source           "star market",
-                       :unit-mass        10,
-                       :unit-mass-type   :mass/lb,
-                       :unit-volume      20,
-                       :unit-volume-type :volume/c,
-                       :unit-cost        9.49}
-             #:grocery{:source           "star market",
-                       :unit-mass        4,
-                       :unit-mass-type   :mass/lb,
-                       :unit-volume      8,
-                       :unit-volume-type :volume/c,
-                       :unit-cost        3.79}
-             #:grocery{:source           "star market",
-                       :unit-mass        2,
-                       :unit-mass-type   :mass/lb,
-                       :unit-volume      4,
-                       :unit-volume-type :volume/c,
-                       :unit-cost        2.99}],
-            :type :grocery/sugar})
+                      :unit-cost 2.5}]}
+ #:grocery{:type :grocery/semisweet-chocolate,
+           :units
+           [#:grocery{:source "star market",
+                      :unit-mass 4,
+                      :unit-mass-type :mass/oz,
+                      :unit-cost 2.49}]}
+ #:grocery{:type :grocery/egg-yolk,
+           :description "need to figure out what to do with whites",
+           :units
+           [#:grocery{:source "star market",
+                      :unit-common 18,
+                      :unit-common-type :common/unit,
+                      :unit-cost 7.39}
+            #:grocery{:source "star market",
+                      :unit-common 12,
+                      :unit-common-type :common/unit,
+                      :unit-cost 4.99}]}
+ #:grocery{:type :grocery/vanilla-bean,
+           :units
+           [#:grocery{:source "star market",
+                      :unit-common 1,
+                      :unit-common-type :common/unit,
+                      :unit-cost 9.99}]}
+ #:grocery{:units
+           [#:grocery{:source "star market",
+                      :unit-mass 44.36029,
+                      :unit-mass-type :mass/g,
+                      :unit-volume 3,
+                      :unit-volume-type :volume/tbsp,
+                      :unit-cost 0.88}],
+           :type :grocery/lemon-juice,
+           :description "Fresh squeezed lemon"}
+ #:grocery{:units
+           [#:grocery{:source "star market",
+                      :unit-volume 0.5,
+                      :unit-volume-type :volume/gal,
+                      :unit-mass 1.94,
+                      :unit-mass-type :mass/kg,
+                      :unit-cost 6.99}
+            #:grocery{:source "star market",
+                      :unit-volume 1,
+                      :unit-volume-type :volume/qt,
+                      :unit-mass 968,
+                      :unit-mass-type :mass/g,
+                      :unit-cost 4.29}
+            #:grocery{:source "star market",
+                      :unit-volume 1,
+                      :unit-volume-type :volume/pt,
+                      :unit-mass 484,
+                      :unit-mass-type :mass/g,
+                      :unit-cost 2.79}],
+           :type :grocery/half-and-half}
+ #:grocery{:units [], :type :grocery/salt}
+ #:grocery{:units
+           [#:grocery{:source "star market",
+                      :unit-mass 8,
+                      :unit-mass-type :mass/oz,
+                      :unit-volume 2.8125,
+                      :unit-volume-type :volume/c,
+                      :unit-cost 4.99}],
+           :type :grocery/dutch-process-cocoa}
+ #:grocery{:units
+           [#:grocery{:source "star market",
+                      :unit-volume 1,
+                      :unit-volume-type :volume/qt,
+                      :unit-mass 968,
+                      :unit-mass-type :mass/g,
+                      :unit-cost 7.49}
+            #:grocery{:source "star market",
+                      :unit-volume 1,
+                      :unit-volume-type :volume/pt,
+                      :unit-mass 484,
+                      :unit-mass-type :mass/g,
+                      :unit-cost 5.49}],
+           :type :grocery/heavy-cream}
+ #:grocery{:units
+           [#:grocery{:source "star market",
+                      :unit-volume 1,
+                      :unit-volume-type :volume/gal,
+                      :unit-mass 3.9,
+                      :unit-mass-type :mass/kg,
+                      :unit-cost 4.99}
+            #:grocery{:source "star market",
+                      :unit-volume 0.5,
+                      :unit-volume-type :volume/gal,
+                      :unit-mass 1.95,
+                      :unit-mass-type :mass/kg,
+                      :unit-cost 3.39}],
+           :type :grocery/milk}
+ #:grocery{:units
+           [#:grocery{:source "star market",
+                      :unit-mass 2,
+                      :unit-mass-type :mass/lb,
+                      :unit-volume 7.5,
+                      :unit-volume-type :volume/c,
+                      :unit-cost 6.99}
+            #:grocery{:source "star market",
+                      :unit-mass 1,
+                      :unit-mass-type :mass/lb,
+                      :unit-volume 3.75,
+                      :unit-volume-type :volume/c,
+                      :unit-cost 3.99}],
+           :type :grocery/strawberry,
+           :description "fresh"}
+ #:grocery{:units
+           [#:grocery{:source "star market",
+                      :unit-volume 2,
+                      :unit-volume-type :volume/floz,
+                      :unit-mass 52,
+                      :unit-mass-type :mass/g,
+                      :unit-cost 7.99}],
+           :type :grocery/vanilla-extract}
+ #:grocery{:units
+           [#:grocery{:source "star market",
+                      :unit-mass 10,
+                      :unit-mass-type :mass/lb,
+                      :unit-volume 20,
+                      :unit-volume-type :volume/c,
+                      :unit-cost 9.49}
+            #:grocery{:source "star market",
+                      :unit-mass 4,
+                      :unit-mass-type :mass/lb,
+                      :unit-volume 8,
+                      :unit-volume-type :volume/c,
+                      :unit-cost 3.79}
+            #:grocery{:source "star market",
+                      :unit-mass 2,
+                      :unit-mass-type :mass/lb,
+                      :unit-volume 4,
+                      :unit-volume-type :volume/c,
+                      :unit-cost 2.99}],
+           :type :grocery/sugar})
