@@ -1,4 +1,34 @@
-(#:grocery{:type :grocery/fresh-basil,
+(#:grocery{:type :grocery/xanthan-gum,
+           :units
+           [#:grocery{:source "star market",
+                      :unit-cost 14.99,
+                      :unit-mass 8,
+                      :unit-mass-type :mass/oz}]}
+ #:grocery{:type :grocery/glucose-syrup,
+           :units
+           [#:grocery{:source "michaels",
+                      :unit-cost 5.99,
+                      :unit-mass 8,
+                      :unit-mass-type :mass/oz}
+            #:grocery{:source "amazon",
+                      :unit-cost 12.98,
+                      :unit-mass 2.2,
+                      :unit-mass-type :mass/lb}
+            #:grocery{:source "amazon",
+                      :unit-cost 54.99,
+                      :unit-mass 13.200000000000001,
+                      :unit-mass-type :mass/lb}]}
+ #:grocery{:type :grocery/milk-powder,
+           :units
+           [#:grocery{:source "star market",
+                      :unit-cost 5.99,
+                      :unit-mass 9.6,
+                      :unit-mass-type :mass/oz}
+            #:grocery{:source "star market",
+                      :unit-cost 11.99,
+                      :unit-mass 25.6,
+                      :unit-mass-type :mass/oz}]}
+ #:grocery{:type :grocery/fresh-basil,
            :units
            [#:grocery{:source "star market",
                       :unit-cost 3.59,
