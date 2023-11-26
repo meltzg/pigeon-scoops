@@ -1,4 +1,66 @@
-(#:recipe{:type :recipe/ice-cream,
+(#:recipe{:name "Philadelphia Base",
+          :source "Hello, My Name is Ice Cream p. 76",
+          :type :recipe/ice-cream,
+          :amount 1,
+          :amount-unit :volume/qt,
+          :instructions
+          ["Check book for specific instructions on stabilizer"
+           "Prepare ice bath"
+           "Combine milk powder and sugar"
+           "Combine milk, cream, and glucose in saucepand and bring to rolling boil, stirring occasionally to prevent scorching"
+           "Whisk in the milk powder mixture. Reduce heat to low simmer and whisk for 2 minutes"
+           "Pour into shallow metal or glass bowl and cool in ice bath, stirring occasionally"
+           "Strain into container and let cool in refrigerator for >4 hours or overnight"
+           "Churn and freeze"],
+          :ingredients
+          [#:recipe{:ingredient-type :grocery/heavy-cream,
+                    :amount 380,
+                    :amount-unit :mass/g}
+           #:recipe{:ingredient-type :grocery/milk,
+                    :amount 400,
+                    :amount-unit :mass/g}
+           #:recipe{:ingredient-type :grocery/glucose-syrup,
+                    :amount 50,
+                    :amount-unit :mass/g}
+           #:recipe{:ingredient-type :grocery/sugar,
+                    :amount 150,
+                    :amount-unit :mass/g}
+           #:recipe{:ingredient-type :grocery/milk-powder,
+                    :amount 20,
+                    :amount-unit :mass/g}],
+          :id #uuid "3dee96cc-da5f-440e-9a67-5d981c13bfdd"}
+ #:recipe{:name "Custard Base",
+          :source "Hello, My Name is Ice Cream p. 50",
+          :type :recipe/ice-cream,
+          :amount 1,
+          :amount-unit :volume/qt,
+          :instructions
+          ["Check book for specific instructions on stabilizer"
+           "Prepare ice bath"
+           "Bring cream, milk, glucose, and sugar to rolling boil and remove from heat"
+           "Whisk yolks with 10% of warm mix, stirring constantly. Pour back into pot while whisking."
+           "Place pot over medium heat, stirring and scrapping constantly over medium heat"
+           "When thickened or at 180F, pour custard into shallow metal or glass bowl. Nest in ice bath and stir until cool"
+           "When cool to touch, strain through mesh sieve. Cool in refrigerator for at least 4 hours"
+           "Churn and freeze"],
+          :ingredients
+          [#:recipe{:ingredient-type :grocery/heavy-cream,
+                    :amount 300,
+                    :amount-unit :mass/g}
+           #:recipe{:ingredient-type :grocery/milk,
+                    :amount 400,
+                    :amount-unit :mass/g}
+           #:recipe{:ingredient-type :grocery/glucose-syrup,
+                    :amount 50,
+                    :amount-unit :mass/g}
+           #:recipe{:ingredient-type :grocery/sugar,
+                    :amount 150,
+                    :amount-unit :mass/g}
+           #:recipe{:ingredient-type :grocery/egg-yolk,
+                    :amount 100,
+                    :amount-unit :mass/g}],
+          :id #uuid "69726d41-d812-4dcc-8952-eb0e225c0c1e"}
+ #:recipe{:type :recipe/ice-cream,
           :name "Pesto",
           :instructions
           ["Combine basil, pine nuts, and garlic in food processor and process until finely minced"
