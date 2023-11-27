@@ -51,7 +51,7 @@
         nil))))
 
 (defn divide-grocery [amount amount-unit grocery-item]
-  (->> (loop [grocery-units {}
+  (assoc (->> (loop [grocery-units {}
               amount-left amount]
          (let [grocery-unit (get-grocery-unit-for-amount amount-left amount-unit grocery-item)
                unit-key (keyword "grocery" (str "unit-" (namespace amount-unit)))
@@ -64,4 +64,6 @@
                                                   amount-unit))))))
        (reduce-kv #(assoc %1 (assoc %2 :grocery/unit-purchase-quantity %3) %3) {})
        keys
-       (assoc grocery-item :grocery/units)))
+       (assoc grocery-item :grocery/units))
+    :grocery/amount-needed amount
+    :grocery/amount-needed-unit amount-unit))

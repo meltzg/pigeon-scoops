@@ -163,6 +163,8 @@
                 recipe-no-id])
              groceries)
            {:purchase-list '(#:grocery{:type  :grocery/milk
+                                       :amount-needed 4.5
+                                       :grocery/amount-needed-unit :volume/pt
                                        :units (#:grocery{:source                 "star market"
                                                          :unit-cost              5.0
                                                          :unit-mass              3.9
@@ -171,6 +173,8 @@
                                                          :unit-volume            1
                                                          :unit-volume-type       :volume/gal})}
                               #:grocery{:type  :grocery/heavy-cream
+                                        :amount-needed 9.0
+                                        :grocery/amount-needed-unit :volume/pt
                                         :units (#:grocery{:source                 "star market"
                                                           :unit-cost              7.5
                                                           :unit-mass              968
@@ -186,5 +190,7 @@
                                                            :unit-volume            1
                                                            :unit-volume-type       :volume/pt})}
                               #:grocery{:type  :grocery/salt
+                                        :amount-needed 4.0
+                                        :grocery/amount-needed-unit :common/pinch
                                         :units nil})
             :total-cost    40.5}))))

@@ -103,7 +103,9 @@
 (deftest divide-grocery-test
   (testing "an amount can be divided into a set of unit amounts"
     (are [amount amount-unit item expected]
-      (= (g/divide-grocery amount amount-unit item) (assoc item :grocery/units expected))
+      (= (g/divide-grocery amount amount-unit item) (assoc item :grocery/units expected
+                                                                :grocery/amount-needed amount
+                                                                :grocery/amount-needed-unit amount-unit))
       0 :common/unit common-unit-grocery-item nil
       -1 :common/unit common-unit-grocery-item nil
       4 :common/pinch no-units-grocery-item nil
