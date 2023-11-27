@@ -43,9 +43,12 @@
   (let [unit-key (keyword "grocery" (str "unit-" (namespace amount-unit)))
         unit-type-key (keyword "grocery" (str "unit-" (namespace amount-unit) "-type"))
         unit-comparator #(units/to-comparable (unit-key %) (unit-type-key %))]
-    (or (first (filter #(>= (units/convert (unit-key %) (unit-type-key %) amount-unit) amount)
-                       (sort-by unit-comparator units)))
-        (first (sort-by (comp - unit-comparator) units)))))
+    (try
+      (or (first (filter #(>= (units/convert (unit-key %) (unit-type-key %) amount-unit) amount)
+                         (sort-by unit-comparator units)))
+          (first (sort-by (comp - unit-comparator) units)))
+      (catch NullPointerException e
+        nil))))
 
 (defn divide-grocery [amount amount-unit grocery-item]
   (->> (loop [grocery-units {}

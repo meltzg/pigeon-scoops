@@ -59,6 +59,10 @@
   #:grocery{:units [half-gal quart pint]
             :type  :grocery/half-and-half})
 
+(def mass-only-unit-grocery-item
+  #:grocery{:units (map #(dissoc % :grocery/unit-volume :grocery/unit-volume-type) [half-gal quart pint])
+            :type  :grocery/half-and-half})
+
 (def no-units-grocery-item
   #:grocery{:units [] :type :grocery/salt})
 
@@ -93,7 +97,8 @@
       36 :common/unit common-unit-grocery-item eggs-18
       1 :volume/c mass-volume-unit-grocery-item pint
       4 :mass/kg mass-volume-unit-grocery-item half-gal
-      4 :common/pinch no-units-grocery-item nil)))
+      4 :common/pinch no-units-grocery-item nil
+      4 :volume/qt mass-only-unit-grocery-item nil)))
 
 (deftest divide-grocery-test
   (testing "an amount can be divided into a set of unit amounts"
