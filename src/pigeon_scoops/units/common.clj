@@ -1,9 +1,10 @@
 (ns pigeon-scoops.units.common
   (:require [pigeon-scoops.units.mass :as mass]
-            [pigeon-scoops.units.volume :as vol]))
+            [pigeon-scoops.units.volume :as vol]
+            [clojure.string :as string]))
 
-(def other-units #{:common/pinch
-                   :common/unit})
+(def other-units #{::pinch
+                   ::unit})
 
 (defn convert [val from to]
   (if (and (some #{from} other-units)
@@ -30,11 +31,14 @@
     (when-let [conversion-factor (convert 1 unit-to unit-from)]
       (* amount-from amount-to conversion-factor))))
 
+(defn to-unit-class [amount-unit]
+  (last (string/split (namespace amount-unit) #"\.")))
+
 (defn to-comparable [amount amount-unit]
   (cond
     (some #{amount-unit} (keys mass/conversion-map))
-    (convert amount amount-unit :mass/g)
+    (convert amount amount-unit ::mass/g)
     (some #{amount-unit} (keys vol/conversion-map))
-    (convert amount amount-unit :volume/ml)
+    (convert amount amount-unit ::vol/ml)
     :otherwise
     amount))

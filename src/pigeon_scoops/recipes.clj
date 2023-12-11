@@ -8,65 +8,65 @@
             [pigeon-scoops.units.volume :as vol])
   (:import (java.util UUID)))
 
-(s/def :recipe/id uuid?)
-(s/def :recipe/type #{:recipe/ice-cream :recipe/sorbet :recipe/mixin})
-(s/def :recipe/name :basic-spec/non-empty-string)
-(s/def :recipe/instructions (s/coll-of :basic-spec/non-empty-string))
-(s/def :recipe/amount pos?)
-(s/def :recipe/amount-unit (union units/other-units
-                                  (set (keys vol/conversion-map))
-                                  (set (keys mass/conversion-map))))
-(s/def :recipe/source :basic-spec/non-empty-string)
+(s/def ::id uuid?)
+(s/def ::type #{::ice-cream ::sorbet ::mixin})
+(s/def ::name :basic-spec/non-empty-string)
+(s/def ::instructions (s/coll-of :basic-spec/non-empty-string))
+(s/def ::amount pos?)
+(s/def ::amount-unit (union units/other-units
+                            (set (keys vol/conversion-map))
+                            (set (keys mass/conversion-map))))
+(s/def ::source :basic-spec/non-empty-string)
 
-(s/def :recipe/ingredient-type :grocery/type)
-(s/def :recipe/ingredient (s/keys :req [:recipe/ingredient-type
-                                        :recipe/amount
-                                        :recipe/amount-unit]))
-(s/def :recipe/ingredients (s/coll-of :recipe/ingredient))
+(s/def ::ingredient-type ::g/type)
+(s/def ::ingredient (s/keys :req [::ingredient-type
+                                  ::amount
+                                  ::amount-unit]))
+(s/def ::ingredients (s/coll-of ::ingredient))
 
-(s/def :recipe/entry (s/keys :req [:recipe/id
-                                   :recipe/type
-                                   :recipe/name
-                                   :recipe/instructions
-                                   :recipe/amount
-                                   :recipe/amount-unit
-                                   :recipe/ingredients]
-                             :opt [:recipe/source]))
+(s/def ::entry (s/keys :req [::id
+                             ::type
+                             ::name
+                             ::instructions
+                             ::amount
+                             ::amount-unit
+                             ::ingredients]
+                       :opt [::source]))
 
 (defn add-recipe [recipes new-recipe]
-  (let [recipe-id (or (:recipe/id new-recipe)
+  (let [recipe-id (or (::id new-recipe)
                       (UUID/randomUUID))
-        conformed-recipe (s/conform :recipe/entry (assoc new-recipe :recipe/id recipe-id))]
+        conformed-recipe (s/conform ::entry (assoc new-recipe ::id recipe-id))]
     (if (s/invalid? conformed-recipe)
       recipes
-      (conj (remove #(= (:recipe/id %) recipe-id) recipes) conformed-recipe))))
+      (conj (remove #(= (::id %) recipe-id) recipes) conformed-recipe))))
 
 (defn scale-recipe [recipe amount amount-unit]
-  (let [scale-factor (units/scale-factor (:recipe/amount recipe)
-                                         (:recipe/amount-unit recipe)
+  (let [scale-factor (units/scale-factor (::amount recipe)
+                                         (::amount-unit recipe)
                                          amount
                                          amount-unit)]
     (assoc (update recipe
-                   :recipe/ingredients
-                   (partial map #(update % :recipe/amount * scale-factor)))
-      :recipe/amount amount
-      :recipe/amount-unit amount-unit)))
+                   ::ingredients
+                   (partial map #(update % ::amount * scale-factor)))
+      ::amount amount
+      ::amount-unit amount-unit)))
 
 (defn merge-recipe-ingredients [recipes]
-  (->> (mapcat :recipe/ingredients recipes)
-       (group-by #(list (:recipe/ingredient-type %) (namespace (:recipe/amount-unit %))))
+  (->> (mapcat ::ingredients recipes)
+       (group-by #(list (::ingredient-type %) (namespace (::amount-unit %))))
        vals
        (map #(reduce (fn [acc ingredient]
-                       (update acc :recipe/amount + (units/convert (:recipe/amount ingredient)
-                                                                   (:recipe/amount-unit ingredient)
-                                                                   (:recipe/amount-unit acc)))) %))))
+                       (update acc ::amount + (units/convert (::amount ingredient)
+                                                             (::amount-unit ingredient)
+                                                             (::amount-unit acc)))) %))))
 
 (defn to-grocery-purchase-list [recipe-ingredients groceries]
-  (let [grocery-map (into {} (map #(vec [(:grocery/type %) %]) groceries))
-        purchase-list (map #(g/divide-grocery (:recipe/amount %)
-                                              (:recipe/amount-unit %)
-                                              ((:recipe/ingredient-type %) grocery-map))
+  (let [grocery-map (into {} (map #(vec [(::g/type %) %]) groceries))
+        purchase-list (map #(g/divide-grocery (::amount %)
+                                              (::amount-unit %)
+                                              ((::ingredient-type %) grocery-map))
                            recipe-ingredients)]
     {:purchase-list purchase-list
-     :total-cost    (apply + (map #(* (:grocery/unit-cost %) (:grocery/unit-purchase-quantity %))
-                                  (mapcat :grocery/units purchase-list)))}))
+     :total-cost    (apply + (map #(* (::g/unit-cost %) (::g/unit-purchase-quantity %))
+                                  (mapcat ::g/units purchase-list)))}))
