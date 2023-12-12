@@ -1,7 +1,7 @@
 (ns pigeon-scoops.recipes
   (:require [clojure.set :refer [union]]
             [clojure.spec.alpha :as s]
-            [pigeon-scoops.basic-spec]
+            [pigeon-scoops.basic-spec :as bs]
             [pigeon-scoops.groceries :as g]
             [pigeon-scoops.units.common :as units]
             [pigeon-scoops.units.mass :as mass]
@@ -10,13 +10,13 @@
 
 (s/def ::id uuid?)
 (s/def ::type #{::ice-cream ::sorbet ::mixin})
-(s/def ::name :basic-spec/non-empty-string)
-(s/def ::instructions (s/coll-of :basic-spec/non-empty-string))
+(s/def ::name ::bs/non-empty-string)
+(s/def ::instructions (s/coll-of ::bs/non-empty-string))
 (s/def ::amount pos?)
 (s/def ::amount-unit (union units/other-units
                             (set (keys vol/conversion-map))
                             (set (keys mass/conversion-map))))
-(s/def ::source :basic-spec/non-empty-string)
+(s/def ::source ::bs/non-empty-string)
 
 (s/def ::ingredient-type ::g/type)
 (s/def ::ingredient (s/keys :req [::ingredient-type

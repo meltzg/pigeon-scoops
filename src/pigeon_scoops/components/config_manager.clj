@@ -4,16 +4,16 @@
             [clojure.spec.alpha :as s]
             [clojure.tools.logging :as logger]
             [com.stuartsierra.component :as component]
-            [pigeon-scoops.basic-spec]))
+            [pigeon-scoops.basic-spec :as bs]))
 
-(s/def :config-manager/app-host :basic-spec/non-empty-string)
-(s/def :config-manager/app-port pos?)
-(s/def :config-manager/app-settings (s/keys :req [:config-manager/app-host
-                                                  :config-manager/app-port]))
+(s/def ::app-host ::bs/non-empty-string)
+(s/def ::app-port pos?)
+(s/def ::app-settings (s/keys :req [::app-host
+                                    ::app-port]))
 
 (def env-defaults
-  {:config-manager/app-host (or (System/getenv "PIGEON_HOST") "0.0.0.0")
-   :config-manager/app-port (Integer/parseInt (or (System/getenv "PIGEON_PORT") "8080"))})
+  {::app-host (or (System/getenv "PIGEON_HOST") "0.0.0.0")
+   ::app-port (Integer/parseInt (or (System/getenv "PIGEON_PORT") "8080"))})
 
 (defrecord ConfigManager [app-settings-file]
   component/Lifecycle
@@ -25,11 +25,11 @@
                                 (-> app-settings-file
                                     slurp
                                     edn/read-string)))]
-      (if (s/valid? :config-manager/app-settings app-settings)
+      (if (s/valid? ::app-settings app-settings)
         (do
           (logger/info (str "Loaded settings " app-settings))
           (assoc this :app-settings app-settings))
-        (throw (ex-info "Invalid app settings" (s/explain :config-manager/app-settings app-settings))))))
+        (throw (ex-info "Invalid app settings" (s/explain ::app-settings app-settings))))))
 
   (stop [this]
     (assoc this :app-settings nil)))

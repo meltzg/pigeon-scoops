@@ -1,14 +1,14 @@
 (ns pigeon-scoops.groceries
   (:require [clojure.spec.alpha :as s]
-            [pigeon-scoops.basic-spec]
+            [pigeon-scoops.basic-spec :as bs]
             [pigeon-scoops.units.common :as units]
             [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.units.volume :as vol]))
 
 (s/def ::type #(= (namespace ::g) (namespace %)))
-(s/def ::description :basic-spec/non-empty-string)
+(s/def ::description ::bs/non-empty-string)
 
-(s/def ::source :basic-spec/non-empty-string)
+(s/def ::source ::bs/non-empty-string)
 (s/def ::unit-volume pos?)
 (s/def ::unit-volume-type (set (keys vol/conversion-map)))
 (s/def ::unit-mass pos?)
