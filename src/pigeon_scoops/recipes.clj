@@ -5,7 +5,8 @@
             [pigeon-scoops.groceries :as g]
             [pigeon-scoops.units.common :as units]
             [pigeon-scoops.units.mass :as mass]
-            [pigeon-scoops.units.volume :as vol])
+            [pigeon-scoops.units.volume :as vol]
+            [clojure.pprint :refer [pprint]])
   (:import (java.util UUID)))
 
 (s/def ::id uuid?)
@@ -24,6 +25,12 @@
                                   ::amount-unit]))
 (s/def ::ingredients (s/coll-of ::ingredient))
 
+(s/def ::mixin (s/keys :req [::id
+                             ::amount
+                             ::amount-unit]))
+
+(s/def ::mixins (s/coll-of ::mixin))
+
 (s/def ::entry (s/keys :req [::id
                              ::type
                              ::name
@@ -31,7 +38,8 @@
                              ::amount
                              ::amount-unit
                              ::ingredients]
-                       :opt [::source]))
+                       :opt [::source
+                             ::mixins]))
 
 (defn add-recipe [recipes new-recipe]
   (let [recipe-id (or (::id new-recipe)
@@ -46,14 +54,30 @@
                                          (::amount-unit recipe)
                                          amount
                                          amount-unit)]
-    (assoc (update recipe
-                   ::ingredients
-                   (partial map #(update % ::amount * scale-factor)))
-      ::amount amount
-      ::amount-unit amount-unit)))
+    (-> recipe
+        (update ::ingredients (partial map #(update % ::amount * scale-factor)))
+        (update ::mixins (partial map #(update % ::amount * scale-factor)))
+        (assoc ::amount amount
+               ::amount-unit amount-unit))))
 
-(defn merge-recipe-ingredients [recipes]
-  (->> (mapcat ::ingredients recipes)
+
+(defn materialize-mixins [recipe-to-materialize recipe-library]
+  (loop [to-materialize (::mixins recipe-to-materialize)
+         materialized-mixins []]
+    (if (empty? to-materialize)
+      materialized-mixins
+      (let [mixin-recipes (map (fn [mixin]
+                                 (scale-recipe (->> recipe-library
+                                                    (filter #(= (::id %) (::id mixin)))
+                                                    first)
+                                               (::amount mixin)
+                                               (::amount-unit mixin)))
+                               to-materialize)
+            new-mixins (mapcat ::mixins mixin-recipes)]
+        (recur new-mixins (concat materialized-mixins mixin-recipes))))))
+
+(defn merge-recipe-ingredients [recipes-to-merge recipe-library]
+  (->> (mapcat ::ingredients recipes-to-merge)
        (group-by #(list (::ingredient-type %) (namespace (::amount-unit %))))
        vals
        (map #(reduce (fn [acc ingredient]

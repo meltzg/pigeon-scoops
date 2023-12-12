@@ -31,7 +31,9 @@
 
 (s/def ::entry (s/keys :req [::type
                              ::units]
-                       :opt [::description]))
+                       :opt [::description
+                             ::amount-needed
+                             ::amount-needed-unit]))
 
 (defn add-grocery-item [groceries new-grocery-item]
   (let [conformed-ingredient (s/conform ::entry new-grocery-item)]
