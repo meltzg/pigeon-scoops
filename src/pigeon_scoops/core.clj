@@ -1,17 +1,19 @@
 (ns pigeon-scoops.core
-  (:require (pigeon-scoops
+  (:require [com.stuartsierra.component :as component]
+            (pigeon-scoops.components
               [api :as api]
-              [config-manager :as cm])
-            [com.stuartsierra.component :as component])
+              [config-manager :as cm]))
   (:gen-class))
 
 
-(defn new-system [app-settings-file]
-  (component/system-map
-    :config-manager (cm/make-config-manager app-settings-file)
-    :api (component/using
-           (api/make-api)
-           [:config-manager])))
+(defn new-system
+  ([] (new-system nil))
+  ([app-settings-file]
+   (component/system-map
+     :config-manager (cm/make-config-manager app-settings-file)
+     :api (component/using
+            (api/make-api)
+            [:config-manager]))))
 
 (defn -main
   [& args]

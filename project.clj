@@ -11,6 +11,7 @@
                  [ring/ring-defaults "0.4.0"]
                  [ring-logger "1.1.1"]
                  [com.stuartsierra/component "1.1.0"]
+                 [metosin/muuntaja "0.6.8"]
 
                  ;; Logging
                  [ch.qos.logback/logback-classic "1.4.11"]

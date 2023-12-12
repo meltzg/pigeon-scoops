@@ -1,5 +1,5 @@
-(ns pigeon-scoops.config-manager
-  (:require [clojure.edn :refer [read-string]]
+(ns pigeon-scoops.components.config-manager
+  (:require [clojure.edn :as edn]
             [clojure.java.io :refer [as-file]]
             [clojure.spec.alpha :as s]
             [clojure.tools.logging :as logger]
@@ -24,7 +24,7 @@
                                        (.exists (as-file app-settings-file)))
                                 (-> app-settings-file
                                     slurp
-                                    read-string)))]
+                                    edn/read-string)))]
       (if (s/valid? :config-manager/app-settings app-settings)
         (do
           (logger/info (str "Loaded settings " app-settings))
