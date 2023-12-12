@@ -1,6 +1,6 @@
-(ns pigeon-scoops.groceries-test
+(ns pigeon-scoops.components.grocery-manager-test
   (:require [clojure.test :refer :all]
-            [pigeon-scoops.groceries :as g]
+            [pigeon-scoops.components.grocery-manager :as g]
             [pigeon-scoops.units.common :as u]
             [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.units.volume :as vol]))

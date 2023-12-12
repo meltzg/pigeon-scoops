@@ -1,7 +1,7 @@
-(ns pigeon-scoops.recipes-test
+(ns pigeon-scoops.components.recipe-manager-test
   (:require [clojure.test :refer :all]
-            [pigeon-scoops.recipes :as r]
-            [pigeon-scoops.groceries :as g]
+            [pigeon-scoops.components.recipe-manager :as r]
+            [pigeon-scoops.components.grocery-manager :as g]
             [pigeon-scoops.units.common :as u]
             [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.units.volume :as vol]))

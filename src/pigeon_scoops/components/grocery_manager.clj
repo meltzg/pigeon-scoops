@@ -1,4 +1,4 @@
-(ns pigeon-scoops.groceries
+(ns pigeon-scoops.components.grocery-manager
   (:require [clojure.spec.alpha :as s]
             [pigeon-scoops.basic-spec :as bs]
             [pigeon-scoops.units.common :as units]

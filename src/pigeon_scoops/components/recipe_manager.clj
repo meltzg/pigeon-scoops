@@ -1,8 +1,8 @@
-(ns pigeon-scoops.recipes
+(ns pigeon-scoops.components.recipe-manager
   (:require [clojure.set :refer [union]]
             [clojure.spec.alpha :as s]
             [pigeon-scoops.basic-spec :as bs]
-            [pigeon-scoops.groceries :as g]
+            [pigeon-scoops.components.grocery-manager :as g]
             [pigeon-scoops.units.common :as units]
             [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.units.volume :as vol])
