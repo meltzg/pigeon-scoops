@@ -5,8 +5,7 @@
             [pigeon-scoops.groceries :as g]
             [pigeon-scoops.units.common :as units]
             [pigeon-scoops.units.mass :as mass]
-            [pigeon-scoops.units.volume :as vol]
-            [clojure.pprint :refer [pprint]])
+            [pigeon-scoops.units.volume :as vol])
   (:import (java.util UUID)))
 
 (s/def ::id uuid?)
@@ -78,6 +77,7 @@
 
 (defn merge-recipe-ingredients [recipes-to-merge recipe-library]
   (->> (mapcat ::ingredients recipes-to-merge)
+       (concat (mapcat #(mapcat ::ingredients (materialize-mixins % recipe-library)) recipes-to-merge))
        (group-by #(list (::ingredient-type %) (namespace (::amount-unit %))))
        vals
        (map #(reduce (fn [acc ingredient]

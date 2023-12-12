@@ -45,7 +45,6 @@
   (let [unit-key (keyword (namespace ::g) (str "unit-" (units/to-unit-class amount-unit)))
         unit-type-key (keyword (namespace ::g) (str "unit-" (units/to-unit-class amount-unit) "-type"))
         unit-comparator #(units/to-comparable (unit-key %) (unit-type-key %))]
-    (println unit-key unit-type-key unit-comparator)
     (try
       (or (first (filter #(>= (units/convert (unit-key %) (unit-type-key %) amount-unit) amount)
                          (sort-by unit-comparator units)))

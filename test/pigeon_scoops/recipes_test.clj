@@ -225,7 +225,7 @@
 (deftest merge-recipe-ingredients-test
   (testing "a list of ingredients can be made from combining several recipes"
     (are [recipes expected]
-      (= (r/merge-recipe-ingredients recipes recipes) expected)
+      (= (r/merge-recipe-ingredients recipes (concat recipe-mixins recipes)) expected)
       [recipe-no-id (r/scale-recipe recipe-no-id 2 ::vol/qt)] [{::r/ingredient-type ::g/milk
                                                                 ::r/amount          3.0
                                                                 ::r/amount-unit     ::vol/c}
@@ -240,7 +240,16 @@
                                                           ::r/amount-unit     ::vol/c}
                                                          {::r/ingredient-type ::g/salt
                                                           ::r/amount          1
-                                                          ::r/amount-unit     ::u/pinch}])))
+                                                          ::r/amount-unit     ::u/pinch}]
+      [recipe-no-id-with-mixins (r/scale-recipe recipe-no-id-with-mixins 2 ::vol/qt)] [{::r/ingredient-type ::g/oreo
+                                                                                        ::r/amount          6.75
+                                                                                        ::r/amount-unit     ::u/unit}
+                                                                                       {::r/ingredient-type ::g/milk
+                                                                                        ::r/amount          4.5
+                                                                                        ::r/amount-unit     ::vol/c}
+                                                                                       {::r/ingredient-type ::g/heavy-cream
+                                                                                        ::r/amount          6.0
+                                                                                        ::r/amount-unit     ::vol/c}])))
 
 (deftest to-grocery-purchase-list-test
   (testing "recipe ingredients can be turned into grocery lists"
