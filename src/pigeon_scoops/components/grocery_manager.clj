@@ -1,6 +1,10 @@
 (ns pigeon-scoops.components.grocery-manager
-  (:require [clojure.spec.alpha :as s]
+  (:require [clojure.edn :as edn]
+            [clojure.spec.alpha :as s]
+            [clojure.tools.logging :as logger]
+            [com.stuartsierra.component :as component]
             [pigeon-scoops.basic-spec :as bs]
+            [pigeon-scoops.components.config-manager :as cm]
             [pigeon-scoops.units.common :as units]
             [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.units.volume :as vol]))
@@ -35,11 +39,36 @@
                              ::amount-needed
                              ::amount-needed-unit]))
 
-(defn add-grocery-item [groceries new-grocery-item]
+(defrecord GroceryManager [config-manager]
+  component/Lifecycle
+
+  (start [this]
+    (assoc this ::groceries (-> config-manager
+                                ::cm/app-settings
+                                ::cm/groceries-file
+                                slurp
+                                edn/read-string
+                                atom)))
+
+  (stop [this]
+    (logger/info "Saving changes to groceries")
+    (spit (-> config-manager ::cm/app-settings ::cm/groceries-file)
+          (with-out-str (clojure.pprint/pprint (deref (::groceries this)))))))
+
+(defn make-grocery-manager []
+  (map->GroceryManager {}))
+
+(defn add-grocery-item [grocery-manager new-grocery-item]
   (let [conformed-ingredient (s/conform ::entry new-grocery-item)]
     (if (s/invalid? conformed-ingredient)
-      groceries
-      (conj (remove #(= (::type %) (::type new-grocery-item)) groceries) conformed-ingredient))))
+      (deref (::groceries grocery-manager))
+      (swap! (::groceries grocery-manager)
+             (fn [groceries]
+               (conj (remove #(= (::type %) (::type new-grocery-item)) groceries) conformed-ingredient))))))
+
+(defn get-groceries [grocery-manager & types]
+  (cond->> (deref (::groceries grocery-manager))
+           (not-empty types) (filter #(some #{(::type %)} types))))
 
 (defn get-grocery-unit-for-amount [amount amount-unit {::keys [units]}]
   (let [unit-key (keyword (namespace ::g) (str "unit-" (units/to-unit-class amount-unit)))

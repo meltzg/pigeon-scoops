@@ -2,7 +2,8 @@
   (:require [com.stuartsierra.component :as component]
             (pigeon-scoops.components
               [api :as api]
-              [config-manager :as cm]))
+              [config-manager :as cm]
+              [grocery-manager :as gm]))
   (:gen-class))
 
 
@@ -11,9 +12,12 @@
   ([app-settings-file]
    (component/system-map
      :config-manager (cm/make-config-manager app-settings-file)
+     :grocery-manager (component/using
+                        (gm/make-grocery-manager)
+                        [:config-manager])
      :api (component/using
             (api/make-api)
-            [:config-manager]))))
+            [:config-manager :grocery-manager]))))
 
 (defn -main
   [& args]

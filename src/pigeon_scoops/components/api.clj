@@ -1,5 +1,6 @@
 (ns pigeon-scoops.components.api
   (:require [clojure.tools.logging :as logger]
+            [pigeon-scoops.components.config-manager :as cm]
             [com.stuartsierra.component :as component]
             [compojure.core :refer :all]
             [compojure.route :as route]
@@ -10,15 +11,15 @@
 
 (defn app-routes [config-manager]
   (routes
-    (GET "api/v1/recipes" {} ())
+    (GET "api/v1/groceries" {} ())
     (route/resources "/")
     (route/not-found "Not Found")))
 
-(defrecord Api [config-manager]
+(defrecord Api [config-manager grocery-manager]
   component/Lifecycle
 
   (start [this]
-    (let [{:config-manager/keys [app-host app-port]} (:app-settings config-manager)]
+    (let [{::cm/keys [app-host app-port]} (::cm/app-settings config-manager)]
       (logger/info (str "Starting server on host " app-host " port: " app-port))
       (assoc this :server (run-jetty
                             (-> (app-routes config-manager)

@@ -77,7 +77,7 @@
 (deftest add-ingredient-test
   (testing "Valid ingredients can be added to collection of ingredients"
     (are [ingredients new-ingredient expected]
-      (= (set (g/add-grocery-item ingredients new-ingredient)) (set expected))
+      (= (set (g/add-grocery-item {::g/groceries (atom ingredients)} new-ingredient)) (set expected))
       ;; add grocery item to nil collection
       nil grocery-item (list grocery-item)
       ;; add grocery item to empty collection
@@ -88,6 +88,14 @@
       [grocery-item] (assoc grocery-item ::g/description "duplicate type") [(assoc grocery-item ::g/description "duplicate type")]
       ;; add invalid does not add
       [grocery-item] (dissoc another-grocery-item ::g/type) [grocery-item])))
+
+(deftest get-groceries-test
+  (testing "Groceries can be retrieved by type"
+    (are [types expected]
+      (= (set (apply (partial g/get-groceries {::g/groceries (atom [grocery-item common-unit-grocery-item another-grocery-item])}) types)) (set expected))
+      [] [grocery-item common-unit-grocery-item another-grocery-item]
+      [(::g/type grocery-item)] [grocery-item]
+      [(::g/type another-grocery-item) (::g/type common-unit-grocery-item)] [another-grocery-item common-unit-grocery-item])))
 
 (deftest get-grocery-unit-for-amount
   (testing "smallest possible grocery unit is returned"
