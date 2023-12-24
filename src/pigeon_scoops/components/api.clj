@@ -8,17 +8,22 @@
             [muuntaja.middleware :as mw]
             [ring.adapter.jetty :refer [run-jetty]]
             [ring.logger :as log-mw]
-            [ring.middleware.defaults :as defaults]
+            [ring.middleware.params :refer [wrap-params]]
+            [ring.middleware.nested-params :refer [wrap-nested-params]]
+            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.util.response :refer [response]]))
 
 (defn get-groceries-handler [grocery-manager params]
   (fn [& _]
-    (response (apply (partial gm/get-groceries grocery-manager) (:types params)))))
+    (response (apply (partial gm/get-groceries grocery-manager)
+                     (map #(keyword (namespace ::gm/type) %) (if (coll? (:types params))
+                                                               (:types params)
+                                                               [(:types params)]))))))
 
 (defn app-routes [config-manager grocery-manager]
   (routes
-    (GET "api/hello" {} (fn [_] (response "hello world")))
-    (GET "api/v1/groceries" {params :params} (get-groceries-handler grocery-manager params))
+    (GET "/api/hello" {} (fn [_] (response "hello world")))
+    (GET "/api/v1/groceries" {params :params} (get-groceries-handler grocery-manager params))
     (route/not-found "Not Found")))
 
 (defrecord Api [config-manager grocery-manager]
@@ -31,8 +36,9 @@
                             (-> (app-routes config-manager grocery-manager)
                                 log-mw/wrap-with-logger
                                 mw/wrap-format
-                                (defaults/wrap-defaults {:params {:keywordize true
-                                                                  :urlencoded true}}))
+                                (wrap-keyword-params {:parse-namespaces? true})
+                                wrap-params
+                                wrap-nested-params)
                             {:host  app-host
                              :port  app-port
                              :join? false}))))

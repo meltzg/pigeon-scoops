@@ -1,365 +1,507 @@
-({:pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/xanthan-gum,
-  :pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-cost 14.99,
-    :pigeon-scoops.components.grocery-manager/unit-mass 8,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/oz}]}
- {:pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/glucose-syrup,
-  :pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "michaels",
-    :pigeon-scoops.components.grocery-manager/unit-cost 5.99,
-    :pigeon-scoops.components.grocery-manager/unit-mass 8,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/oz}
-   {:pigeon-scoops.components.grocery-manager/source "amazon",
-    :pigeon-scoops.components.grocery-manager/unit-cost 12.98,
-    :pigeon-scoops.components.grocery-manager/unit-mass 2.2,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/lb}
-   {:pigeon-scoops.components.grocery-manager/source "amazon",
-    :pigeon-scoops.components.grocery-manager/unit-cost 54.99,
-    :pigeon-scoops.components.grocery-manager/unit-mass
-    13.200000000000001,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/lb}]}
- {:pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/milk-powder,
-  :pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-cost 5.99,
-    :pigeon-scoops.components.grocery-manager/unit-mass 9.6,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/oz}
-   {:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-cost 11.99,
-    :pigeon-scoops.components.grocery-manager/unit-mass 25.6,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/oz}]}
- {:pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/fresh-basil,
-  :pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-cost 3.59,
-    :pigeon-scoops.components.grocery-manager/unit-volume 1,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/c,
-    :pigeon-scoops.components.grocery-manager/unit-mass 1.25,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/oz}]}
- {:pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/fresh-mint,
-  :pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-cost 2.99,
-    :pigeon-scoops.components.grocery-manager/unit-volume 0.5,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/c,
-    :pigeon-scoops.components.grocery-manager/unit-mass 0.66,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/oz}]}
- {:pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/black-sesame-paste,
-  :pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "h-mart",
-    :pigeon-scoops.components.grocery-manager/unit-cost 12.49,
-    :pigeon-scoops.components.grocery-manager/unit-mass 16,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/oz}]}
- {:pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/pine-nuts,
-  :pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-cost 5.99,
-    :pigeon-scoops.components.grocery-manager/unit-mass 2.25,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/oz,
-    :pigeon-scoops.components.grocery-manager/unit-volume 0.5,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/c}]}
- {:pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/garlic-clove,
-  :pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-cost 0.99,
-    :pigeon-scoops.components.grocery-manager/unit-common 10,
-    :pigeon-scoops.components.grocery-manager/unit-common-type
-    :pigeon-scoops.units.common/unit}]}
- {:pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/olive-oil,
-  :pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-cost 8.99,
-    :pigeon-scoops.components.grocery-manager/unit-volume 16.9,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/floz,
-    :pigeon-scoops.components.grocery-manager/unit-mass 16.69,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/oz}]}
- {:pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/grated-parmesan,
-  :pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-cost 6.99,
-    :pigeon-scoops.components.grocery-manager/unit-volume 2.75,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/c,
-    :pigeon-scoops.components.grocery-manager/unit-mass 8,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/oz}]}
- {:pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/light-brown-sugar,
-  :pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-cost 2.69,
-    :pigeon-scoops.components.grocery-manager/unit-volume 7.125,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/c,
-    :pigeon-scoops.components.grocery-manager/unit-mass 1,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/lb}
-   {:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-cost 3.99,
-    :pigeon-scoops.components.grocery-manager/unit-volume 14.25,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/c,
-    :pigeon-scoops.components.grocery-manager/unit-mass 2,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/lb}]}
- {:pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/ube-halaya,
-  :pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source
-    "https://a.co/d/1Gk4PIP",
-    :pigeon-scoops.components.grocery-manager/unit-cost 25.85,
-    :pigeon-scoops.components.grocery-manager/unit-volume 2.25,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/c,
-    :pigeon-scoops.components.grocery-manager/unit-mass 24,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/oz}]}
- {:pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/ube-extract,
-  :pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source
-    "https://a.co/d/9y1FvdF",
-    :pigeon-scoops.components.grocery-manager/unit-cost 59.95,
-    :pigeon-scoops.components.grocery-manager/unit-volume 980,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/ml}
-   {:pigeon-scoops.components.grocery-manager/source
-    "https://a.co/d/cUXhkjp",
-    :pigeon-scoops.components.grocery-manager/unit-cost 9.95,
-    :pigeon-scoops.components.grocery-manager/unit-volume 70,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/ml}]}
- {:pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/smooth-peanut-butter,
-  :pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-mass 64,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/oz,
-    :pigeon-scoops.components.grocery-manager/unit-volume 114,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/tbsp,
-    :pigeon-scoops.components.grocery-manager/unit-cost 9.99}
-   {:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-mass 28,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/oz,
-    :pigeon-scoops.components.grocery-manager/unit-volume 50,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/tbsp,
-    :pigeon-scoops.components.grocery-manager/unit-cost 4.99}
-   {:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-mass 16,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/oz,
-    :pigeon-scoops.components.grocery-manager/unit-volume 28,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/tbsp,
-    :pigeon-scoops.components.grocery-manager/unit-cost 2.5}]}
- {:pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/semisweet-chocolate,
-  :pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-mass 4,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/oz,
-    :pigeon-scoops.components.grocery-manager/unit-cost 2.49}]}
- {:pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/egg-yolk,
-  :pigeon-scoops.components.grocery-manager/description
-  "need to figure out what to do with whites",
-  :pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-common 18,
-    :pigeon-scoops.components.grocery-manager/unit-common-type
-    :pigeon-scoops.units.common/unit,
-    :pigeon-scoops.components.grocery-manager/unit-cost 7.39}
-   {:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-common 12,
-    :pigeon-scoops.components.grocery-manager/unit-common-type
-    :pigeon-scoops.units.common/unit,
-    :pigeon-scoops.components.grocery-manager/unit-cost 4.99}]}
- {:pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/vanilla-bean,
-  :pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-common 1,
-    :pigeon-scoops.components.grocery-manager/unit-common-type
-    :pigeon-scoops.units.common/unit,
-    :pigeon-scoops.components.grocery-manager/unit-cost 9.99}]}
- {:pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-mass 44.36029,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/g,
-    :pigeon-scoops.components.grocery-manager/unit-volume 3,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/tbsp,
-    :pigeon-scoops.components.grocery-manager/unit-cost 0.88}],
-  :pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/lemon-juice,
-  :pigeon-scoops.components.grocery-manager/description
-  "Fresh squeezed lemon"}
- {:pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-volume 0.5,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/gal,
-    :pigeon-scoops.components.grocery-manager/unit-mass 1.94,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/kg,
-    :pigeon-scoops.components.grocery-manager/unit-cost 6.99}
-   {:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-volume 1,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/qt,
-    :pigeon-scoops.components.grocery-manager/unit-mass 968,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/g,
-    :pigeon-scoops.components.grocery-manager/unit-cost 4.29}
-   {:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-volume 1,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/pt,
-    :pigeon-scoops.components.grocery-manager/unit-mass 484,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/g,
-    :pigeon-scoops.components.grocery-manager/unit-cost 2.79}],
-  :pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/half-and-half}
- {:pigeon-scoops.components.grocery-manager/units [],
-  :pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/salt}
- {:pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-mass 8,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/oz,
-    :pigeon-scoops.components.grocery-manager/unit-volume 2.8125,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/c,
-    :pigeon-scoops.components.grocery-manager/unit-cost 4.99}],
-  :pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/dutch-process-cocoa}
- {:pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-volume 1,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/qt,
-    :pigeon-scoops.components.grocery-manager/unit-mass 968,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/g,
-    :pigeon-scoops.components.grocery-manager/unit-cost 7.49}
-   {:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-volume 1,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/pt,
-    :pigeon-scoops.components.grocery-manager/unit-mass 484,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/g,
-    :pigeon-scoops.components.grocery-manager/unit-cost 5.49}],
-  :pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/heavy-cream}
- {:pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-volume 1,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/gal,
-    :pigeon-scoops.components.grocery-manager/unit-mass 3.9,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/kg,
-    :pigeon-scoops.components.grocery-manager/unit-cost 4.99}
-   {:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-volume 0.5,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/gal,
-    :pigeon-scoops.components.grocery-manager/unit-mass 1.95,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/kg,
-    :pigeon-scoops.components.grocery-manager/unit-cost 3.39}],
-  :pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/milk}
- {:pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-mass 2,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/lb,
-    :pigeon-scoops.components.grocery-manager/unit-volume 7.5,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/c,
-    :pigeon-scoops.components.grocery-manager/unit-cost 6.99}
-   {:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-mass 1,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/lb,
-    :pigeon-scoops.components.grocery-manager/unit-volume 3.75,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/c,
-    :pigeon-scoops.components.grocery-manager/unit-cost 3.99}],
-  :pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/strawberry,
-  :pigeon-scoops.components.grocery-manager/description "fresh"}
- {:pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-volume 2,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/floz,
-    :pigeon-scoops.components.grocery-manager/unit-mass 52,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/g,
-    :pigeon-scoops.components.grocery-manager/unit-cost 7.99}],
-  :pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/vanilla-extract}
- {:pigeon-scoops.components.grocery-manager/units
-  [{:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-mass 10,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/lb,
-    :pigeon-scoops.components.grocery-manager/unit-volume 20,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/c,
-    :pigeon-scoops.components.grocery-manager/unit-cost 9.49}
-   {:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-mass 4,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/lb,
-    :pigeon-scoops.components.grocery-manager/unit-volume 8,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/c,
-    :pigeon-scoops.components.grocery-manager/unit-cost 3.79}
-   {:pigeon-scoops.components.grocery-manager/source "star market",
-    :pigeon-scoops.components.grocery-manager/unit-mass 2,
-    :pigeon-scoops.components.grocery-manager/unit-mass-type
-    :pigeon-scoops.units.mass/lb,
-    :pigeon-scoops.components.grocery-manager/unit-volume 4,
-    :pigeon-scoops.components.grocery-manager/unit-volume-type
-    :pigeon-scoops.units.volume/c,
-    :pigeon-scoops.components.grocery-manager/unit-cost 2.99}],
-  :pigeon-scoops.components.grocery-manager/type
-  :pigeon-scoops.components.grocery-manager/sugar})
+(#:pigeon-scoops.components.grocery-manager{:type
+                                            :pigeon-scoops.components.grocery-manager/xanthan-gum,
+                                            :units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-cost
+                                                                                        14.99,
+                                                                                        :unit-mass
+                                                                                        8,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/oz}]}
+ #:pigeon-scoops.components.grocery-manager{:type
+                                            :pigeon-scoops.components.grocery-manager/glucose-syrup,
+                                            :units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "michaels",
+                                                                                        :unit-cost
+                                                                                        5.99,
+                                                                                        :unit-mass
+                                                                                        8,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/oz}
+                                             #:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "amazon",
+                                                                                        :unit-cost
+                                                                                        12.98,
+                                                                                        :unit-mass
+                                                                                        2.2,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/lb}
+                                             #:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "amazon",
+                                                                                        :unit-cost
+                                                                                        54.99,
+                                                                                        :unit-mass
+                                                                                        13.200000000000001,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/lb}]}
+ #:pigeon-scoops.components.grocery-manager{:type
+                                            :pigeon-scoops.components.grocery-manager/milk-powder,
+                                            :units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-cost
+                                                                                        5.99,
+                                                                                        :unit-mass
+                                                                                        9.6,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/oz}
+                                             #:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-cost
+                                                                                        11.99,
+                                                                                        :unit-mass
+                                                                                        25.6,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/oz}]}
+ #:pigeon-scoops.components.grocery-manager{:type
+                                            :pigeon-scoops.components.grocery-manager/fresh-basil,
+                                            :units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-cost
+                                                                                        3.59,
+                                                                                        :unit-volume
+                                                                                        1,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/c,
+                                                                                        :unit-mass
+                                                                                        1.25,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/oz}]}
+ #:pigeon-scoops.components.grocery-manager{:type
+                                            :pigeon-scoops.components.grocery-manager/fresh-mint,
+                                            :units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-cost
+                                                                                        2.99,
+                                                                                        :unit-volume
+                                                                                        0.5,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/c,
+                                                                                        :unit-mass
+                                                                                        0.66,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/oz}]}
+ #:pigeon-scoops.components.grocery-manager{:type
+                                            :pigeon-scoops.components.grocery-manager/black-sesame-paste,
+                                            :units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "h-mart",
+                                                                                        :unit-cost
+                                                                                        12.49,
+                                                                                        :unit-mass
+                                                                                        16,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/oz}]}
+ #:pigeon-scoops.components.grocery-manager{:type
+                                            :pigeon-scoops.components.grocery-manager/pine-nuts,
+                                            :units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-cost
+                                                                                        5.99,
+                                                                                        :unit-mass
+                                                                                        2.25,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/oz,
+                                                                                        :unit-volume
+                                                                                        0.5,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/c}]}
+ #:pigeon-scoops.components.grocery-manager{:type
+                                            :pigeon-scoops.components.grocery-manager/garlic-clove,
+                                            :units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-cost
+                                                                                        0.99,
+                                                                                        :unit-common
+                                                                                        10,
+                                                                                        :unit-common-type
+                                                                                        :pigeon-scoops.units.common/unit}]}
+ #:pigeon-scoops.components.grocery-manager{:type
+                                            :pigeon-scoops.components.grocery-manager/olive-oil,
+                                            :units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-cost
+                                                                                        8.99,
+                                                                                        :unit-volume
+                                                                                        16.9,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/floz,
+                                                                                        :unit-mass
+                                                                                        16.69,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/oz}]}
+ #:pigeon-scoops.components.grocery-manager{:type
+                                            :pigeon-scoops.components.grocery-manager/grated-parmesan,
+                                            :units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-cost
+                                                                                        6.99,
+                                                                                        :unit-volume
+                                                                                        2.75,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/c,
+                                                                                        :unit-mass
+                                                                                        8,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/oz}]}
+ #:pigeon-scoops.components.grocery-manager{:type
+                                            :pigeon-scoops.components.grocery-manager/light-brown-sugar,
+                                            :units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-cost
+                                                                                        2.69,
+                                                                                        :unit-volume
+                                                                                        7.125,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/c,
+                                                                                        :unit-mass
+                                                                                        1,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/lb}
+                                             #:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-cost
+                                                                                        3.99,
+                                                                                        :unit-volume
+                                                                                        14.25,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/c,
+                                                                                        :unit-mass
+                                                                                        2,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/lb}]}
+ #:pigeon-scoops.components.grocery-manager{:type
+                                            :pigeon-scoops.components.grocery-manager/ube-halaya,
+                                            :units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "https://a.co/d/1Gk4PIP",
+                                                                                        :unit-cost
+                                                                                        25.85,
+                                                                                        :unit-volume
+                                                                                        2.25,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/c,
+                                                                                        :unit-mass
+                                                                                        24,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/oz}]}
+ #:pigeon-scoops.components.grocery-manager{:type
+                                            :pigeon-scoops.components.grocery-manager/ube-extract,
+                                            :units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "https://a.co/d/9y1FvdF",
+                                                                                        :unit-cost
+                                                                                        59.95,
+                                                                                        :unit-volume
+                                                                                        980,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/ml}
+                                             #:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "https://a.co/d/cUXhkjp",
+                                                                                        :unit-cost
+                                                                                        9.95,
+                                                                                        :unit-volume
+                                                                                        70,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/ml}]}
+ #:pigeon-scoops.components.grocery-manager{:type
+                                            :pigeon-scoops.components.grocery-manager/smooth-peanut-butter,
+                                            :units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-mass
+                                                                                        64,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/oz,
+                                                                                        :unit-volume
+                                                                                        114,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/tbsp,
+                                                                                        :unit-cost
+                                                                                        9.99}
+                                             #:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-mass
+                                                                                        28,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/oz,
+                                                                                        :unit-volume
+                                                                                        50,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/tbsp,
+                                                                                        :unit-cost
+                                                                                        4.99}
+                                             #:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-mass
+                                                                                        16,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/oz,
+                                                                                        :unit-volume
+                                                                                        28,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/tbsp,
+                                                                                        :unit-cost
+                                                                                        2.5}]}
+ #:pigeon-scoops.components.grocery-manager{:type
+                                            :pigeon-scoops.components.grocery-manager/semisweet-chocolate,
+                                            :units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-mass
+                                                                                        4,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/oz,
+                                                                                        :unit-cost
+                                                                                        2.49}]}
+ #:pigeon-scoops.components.grocery-manager{:type
+                                            :pigeon-scoops.components.grocery-manager/egg-yolk,
+                                            :description
+                                            "need to figure out what to do with whites",
+                                            :units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-common
+                                                                                        18,
+                                                                                        :unit-common-type
+                                                                                        :pigeon-scoops.units.common/unit,
+                                                                                        :unit-cost
+                                                                                        7.39}
+                                             #:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-common
+                                                                                        12,
+                                                                                        :unit-common-type
+                                                                                        :pigeon-scoops.units.common/unit,
+                                                                                        :unit-cost
+                                                                                        4.99}]}
+ #:pigeon-scoops.components.grocery-manager{:type
+                                            :pigeon-scoops.components.grocery-manager/vanilla-bean,
+                                            :units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-common
+                                                                                        1,
+                                                                                        :unit-common-type
+                                                                                        :pigeon-scoops.units.common/unit,
+                                                                                        :unit-cost
+                                                                                        9.99}]}
+ #:pigeon-scoops.components.grocery-manager{:units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-mass
+                                                                                        44.36029,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/g,
+                                                                                        :unit-volume
+                                                                                        3,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/tbsp,
+                                                                                        :unit-cost
+                                                                                        0.88}],
+                                            :type
+                                            :pigeon-scoops.components.grocery-manager/lemon-juice,
+                                            :description
+                                            "Fresh squeezed lemon"}
+ #:pigeon-scoops.components.grocery-manager{:units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-volume
+                                                                                        0.5,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/gal,
+                                                                                        :unit-mass
+                                                                                        1.94,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/kg,
+                                                                                        :unit-cost
+                                                                                        6.99}
+                                             #:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-volume
+                                                                                        1,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/qt,
+                                                                                        :unit-mass
+                                                                                        968,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/g,
+                                                                                        :unit-cost
+                                                                                        4.29}
+                                             #:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-volume
+                                                                                        1,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/pt,
+                                                                                        :unit-mass
+                                                                                        484,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/g,
+                                                                                        :unit-cost
+                                                                                        2.79}],
+                                            :type
+                                            :pigeon-scoops.components.grocery-manager/half-and-half}
+ #:pigeon-scoops.components.grocery-manager{:units [],
+                                            :type
+                                            :pigeon-scoops.components.grocery-manager/salt}
+ #:pigeon-scoops.components.grocery-manager{:units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-mass
+                                                                                        8,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/oz,
+                                                                                        :unit-volume
+                                                                                        2.8125,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/c,
+                                                                                        :unit-cost
+                                                                                        4.99}],
+                                            :type
+                                            :pigeon-scoops.components.grocery-manager/dutch-process-cocoa}
+ #:pigeon-scoops.components.grocery-manager{:units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-volume
+                                                                                        1,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/qt,
+                                                                                        :unit-mass
+                                                                                        968,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/g,
+                                                                                        :unit-cost
+                                                                                        7.49}
+                                             #:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-volume
+                                                                                        1,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/pt,
+                                                                                        :unit-mass
+                                                                                        484,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/g,
+                                                                                        :unit-cost
+                                                                                        5.49}],
+                                            :type
+                                            :pigeon-scoops.components.grocery-manager/heavy-cream}
+ #:pigeon-scoops.components.grocery-manager{:units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-volume
+                                                                                        1,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/gal,
+                                                                                        :unit-mass
+                                                                                        3.9,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/kg,
+                                                                                        :unit-cost
+                                                                                        4.99}
+                                             #:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-volume
+                                                                                        0.5,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/gal,
+                                                                                        :unit-mass
+                                                                                        1.95,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/kg,
+                                                                                        :unit-cost
+                                                                                        3.39}],
+                                            :type
+                                            :pigeon-scoops.components.grocery-manager/milk}
+ #:pigeon-scoops.components.grocery-manager{:units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-mass
+                                                                                        2,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/lb,
+                                                                                        :unit-volume
+                                                                                        7.5,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/c,
+                                                                                        :unit-cost
+                                                                                        6.99}
+                                             #:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-mass
+                                                                                        1,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/lb,
+                                                                                        :unit-volume
+                                                                                        3.75,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/c,
+                                                                                        :unit-cost
+                                                                                        3.99}],
+                                            :type
+                                            :pigeon-scoops.components.grocery-manager/strawberry,
+                                            :description "fresh"}
+ #:pigeon-scoops.components.grocery-manager{:units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-volume
+                                                                                        2,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/floz,
+                                                                                        :unit-mass
+                                                                                        52,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/g,
+                                                                                        :unit-cost
+                                                                                        7.99}],
+                                            :type
+                                            :pigeon-scoops.components.grocery-manager/vanilla-extract}
+ #:pigeon-scoops.components.grocery-manager{:units
+                                            [#:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-mass
+                                                                                        10,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/lb,
+                                                                                        :unit-volume
+                                                                                        20,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/c,
+                                                                                        :unit-cost
+                                                                                        9.49}
+                                             #:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-mass
+                                                                                        4,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/lb,
+                                                                                        :unit-volume
+                                                                                        8,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/c,
+                                                                                        :unit-cost
+                                                                                        3.79}
+                                             #:pigeon-scoops.components.grocery-manager{:source
+                                                                                        "star market",
+                                                                                        :unit-mass
+                                                                                        2,
+                                                                                        :unit-mass-type
+                                                                                        :pigeon-scoops.units.mass/lb,
+                                                                                        :unit-volume
+                                                                                        4,
+                                                                                        :unit-volume-type
+                                                                                        :pigeon-scoops.units.volume/c,
+                                                                                        :unit-cost
+                                                                                        2.99}],
+                                            :type
+                                            :pigeon-scoops.components.grocery-manager/sugar})

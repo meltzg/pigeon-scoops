@@ -53,7 +53,8 @@
   (stop [this]
     (logger/info "Saving changes to groceries")
     (spit (-> config-manager ::cm/app-settings ::cm/groceries-file)
-          (with-out-str (clojure.pprint/pprint (deref (::groceries this)))))))
+          (with-out-str (clojure.pprint/pprint (deref (::groceries this)))))
+    (assoc this ::groceries nil)))
 
 (defn make-grocery-manager []
   (map->GroceryManager {}))

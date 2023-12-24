@@ -8,7 +8,6 @@
                  [ring/ring-core "1.10.0"]
                  [ring/ring-jetty-adapter "1.10.0"]
                  [ring/ring-codec "1.2.0"]
-                 [ring/ring-defaults "0.4.0"]
                  [ring-logger "1.1.1"]
                  [com.stuartsierra/component "1.1.0"]
                  [metosin/muuntaja "0.6.8"]
