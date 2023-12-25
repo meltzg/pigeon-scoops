@@ -1,25 +1,16 @@
 (ns pigeon-scoops.core
   (:require
-    [goog.dom :as gdom]
-    [rum.core :as rum]))
+    [uix.core :refer [defui $]]
+    [uix.dom]))
 
-(rum/defc content < rum/reactive []
-  [:div "Hello world!"])
+(defui content []
+  ($ :div {} "Hello world!"))
 
-(defn mount [el]
-  (rum/mount (content) el))
+(defonce root
+         (uix.dom/create-root (js/document.getElementById "root")))
 
-(defn get-app-element []
-  (gdom/getElement "app"))
+(defn render []
+  (uix.dom/render-root ($ content) root))
 
-(defn mount-app-element []
-  (when-let [el (get-app-element)]
-    (mount el)))
-
-;; conditionally start your application based on the presence of an "app" element
-;; this is particularly helpful for testing this ns without launching the app
-(mount-app-element)
-
-;; specify reload hook with ^:after-load metadata
-(defn ^:after-load on-reload []
-  (mount-app-element))
+(defn ^:export init []
+  (render))
