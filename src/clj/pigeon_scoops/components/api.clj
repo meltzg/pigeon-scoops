@@ -11,7 +11,7 @@
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.nested-params :refer [wrap-nested-params]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
-            [ring.util.response :refer [response]]))
+            [ring.util.response :refer [response resource-response]]))
 
 (defn get-groceries-handler [grocery-manager params]
   (fn [& _]
@@ -22,8 +22,9 @@
 
 (defn app-routes [config-manager grocery-manager]
   (routes
-    (GET "/api/hello" {} (fn [_] (response "hello world")))
+    (GET "/" [] (resource-response "index.html" {:root "public"}))
     (GET "/api/v1/groceries" {params :params} (get-groceries-handler grocery-manager params))
+    (route/resources "/")
     (route/not-found "Not Found")))
 
 (defrecord Api [config-manager grocery-manager]

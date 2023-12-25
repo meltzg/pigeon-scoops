@@ -20,7 +20,12 @@
                  [org.slf4j/log4j-over-slf4j "2.0.9"]
                  [org.slf4j/osgi-over-slf4j "2.0.9"]
                  [org.slf4j/jul-to-slf4j "2.0.9"]
-                 [org.apache.logging.log4j/log4j-to-slf4j "2.20.0"]]
+                 [org.apache.logging.log4j/log4j-to-slf4j "2.20.0"]
+
+                 ;; CLJS Dependencies
+                 [thheller/shadow-cljs "2.25.8"]
+                 [rum "0.12.11"]
+                 [cljs-ajax "0.8.4"]]
   :main ^:skip-aot pigeon-scoops.core
   :target-path "target/%s"
   :source-paths ["src/clj"
