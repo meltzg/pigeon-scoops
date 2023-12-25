@@ -23,4 +23,6 @@
                  [org.apache.logging.log4j/log4j-to-slf4j "2.20.0"]]
   :main ^:skip-aot pigeon-scoops.core
   :target-path "target/%s"
+  :source-paths ["src/clj"
+                 "src/cljs"]
   :profiles {:uberjar {:aot :all}})
