@@ -40,26 +40,26 @@
        (let [[source source-valid? on-source-change] (use-validation (or (::gm/source initial-unit) "")
                                                                      #(not (clojure.string/blank? %)))
              [mass mass-valid? on-mass-change] (use-validation (or (::gm/unit-mass initial-unit) 0)
-                                                               #(re-matches #"^\d+\.?\d*$" (str %)))
+                                                               #(and (re-matches #"^\d+\.?\d*$" (str %))
+                                                                     (> (js/parseFloat %) 0)))
              [mass-type mass-type-valid? on-mass-type-change] (use-validation (or (::gm/unit-mass-type initial-unit) (first (keys mass/conversion-map)))
                                                                               #(some #{%} (keys mass/conversion-map))
                                                                               #(keyword (namespace ::mass/kg) %))
              [volume volume-valid? on-volume-change] (use-validation (or (::gm/unit-volume initial-unit) 0)
-                                                                     #(re-matches #"^\d+\.?\d*$" (str %)))
+                                                                     #(and (re-matches #"^\d+\.?\d*$" (str %))
+                                                                           (> (js/parseFloat %) 0)))
              [volume-type volume-type-valid? on-volume-type-change] (use-validation (or (::gm/unit-volume-type initial-unit) (first (keys volume/conversion-map)))
                                                                                     #(some #{%} (keys volume/conversion-map))
                                                                                     #(keyword (namespace ::volume/c) %))
              [common common-valid? on-common-change] (use-validation (or (::gm/unit-common initial-unit) 0)
-                                                                     #(re-matches #"^\d+\.?\d*$" (str %)))
+                                                                     #(and (re-matches #"^\d+\.?\d*$" (str %))
+                                                                           (> (js/parseFloat %) 0)))
              [common-type common-type-valid? on-common-type-change] (use-validation (or (::gm/unit-common-type initial-unit) (first ucom/other-units))
                                                                                     #(some #{%} ucom/other-units)
                                                                                     #(keyword (namespace ::ucom/pinch) %))
              [cost cost-valid? on-cost-change] (use-validation (or (::gm/unit-cost initial-unit) 0)
-                                                               #(> % 0)
-                                                               #(let [v (js/parseFloat %)]
-                                                                  (if (not (js/isNaN v))
-                                                                    v
-                                                                    0)))]
+                                                               #(and (re-matches #"^\d+\.?\d*$" (str %))
+                                                                     (> (js/parseFloat %) 0)))]
          ($ Dialog {:open open? :on-close on-close}
             ($ DialogTitle "Configure Unit")
             ($ DialogContent
