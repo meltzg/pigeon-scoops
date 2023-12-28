@@ -36,16 +36,38 @@
                                      Typography]]))
 
 (defui unit-config [{:keys [initial-unit open? on-save on-close]}]
-       (let [[source source-valid? on-source-change] (use-validation (::gm/source initial-unit)
+       (let [[source source-valid? on-source-change] (use-validation (or (::gm/source initial-unit) "")
                                                                      #(not (clojure.string/blank? %)))
-             [mass mass-valid? on-mass-change] (use-validation (::gm/unit-mass initial-unit)
-                                                               #(or (nil? %) (> % 0))
+             [mass mass-valid? on-mass-change] (use-validation (or (::gm/unit-mass initial-unit) 0)
+                                                               #(> % 0)
                                                                #(let [v (js/parseFloat %)]
                                                                   (if (not (js/isNaN v))
                                                                     v
                                                                     0)))
-             [mass-type mass-type-valid? on-mass-type-change] (use-validation (::gm/unit-mass-type initial-unit)
-                                                                              #(some #{%} (keys mass/conversion-map)))]
+             [mass-type mass-type-valid? on-mass-type-change] (use-validation (or (::gm/unit-mass-type initial-unit) (first (keys mass/conversion-map)))
+                                                                              #(some #{%} (keys mass/conversion-map)))
+             [volume volume-valid? on-volume-change] (use-validation (or (::gm/unit-volume initial-unit) 0)
+                                                                     #(> % 0)
+                                                                     #(let [v (js/parseFloat %)]
+                                                                        (if (not (js/isNaN v))
+                                                                          v
+                                                                          0)))
+             [volume-type volume-type-valid? on-volume-type-change] (use-validation (or (::gm/unit-volume-type initial-unit) (first (keys volume/conversion-map)))
+                                                                                    #(some #{%} (keys volume/conversion-map)))
+             [common common-valid? on-common-change] (use-validation (or (::gm/unit-common initial-unit) 0)
+                                                                     #(> % 0)
+                                                                     #(let [v (js/parseFloat %)]
+                                                                        (if (not (js/isNaN v))
+                                                                          v
+                                                                          0)))
+             [common-type common-type-valid? on-common-type-change] (use-validation (or (::gm/unit-common-type initial-unit) (first ucom/other-units))
+                                                                                    #(some #{%} ucom/other-units))
+             [cost cost-valid? on-cost-change] (use-validation (or (::gm/unit-cost initial-unit) 0)
+                                                               #(> % 0)
+                                                               #(let [v (js/parseFloat %)]
+                                                                  (if (not (js/isNaN v))
+                                                                    v
+                                                                    0)))]
          ($ Dialog {:open open? :on-close on-close}
             ($ DialogTitle "Configure Unit")
             ($ DialogContent
@@ -63,9 +85,39 @@
                      ($ InputLabel "Unit type")
                      ($ Select {:value     mass-type
                                 :on-change on-mass-type-change}
-                        (map #($ MenuItem {:value % :key %} (name %)) (keys mass/conversion-map))))))
+                        (map #($ MenuItem {:value % :key %} (name %)) (keys mass/conversion-map))))
+                  ($ TextField {:label     "Volume"
+                                :value     volume
+                                :error     (not volume-valid?)
+                                :on-change on-volume-change})
+                  ($ FormControl {:full-width true
+                                  :error      (not volume-type-valid?)}
+                     ($ InputLabel "Unit type")
+                     ($ Select {:value     volume-type
+                                :on-change on-volume-type-change}
+                        (map #($ MenuItem {:value % :key %} (name %)) (keys volume/conversion-map))))
+                  ($ TextField {:label     "Common units"
+                                :value     common
+                                :error     (not common-valid?)
+                                :on-change on-common-change})
+                  ($ FormControl {:full-width true
+                                  :error      (not common-type-valid?)}
+                     ($ InputLabel "Unit type")
+                     ($ Select {:value     common-type
+                                :on-change on-common-type-change}
+                        (map #($ MenuItem {:value % :key %} (name %)) ucom/other-units)))
+                  ($ TextField {:label     "Cost ($)"
+                                :value     cost
+                                :error     (not cost-valid?)
+                                :on-change on-cost-change})))
             ($ DialogActions
-               ($ Button {:on-click on-close} "Cancel")))))
+               ($ Button {:on-click on-close} "Cancel")
+               ($ Button {:on-click on-close
+                          :disabled (not (and source-valid?
+                                              cost-valid?
+                                              (or (and mass-valid? mass-type-valid?)
+                                                  (and volume-valid? volume-type-valid?)
+                                                  (and common-valid? common-type-valid?))))} "Save")))))
 
 (defui grocery-unit-row [{:keys [idx unit on-edit on-delete]}]
        (let [[config-open set-config-open!] (uix/use-state false)]
