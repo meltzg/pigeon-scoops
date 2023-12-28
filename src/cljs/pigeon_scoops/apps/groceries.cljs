@@ -1,10 +1,13 @@
 (ns pigeon-scoops.apps.groceries
   (:require [ajax.core :as ajax]
-            [pigeon-scoops.utils :refer [api-url]]
+            [pigeon-scoops.utils :refer [api-url drop-nth]]
+            [pigeon-scoops.units.common :as ucom]
+            [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.components.grocery-manager :as-alias gm]
             [uix.core :as uix :refer [$ defui]]
             ["@mui/icons-material/Add$default" :as AddIcon]
             ["@mui/icons-material/Delete$default" :as DeleteIcon]
+            ["@mui/icons-material/Edit$default" :as EditIcon]
             ["@mui/icons-material/ExpandMore$default" :as ExpandMoreIcon]
             ["@mui/material" :refer [Accordion
                                      AccordionActions
@@ -32,7 +35,8 @@
                      ($ TableCell "Mass")
                      ($ TableCell "Volume")
                      ($ TableCell "Common Unit")
-                     ($ TableCell "Cost")))
+                     ($ TableCell "Cost")
+                     ($ TableCell "Actions")))
                ($ TableBody (map-indexed (fn [idx unit]
                                            ($ TableRow {:key idx}
                                               ($ TableCell (::gm/source unit))
@@ -42,7 +46,14 @@
                                                                                           (name (::gm/unit-volume-type unit)))))
                                               ($ TableCell (str (::gm/unit-common unit) " " (when (::gm/unit-common-type unit)
                                                                                               (name (::gm/unit-common-type unit)))))
-                                              ($ TableCell (str "$" (::gm/unit-cost unit)))))
+                                              ($ TableCell (str "$" (::gm/unit-cost unit)))
+                                              ($ TableCell
+                                                 ($ IconButton
+                                                    ($ EditIcon))
+                                                 ($ IconButton {:color    "error"
+                                                                :on-click #(set-units! (drop-nth idx units
+                                                                                                 ))}
+                                                    ($ DeleteIcon)))))
                                          units))))))
 
 (defui grocery-entry [{:keys [item]}]
