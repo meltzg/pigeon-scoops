@@ -19,6 +19,7 @@
                                      DialogActions
                                      DialogContent
                                      DialogTitle
+                                     Fab
                                      FormControl
                                      IconButton
                                      InputLabel
@@ -39,29 +40,20 @@
        (let [[source source-valid? on-source-change] (use-validation (or (::gm/source initial-unit) "")
                                                                      #(not (clojure.string/blank? %)))
              [mass mass-valid? on-mass-change] (use-validation (or (::gm/unit-mass initial-unit) 0)
-                                                               #(> % 0)
-                                                               #(let [v (js/parseFloat %)]
-                                                                  (if (not (js/isNaN v))
-                                                                    v
-                                                                    0)))
+                                                               #(re-matches #"^\d+\.?\d*$" (str %)))
              [mass-type mass-type-valid? on-mass-type-change] (use-validation (or (::gm/unit-mass-type initial-unit) (first (keys mass/conversion-map)))
-                                                                              #(some #{%} (keys mass/conversion-map)))
+                                                                              #(some #{%} (keys mass/conversion-map))
+                                                                              #(keyword (namespace ::mass/kg) %))
              [volume volume-valid? on-volume-change] (use-validation (or (::gm/unit-volume initial-unit) 0)
-                                                                     #(> % 0)
-                                                                     #(let [v (js/parseFloat %)]
-                                                                        (if (not (js/isNaN v))
-                                                                          v
-                                                                          0)))
+                                                                     #(re-matches #"^\d+\.?\d*$" (str %)))
              [volume-type volume-type-valid? on-volume-type-change] (use-validation (or (::gm/unit-volume-type initial-unit) (first (keys volume/conversion-map)))
-                                                                                    #(some #{%} (keys volume/conversion-map)))
+                                                                                    #(some #{%} (keys volume/conversion-map))
+                                                                                    #(keyword (namespace ::volume/c) %))
              [common common-valid? on-common-change] (use-validation (or (::gm/unit-common initial-unit) 0)
-                                                                     #(> % 0)
-                                                                     #(let [v (js/parseFloat %)]
-                                                                        (if (not (js/isNaN v))
-                                                                          v
-                                                                          0)))
+                                                                     #(re-matches #"^\d+\.?\d*$" (str %)))
              [common-type common-type-valid? on-common-type-change] (use-validation (or (::gm/unit-common-type initial-unit) (first ucom/other-units))
-                                                                                    #(some #{%} ucom/other-units))
+                                                                                    #(some #{%} ucom/other-units)
+                                                                                    #(keyword (namespace ::ucom/pinch) %))
              [cost cost-valid? on-cost-change] (use-validation (or (::gm/unit-cost initial-unit) 0)
                                                                #(> % 0)
                                                                #(let [v (js/parseFloat %)]
@@ -85,7 +77,7 @@
                      ($ InputLabel "Unit type")
                      ($ Select {:value     mass-type
                                 :on-change on-mass-type-change}
-                        (map #($ MenuItem {:value % :key %} (name %)) (keys mass/conversion-map))))
+                        (map #($ MenuItem {:value % :key %} (name %)) (sort (keys mass/conversion-map)))))
                   ($ TextField {:label     "Volume"
                                 :value     volume
                                 :error     (not volume-valid?)
@@ -95,7 +87,7 @@
                      ($ InputLabel "Unit type")
                      ($ Select {:value     volume-type
                                 :on-change on-volume-type-change}
-                        (map #($ MenuItem {:value % :key %} (name %)) (keys volume/conversion-map))))
+                        (map #($ MenuItem {:value % :key %} (name %)) (sort (keys volume/conversion-map)))))
                   ($ TextField {:label     "Common units"
                                 :value     common
                                 :error     (not common-valid?)
@@ -105,7 +97,7 @@
                      ($ InputLabel "Unit type")
                      ($ Select {:value     common-type
                                 :on-change on-common-type-change}
-                        (map #($ MenuItem {:value % :key %} (name %)) ucom/other-units)))
+                        (map #($ MenuItem {:value % :key %} (name %)) (sort ucom/other-units))))
                   ($ TextField {:label     "Cost ($)"
                                 :value     cost
                                 :error     (not cost-valid?)
@@ -114,9 +106,9 @@
                ($ Button {:on-click on-close} "Cancel")
                ($ Button {:on-click #(on-save (cond-> {::gm/source    source
                                                        ::gm/unit-cost cost}
-                                                      mass-valid? (assoc ::gm/unit-mass mass ::gm/unit-mass-type mass-type)
-                                                      volume-valid? (assoc ::gm/unit-volume volume ::gm/unit-volume-type volume-type)
-                                                      common-valid? (assoc ::gm/unit-common common ::gm/unit-common-type common-type)))
+                                                      mass-valid? (assoc ::gm/unit-mass (js/parseFloat mass) ::gm/unit-mass-type mass-type)
+                                                      volume-valid? (assoc ::gm/unit-volume (js/parseFloat volume) ::gm/unit-volume-type volume-type)
+                                                      common-valid? (assoc ::gm/unit-common (js/parseFloat common) ::gm/unit-common-type common-type)))
                           :disabled (not (and source-valid?
                                               cost-valid?
                                               (or (and mass-valid? mass-type-valid?)
@@ -124,7 +116,7 @@
                                                   (and common-valid? common-type-valid?))))}
                   "Save")))))
 
-(defui grocery-unit-row [{:keys [idx unit on-edit on-delete]}]
+(defui grocery-unit-row [{:keys [unit on-edit on-delete]}]
        (let [[config-open set-config-open!] (uix/use-state false)]
          ($ TableRow
             ($ TableCell (::gm/source unit))
@@ -149,9 +141,11 @@
 
 (defui grocery-unit-list [{:keys [initial-units on-change]}]
        (let [[open-unit-dialog set-open-unit-dialog!] (uix/use-state false)]
-         ($ :div
+         ($ Stack {:direction "column" :spacing 1}
             ($ unit-config {:open?    open-unit-dialog
-                            :on-close #(set-open-unit-dialog! false)})
+                            :on-close #(set-open-unit-dialog! false)
+                            :on-save  #(do (on-change (conj initial-units %))
+                                           (set-open-unit-dialog! false))})
             ($ TableContainer {:component Paper}
                ($ Table
                   ($ TableHead
@@ -164,11 +158,16 @@
                         ($ TableCell "Actions")))
                   ($ TableBody (map-indexed (fn [idx unit]
                                               ($ grocery-unit-row {:key       idx
-                                                                   :idx       idx
                                                                    :unit      unit
                                                                    :on-edit   #(on-change (assoc initial-units idx %))
-                                                                   :on-delete #(on-change (drop-nth idx initial-units))}))
-                                            initial-units)))))))
+                                                                   :on-delete #(on-change (vec (drop-nth idx initial-units)))}))
+                                            initial-units))))
+            ($ Fab {:color    "primary"
+                    :variant  "extended"
+                    :size     "small"
+                    :on-click #(set-open-unit-dialog! true)}
+               ($ AddIcon)
+               "Add Unit"))))
 
 (defui grocery-entry [{:keys [item]}]
        (let [[grocery-type set-grocery-type!] (uix/use-state (::gm/type item))
