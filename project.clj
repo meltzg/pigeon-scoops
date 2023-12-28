@@ -31,6 +31,7 @@
   :main ^:skip-aot pigeon-scoops.core
   :target-path "target/%s"
   :source-paths ["src/clj"
+                 "src/cljc"
                  "src/cljs"
                  "dev"]
   :profiles {:uberjar {:aot :all}})
