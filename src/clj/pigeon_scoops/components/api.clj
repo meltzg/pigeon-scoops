@@ -16,9 +16,10 @@
 (defn get-groceries-handler [grocery-manager params]
   (fn [& _]
     (response (apply (partial gm/get-groceries grocery-manager)
-                     (map #(keyword (namespace ::gm/type) %) (if (coll? (:types params))
-                                                               (:types params)
-                                                               [(:types params)]))))))
+                     (map #(keyword (namespace ::gm/type) %)
+                          (if (or (nil? (:types params)) (coll? (:types params)))
+                            (:types params)
+                            [(:types params)]))))))
 
 (defn app-routes [config-manager grocery-manager]
   (routes

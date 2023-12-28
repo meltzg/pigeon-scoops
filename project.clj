@@ -20,7 +20,7 @@
                  [org.slf4j/log4j-over-slf4j "2.0.9"]
                  [org.slf4j/osgi-over-slf4j "2.0.9"]
                  [org.slf4j/jul-to-slf4j "2.0.9"]
-                 [org.apache.logging.log4j/log4j-to-slf4j "2.22.0"]
+                 [org.apache.logging.log4j/log4j-to-slf4j "2.22.1"]
 
                  ;; CLJS Dependencies
                  [thheller/shadow-cljs "2.26.2"]
