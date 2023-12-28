@@ -36,7 +36,7 @@
                                      TextField
                                      Typography]]))
 
-(defui unit-config [{:keys [initial-unit open? on-save on-close]}]
+(defui unit-config [{:keys [initial-unit on-save on-close]}]
        (let [[source source-valid? on-source-change] (use-validation (or (::gm/source initial-unit) "")
                                                                      #(not (clojure.string/blank? %)))
              [mass mass-valid? on-mass-change] (use-validation (or (::gm/unit-mass initial-unit) 0)
@@ -57,7 +57,7 @@
              [cost cost-valid? on-cost-change] (use-validation (or (::gm/unit-cost initial-unit) 0)
                                                                #(and (re-matches #"^\d+\.?\d*$" (str %))
                                                                      (> (js/parseFloat %) 0)))]
-         ($ Dialog {:open open? :on-close on-close}
+         ($ Dialog {:open true :on-close on-close}
             ($ DialogTitle "Configure Unit")
             ($ DialogContent
                ($ Stack {:direction "column" :spacing 2}
@@ -128,11 +128,11 @@
                                                             (name (::gm/unit-common-type unit)))))
             ($ TableCell (str "$" (::gm/unit-cost unit)))
             ($ TableCell
-               ($ unit-config {:initial-unit unit
-                               :open?        config-open
-                               :on-close     #(set-config-open! false)
-                               :on-save      #(do (on-edit %)
-                                                  (set-config-open! false))})
+               (when config-open
+                 ($ unit-config {:initial-unit unit
+                                 :on-close     #(set-config-open! false)
+                                 :on-save      #(do (on-edit %)
+                                                    (set-config-open! false))}))
                ($ IconButton {:on-click #(set-config-open! true)}
                   ($ EditIcon))
                ($ IconButton {:color    "error"
@@ -142,10 +142,10 @@
 (defui grocery-unit-list [{:keys [initial-units on-change]}]
        (let [[open-unit-dialog set-open-unit-dialog!] (uix/use-state false)]
          ($ Stack {:direction "column" :spacing 1}
-            ($ unit-config {:open?    open-unit-dialog
-                            :on-close #(set-open-unit-dialog! false)
-                            :on-save  #(do (on-change (conj initial-units %))
-                                           (set-open-unit-dialog! false))})
+            (when open-unit-dialog
+              ($ unit-config {:on-close #(set-open-unit-dialog! false)
+                              :on-save  #(do (on-change (conj initial-units %))
+                                             (set-open-unit-dialog! false))}))
             ($ TableContainer {:component Paper}
                ($ Table
                   ($ TableHead
