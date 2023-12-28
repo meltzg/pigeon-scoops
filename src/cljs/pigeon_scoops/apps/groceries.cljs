@@ -112,12 +112,17 @@
                                 :on-change on-cost-change})))
             ($ DialogActions
                ($ Button {:on-click on-close} "Cancel")
-               ($ Button {:on-click on-close
+               ($ Button {:on-click #(on-save (cond-> {::gm/source    source
+                                                       ::gm/unit-cost cost}
+                                                      mass-valid? (assoc ::gm/unit-mass mass ::gm/unit-mass-type mass-type)
+                                                      volume-valid? (assoc ::gm/unit-volume volume ::gm/unit-volume-type volume-type)
+                                                      common-valid? (assoc ::gm/unit-common common ::gm/unit-common-type common-type)))
                           :disabled (not (and source-valid?
                                               cost-valid?
                                               (or (and mass-valid? mass-type-valid?)
                                                   (and volume-valid? volume-type-valid?)
-                                                  (and common-valid? common-type-valid?))))} "Save")))))
+                                                  (and common-valid? common-type-valid?))))}
+                  "Save")))))
 
 (defui grocery-unit-row [{:keys [idx unit on-edit on-delete]}]
        (let [[config-open set-config-open!] (uix/use-state false)]
@@ -133,7 +138,9 @@
             ($ TableCell
                ($ unit-config {:initial-unit unit
                                :open?        config-open
-                               :on-close     #(set-config-open! false)})
+                               :on-close     #(set-config-open! false)
+                               :on-save      #(do (on-edit %)
+                                                  (set-config-open! false))})
                ($ IconButton {:on-click #(set-config-open! true)}
                   ($ EditIcon))
                ($ IconButton {:color    "error"
@@ -159,6 +166,7 @@
                                               ($ grocery-unit-row {:key       idx
                                                                    :idx       idx
                                                                    :unit      unit
+                                                                   :on-edit   #(on-change (assoc initial-units idx %))
                                                                    :on-delete #(on-change (drop-nth idx initial-units))}))
                                             initial-units)))))))
 
