@@ -103,7 +103,7 @@
             ($ DialogActions
                ($ Button {:on-click on-close} "Cancel")
                ($ Button {:on-click #(on-save (cond-> {::gm/source    source
-                                                       ::gm/unit-cost cost}
+                                                       ::gm/unit-cost (js/parseFloat cost)}
                                                       mass-valid? (assoc ::gm/unit-mass (js/parseFloat mass)
                                                                          ::gm/unit-mass-type (keyword (namespace ::mass/kg) mass-type))
                                                       volume-valid? (assoc ::gm/unit-volume (js/parseFloat volume)
@@ -168,7 +168,7 @@
                ($ AddIcon)
                "Add Unit"))))
 
-(defui grocery-entry [{:keys [item]}]
+(defui grocery-entry [{:keys [item on-save on-delete]}]
        (let [[grocery-type grocery-type-valid? on-grocery-type-change] (use-validation (name (::gm/type item))
                                                                                        #(re-matches #"^[a-zA-Z0-9-]+$" %))
              [description set-description!] (uix/use-state (::gm/description item))
@@ -194,14 +194,27 @@
                                 :on-change #(set-description! (.. % -target -value))})
                   ($ grocery-unit-list {:initial-units units :on-change set-units!})
                   ($ Button {:variant  "contained"
-                             :disabled (not unsaved-changes?)} "Save")
+                             :disabled (not unsaved-changes?)
+                             :on-click #(on-save {::gm/type        (keyword (namespace ::gm/type) grocery-type)
+                                                  ::gm/description description
+                                                  ::gm/units       units})}
+                     "Save")
                   ($ Button {:variant  "contained"
                              :disabled (not unsaved-changes?)
                              :on-click #(do (set-description! (::gm/description item))
-                                            (set-units! (::gm/units item)))} "Reset"))))))
+                                            (set-units! (::gm/units item)))}
+                     "Reset")
+                  ($ Button {:variant  "contained"
+                             :color    "error"
+                             :on-click #(on-delete (keyword (namespace ::gm/type) grocery-type))}
+                     "Delete"))))))
 
 (defui grocery-list [{:keys [groceries on-change]}]
-       ($ Stack {:direction "column"}
-          (for [item (sort #(compare (::gm/type %1)
-                                     (::gm/type %2)) groceries)]
-            ($ grocery-entry {:item item :key (::gm/type item)}))))
+       (let [[working-groceries set-groceries!] (uix/use-state groceries)]
+         ($ Stack {:direction "column"}
+            (for [item (sort #(compare (::gm/type %1)
+                                       (::gm/type %2)) working-groceries)]
+              ($ grocery-entry {:item      item
+                                :on-save   #(prn (str "Save " %))
+                                :on-delete #(prn (str "Delete " %))
+                                :key       (::gm/type item)})))))
