@@ -1,11 +1,11 @@
 (ns pigeon-scoops.apps.groceries
   (:require [ajax.core :as ajax]
             [clojure.string :as str]
-            [pigeon-scoops.utils :refer [api-url drop-nth use-validation]]
+            [pigeon-scoops.components.grocery-manager :as-alias gm]
             [pigeon-scoops.units.common :as ucom]
             [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.units.volume :as volume]
-            [pigeon-scoops.components.grocery-manager :as-alias gm]
+            [pigeon-scoops.utils :as utils]
             [uix.core :as uix :refer [$ defui]]
             ["@mui/icons-material/Add$default" :as AddIcon]
             ["@mui/icons-material/Delete$default" :as DeleteIcon]
@@ -15,18 +15,19 @@
                                      AccordionActions
                                      AccordionDetails
                                      AccordionSummary
+                                     Alert
                                      Button
                                      Dialog
                                      DialogActions
                                      DialogContent
                                      DialogTitle
-                                     Fab
                                      FormControl
                                      IconButton
                                      InputLabel
                                      MenuItem
                                      Paper
                                      Select
+                                     Snackbar
                                      Stack
                                      Table
                                      TableBody
@@ -38,26 +39,26 @@
                                      Typography]]))
 
 (defui unit-config [{:keys [initial-unit on-save on-close]}]
-       (let [[source source-valid? on-source-change] (use-validation (or (::gm/source initial-unit) "")
-                                                                     #(not (str/blank? %)))
-             [mass mass-valid? on-mass-change] (use-validation (or (::gm/unit-mass initial-unit) 0)
-                                                               #(and (re-matches #"^\d+\.?\d*$" (str %))
-                                                                     (> (js/parseFloat %) 0)))
-             [mass-type mass-type-valid? on-mass-type-change] (use-validation (or (::gm/unit-mass-type initial-unit) (first (keys mass/conversion-map)))
-                                                                              #(some #{(keyword (namespace ::mass/kg) %)} (keys mass/conversion-map)))
-             [volume volume-valid? on-volume-change] (use-validation (or (::gm/unit-volume initial-unit) 0)
+       (let [[source source-valid? on-source-change] (utils/use-validation (or (::gm/source initial-unit) "")
+                                                                           #(not (str/blank? %)))
+             [mass mass-valid? on-mass-change] (utils/use-validation (or (::gm/unit-mass initial-unit) 0)
                                                                      #(and (re-matches #"^\d+\.?\d*$" (str %))
                                                                            (> (js/parseFloat %) 0)))
-             [volume-type volume-type-valid? on-volume-type-change] (use-validation (or (::gm/unit-volume-type initial-unit) (first (keys volume/conversion-map)))
-                                                                                    #(some #{(keyword (namespace ::volume/c) %)} (keys volume/conversion-map)))
-             [common common-valid? on-common-change] (use-validation (or (::gm/unit-common initial-unit) 0)
+             [mass-type mass-type-valid? on-mass-type-change] (utils/use-validation (or (::gm/unit-mass-type initial-unit) (first (keys mass/conversion-map)))
+                                                                                    #(some #{(keyword (namespace ::mass/kg) %)} (keys mass/conversion-map)))
+             [volume volume-valid? on-volume-change] (utils/use-validation (or (::gm/unit-volume initial-unit) 0)
+                                                                           #(and (re-matches #"^\d+\.?\d*$" (str %))
+                                                                                 (> (js/parseFloat %) 0)))
+             [volume-type volume-type-valid? on-volume-type-change] (utils/use-validation (or (::gm/unit-volume-type initial-unit) (first (keys volume/conversion-map)))
+                                                                                          #(some #{(keyword (namespace ::volume/c) %)} (keys volume/conversion-map)))
+             [common common-valid? on-common-change] (utils/use-validation (or (::gm/unit-common initial-unit) 0)
+                                                                           #(and (re-matches #"^\d+\.?\d*$" (str %))
+                                                                                 (> (js/parseFloat %) 0)))
+             [common-type common-type-valid? on-common-type-change] (utils/use-validation (or (::gm/unit-common-type initial-unit) (first ucom/other-units))
+                                                                                          #(some #{(keyword (namespace ::ucom/pinch) %)} ucom/other-units))
+             [cost cost-valid? on-cost-change] (utils/use-validation (or (::gm/unit-cost initial-unit) 0)
                                                                      #(and (re-matches #"^\d+\.?\d*$" (str %))
-                                                                           (> (js/parseFloat %) 0)))
-             [common-type common-type-valid? on-common-type-change] (use-validation (or (::gm/unit-common-type initial-unit) (first ucom/other-units))
-                                                                                    #(some #{(keyword (namespace ::ucom/pinch) %)} ucom/other-units))
-             [cost cost-valid? on-cost-change] (use-validation (or (::gm/unit-cost initial-unit) 0)
-                                                               #(and (re-matches #"^\d+\.?\d*$" (str %))
-                                                                     (> (js/parseFloat %) 0)))]
+                                                                           (> (js/parseFloat %) 0)))]
          ($ Dialog {:open true :on-close on-close}
             ($ DialogTitle "Configure Unit")
             ($ DialogContent
@@ -161,7 +162,7 @@
                                               ($ grocery-unit-row {:key       idx
                                                                    :unit      unit
                                                                    :on-edit   #(on-change (assoc initial-units idx %))
-                                                                   :on-delete #(on-change (vec (drop-nth idx initial-units)))}))
+                                                                   :on-delete #(on-change (vec (utils/drop-nth idx initial-units)))}))
                                             initial-units))))
             ($ Button {:variant  "contained"
                        :on-click #(set-open-unit-dialog! true)}
@@ -169,8 +170,8 @@
                "Add Unit"))))
 
 (defui grocery-entry [{:keys [item on-save on-delete]}]
-       (let [[grocery-type grocery-type-valid? on-grocery-type-change] (use-validation (name (::gm/type item))
-                                                                                       #(re-matches #"^[a-zA-Z0-9-]+$" %))
+       (let [[grocery-type grocery-type-valid? on-grocery-type-change] (utils/use-validation (name (::gm/type item))
+                                                                                             #(re-matches #"^[a-zA-Z0-9-]+$" %))
              [description set-description!] (uix/use-state (::gm/description item))
              [units set-units!] (uix/use-state (::gm/units item))
              unsaved-changes? (or (not= grocery-type (name (::gm/type item)))
@@ -206,14 +207,34 @@
                      "Reset")
                   ($ Button {:variant  "contained"
                              :color    "error"
-                             :on-click #(on-delete (keyword (namespace ::gm/type) grocery-type))}
+                             :on-click #(on-delete (name grocery-type))}
                      "Delete"))))))
 
 (defui grocery-list [{:keys [groceries on-change]}]
-       ($ Stack {:direction "column"}
-          (for [item (sort #(compare (::gm/type %1)
-                                     (::gm/type %2)) groceries)]
-            ($ grocery-entry {:item      item
-                              :on-save   #(prn (str "Save " %))
-                              :on-delete #(prn (str "Delete " %))
-                              :key       (::gm/type item)}))))
+       (let [[error-text set-error-text!] (uix/use-state "")
+             error-handler (partial utils/error-handler
+                                    set-error-text!)
+             on-alert-close (partial utils/handle-alert-close #(set-error-text! ""))]
+         ($ Stack {:direction "column"}
+            ($ Snackbar {:open     (not (str/blank? error-text))
+                         :on-close on-alert-close}
+               ($ Alert {:variant  "filled"
+                         :severity "error"
+                         :on-close on-alert-close}
+                  error-text))
+            (for [item (sort #(compare (::gm/type %1)
+                                       (::gm/type %2)) groceries)]
+              ($ grocery-entry {:item      item
+                                :on-save   #(ajax/PUT (str utils/api-url "groceries")
+                                                      {:params          %
+                                                       :format          :transit
+                                                       :response-format :transit
+                                                       :handler         on-change
+                                                       :error-handler   error-handler})
+                                :on-delete #(ajax/DELETE (str utils/api-url "groceries")
+                                                         {:params          {:type %}
+                                                          :format          :transit
+                                                          :response-format :transit
+                                                          :handler         on-change
+                                                          :error-handler   error-handler})
+                                :key       (::gm/type item)})))))
