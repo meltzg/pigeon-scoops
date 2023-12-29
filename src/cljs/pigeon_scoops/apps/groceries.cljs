@@ -210,11 +210,10 @@
                      "Delete"))))))
 
 (defui grocery-list [{:keys [groceries on-change]}]
-       (let [[working-groceries set-groceries!] (uix/use-state groceries)]
-         ($ Stack {:direction "column"}
-            (for [item (sort #(compare (::gm/type %1)
-                                       (::gm/type %2)) working-groceries)]
-              ($ grocery-entry {:item      item
-                                :on-save   #(prn (str "Save " %))
-                                :on-delete #(prn (str "Delete " %))
-                                :key       (::gm/type item)})))))
+       ($ Stack {:direction "column"}
+          (for [item (sort #(compare (::gm/type %1)
+                                     (::gm/type %2)) groceries)]
+            ($ grocery-entry {:item      item
+                              :on-save   #(prn (str "Save " %))
+                              :on-delete #(prn (str "Delete " %))
+                              :key       (::gm/type item)}))))
