@@ -12,7 +12,7 @@
 (defn use-validation [initial-value valid-pred]
   (let [[value set-value!] (uix.core/use-state initial-value)
         [valid? set-valid!] (uix.core/use-state (valid-pred initial-value))
-        on-change #(let [v (.. % -target -value)]
+        on-change #(let [v (or (.. % -target -value) %)]
                      (set-value! v)
                      (set-valid! (valid-pred v)))]
     [value valid? on-change]))

@@ -1,5 +1,6 @@
 (ns pigeon-scoops.apps.groceries
   (:require [ajax.core :as ajax]
+            [clojure.string :as str]
             [pigeon-scoops.utils :refer [api-url drop-nth use-validation]]
             [pigeon-scoops.units.common :as ucom]
             [pigeon-scoops.units.mass :as mass]
@@ -38,7 +39,7 @@
 
 (defui unit-config [{:keys [initial-unit on-save on-close]}]
        (let [[source source-valid? on-source-change] (use-validation (or (::gm/source initial-unit) "")
-                                                                     #(not (clojure.string/blank? %)))
+                                                                     #(not (str/blank? %)))
              [mass mass-valid? on-mass-change] (use-validation (or (::gm/unit-mass initial-unit) 0)
                                                                #(and (re-matches #"^\d+\.?\d*$" (str %))
                                                                      (> (js/parseFloat %) 0)))
@@ -162,33 +163,42 @@
                                                                    :on-edit   #(on-change (assoc initial-units idx %))
                                                                    :on-delete #(on-change (vec (drop-nth idx initial-units)))}))
                                             initial-units))))
-            ($ Fab {:color    "primary"
-                    :variant  "extended"
-                    :size     "small"
-                    :on-click #(set-open-unit-dialog! true)}
+            ($ Button {:variant  "contained"
+                       :on-click #(set-open-unit-dialog! true)}
                ($ AddIcon)
                "Add Unit"))))
 
 (defui grocery-entry [{:keys [item]}]
-       (let [[grocery-type set-grocery-type!] (uix/use-state (::gm/type item))
+       (let [[grocery-type grocery-type-valid? on-grocery-type-change] (use-validation (name (::gm/type item))
+                                                                                       #(re-matches #"^[a-zA-Z0-9-]+$" %))
              [description set-description!] (uix/use-state (::gm/description item))
-             [units set-units!] (uix/use-state (::gm/units item))]
+             [units set-units!] (uix/use-state (::gm/units item))
+             unsaved-changes? (or (not= grocery-type (name (::gm/type item)))
+                                  (not= description (::gm/description item))
+                                  (not= units (::gm/units item)))]
          ($ Accordion
             ($ AccordionSummary {:expandIcon ($ ExpandMoreIcon)}
                ($ Typography (name grocery-type)))
             ($ AccordionDetails
                ($ Stack {:direction "column"
-                         :spacing   2}
+                         :spacing   1}
                   ($ TextField {:label     "Type"
+                                :error     (not grocery-type-valid?)
                                 :disabled  (some? item)
                                 :value     grocery-type
-                                :on-change #(set-grocery-type! (.. % -target -value))})
+                                :on-change on-grocery-type-change})
                   ($ TextField {:label     "Description"
                                 :multiline true
                                 :max-rows  4
                                 :value     (or description "")
                                 :on-change #(set-description! (.. % -target -value))})
-                  ($ grocery-unit-list {:initial-units units :on-change set-units!}))))))
+                  ($ grocery-unit-list {:initial-units units :on-change set-units!})
+                  ($ Button {:variant  "contained"
+                             :disabled (not unsaved-changes?)} "Save")
+                  ($ Button {:variant  "contained"
+                             :disabled (not unsaved-changes?)
+                             :on-click #(do (set-description! (::gm/description item))
+                                            (set-units! (::gm/units item)))} "Reset"))))))
 
 (defui grocery-list [{:keys [groceries on-change]}]
        ($ Stack {:direction "column"}
