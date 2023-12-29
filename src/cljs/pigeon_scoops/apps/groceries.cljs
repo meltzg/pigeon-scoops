@@ -170,16 +170,18 @@
                "Add Unit"))))
 
 (defui grocery-entry [{:keys [item on-save on-delete]}]
-       (let [[grocery-type grocery-type-valid? on-grocery-type-change] (utils/use-validation (name (::gm/type item))
-                                                                                             #(re-matches #"^[a-zA-Z0-9-]+$" %))
+       (let [original-type (when item (name (::gm/type item)))
+             [grocery-type grocery-type-valid? on-grocery-type-change]
+             (utils/use-validation (or original-type "")
+                                   #(re-matches #"^[a-zA-Z0-9-]+$" %))
              [description set-description!] (uix/use-state (::gm/description item))
              [units set-units!] (uix/use-state (::gm/units item))
-             unsaved-changes? (or (not= grocery-type (name (::gm/type item)))
+             unsaved-changes? (or (and grocery-type-valid? (not= grocery-type original-type))
                                   (not= description (::gm/description item))
                                   (not= units (::gm/units item)))]
          ($ Accordion
             ($ AccordionSummary {:expandIcon ($ ExpandMoreIcon)}
-               ($ Typography (name grocery-type)))
+               ($ Typography (or original-type "New Grocery Item")))
             ($ AccordionDetails
                ($ Stack {:direction "column"
                          :spacing   1}
@@ -203,12 +205,14 @@
                   ($ Button {:variant  "contained"
                              :disabled (not unsaved-changes?)
                              :on-click #(do (set-description! (::gm/description item))
-                                            (set-units! (::gm/units item)))}
+                                            (set-units! (::gm/units item))
+                                            (when-not original-type (on-grocery-type-change "")))}
                      "Reset")
-                  ($ Button {:variant  "contained"
-                             :color    "error"
-                             :on-click #(on-delete (name grocery-type))}
-                     "Delete"))))))
+                  (when original-type
+                    ($ Button {:variant  "contained"
+                               :color    "error"
+                               :on-click #(on-delete (name grocery-type))}
+                       "Delete")))))))
 
 (defui grocery-list [{:keys [groceries on-change]}]
        (let [[error-text set-error-text!] (uix/use-state "")
@@ -223,18 +227,20 @@
                          :on-close on-alert-close}
                   error-text))
             (for [item (sort #(compare (::gm/type %1)
-                                       (::gm/type %2)) groceries)]
+                                       (::gm/type %2)) (conj groceries nil))]
               ($ grocery-entry {:item      item
-                                :on-save   #(ajax/PUT (str utils/api-url "groceries")
-                                                      {:params          %
-                                                       :format          :transit
-                                                       :response-format :transit
-                                                       :handler         on-change
-                                                       :error-handler   error-handler})
+                                :on-save   #((if item
+                                               ajax/PATCH
+                                               ajax/PUT) (str utils/api-url "groceries")
+                                             {:params          %
+                                              :format          :transit
+                                              :response-format :transit
+                                              :handler         on-change
+                                              :error-handler   error-handler})
                                 :on-delete #(ajax/DELETE (str utils/api-url "groceries")
                                                          {:params          {:type %}
                                                           :format          :transit
                                                           :response-format :transit
                                                           :handler         on-change
                                                           :error-handler   error-handler})
-                                :key       (::gm/type item)})))))
+                                :key       (or (::gm/type item) -1)})))))
