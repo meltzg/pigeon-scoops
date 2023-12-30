@@ -23,4 +23,4 @@
 
 (defn error-handler [set-title! set-message! {:keys [status status-text response]}]
   (set-title! (str "Error: " status " Message: " status-text))
-  (set-message! (with-out-str (pp/pprint response))))
+  (set-message! (when response (with-out-str (pp/pprint response)))))
