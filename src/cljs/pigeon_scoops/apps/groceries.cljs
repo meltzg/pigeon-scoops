@@ -216,6 +216,7 @@
 (defui grocery-list [{:keys [groceries on-change]}]
        (let [[error-text set-error-text!] (uix/use-state "")
              [error-title set-error-title!] (uix/use-state "")
+             [new-item-key set-new-item-key!] (uix/use-state (str (random-uuid)))
              error-handler (partial utils/error-handler
                                     set-error-title!
                                     set-error-text!)]
@@ -233,7 +234,9 @@
                                              {:params          %
                                               :format          :transit
                                               :response-format :transit
-                                              :handler         on-change
+                                              :handler         (fn []
+                                                                 (set-new-item-key! (str (random-uuid)))
+                                                                 (on-change))
                                               :error-handler   error-handler})
                                 :on-delete #(ajax/DELETE (str utils/api-url "groceries")
                                                          {:params          {:type %}
@@ -241,4 +244,4 @@
                                                           :response-format :transit
                                                           :handler         on-change
                                                           :error-handler   error-handler})
-                                :key       (or (::gm/type item) -1)})))))
+                                :key       (or (::gm/type item) new-item-key)})))))
