@@ -76,6 +76,7 @@
                     (conj (remove #(= (::type %) (::type new-grocery-item)) groceries) new-grocery-item))))))))
 
 (defn delete-grocery-item [grocery-manager type]
+  (logger/info (str "Deleting " type))
   (swap! (::groceries grocery-manager)
          (partial remove #(= (::type %) type))))
 

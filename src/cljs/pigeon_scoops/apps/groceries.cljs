@@ -178,7 +178,7 @@
              unsaved-changes? (or (and grocery-type-valid? (not= grocery-type original-type))
                                   (not= description (::gm/description item))
                                   (not= units (::gm/units item)))]
-         ($ Accordion
+         ($ Accordion (if (nil? item) {:expanded true} {})
             ($ AccordionSummary {:expandIcon ($ ExpandMoreIcon)}
                ($ Typography (or original-type "New Grocery Item")))
             ($ AccordionDetails

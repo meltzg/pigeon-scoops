@@ -37,12 +37,19 @@
             :otherwise-success
             (resp/response updated-groceries)))))
 
+(defn delete-grocery-item-handler [grocery-manager]
+  (fn [{:keys [body-params]}]
+    (gm/delete-grocery-item grocery-manager
+                            (keyword (namespace ::gm/type) (:type body-params)))
+    (resp/status 204)))
+
 (defn app-routes [config-manager grocery-manager]
   (routes
     (GET "/" {} (resp/resource-response "index.html" {:root "public"}))
     (GET "/api/v1/groceries" {params :params} (get-groceries-handler grocery-manager params))
     (PUT "/api/v1/groceries" {} (add-grocery-item-handler grocery-manager false))
     (PATCH "/api/v1/groceries" {} (add-grocery-item-handler grocery-manager true))
+    (DELETE "/api/v1/groceries" {} (delete-grocery-item-handler grocery-manager))
     (route/resources "/")
     (route/not-found "Not Found")))
 
