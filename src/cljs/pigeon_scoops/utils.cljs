@@ -1,5 +1,6 @@
 (ns pigeon-scoops.utils
-  (:require [clojure.string :as string]
+  (:require [cljs.pprint :as pp]
+            [clojure.string :as string]
             [uix.core]))
 
 (def api-url (str (first (string/split (.-href (.-location js/window))
@@ -20,9 +21,6 @@
                      (set-valid! (valid-pred v)))]
     [value valid? on-change]))
 
-(defn error-handler [set-message! {:keys [status status-text]}]
-  (set-message! (str "Error: " status " Message: " status-text)))
-
-(defn handle-alert-close [on-close event reason]
-  (when (not= reason "clickaway")
-    (on-close)))
+(defn error-handler [set-title! set-message! {:keys [status status-text response]}]
+  (set-title! (str "Error: " status " Message: " status-text))
+  (set-message! (with-out-str (pp/pprint response))))

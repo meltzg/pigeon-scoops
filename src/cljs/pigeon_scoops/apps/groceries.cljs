@@ -1,6 +1,7 @@
 (ns pigeon-scoops.apps.groceries
   (:require [ajax.core :as ajax]
             [clojure.string :as str]
+            [pigeon-scoops.components.alert-dialog :refer [alert-dialog]]
             [pigeon-scoops.components.grocery-manager :as-alias gm]
             [pigeon-scoops.units.common :as ucom]
             [pigeon-scoops.units.mass :as mass]
@@ -15,7 +16,6 @@
                                      AccordionActions
                                      AccordionDetails
                                      AccordionSummary
-                                     Alert
                                      Button
                                      Dialog
                                      DialogActions
@@ -27,7 +27,6 @@
                                      MenuItem
                                      Paper
                                      Select
-                                     Snackbar
                                      Stack
                                      Table
                                      TableBody
@@ -216,16 +215,15 @@
 
 (defui grocery-list [{:keys [groceries on-change]}]
        (let [[error-text set-error-text!] (uix/use-state "")
+             [error-title set-error-title!] (uix/use-state "")
              error-handler (partial utils/error-handler
-                                    set-error-text!)
-             on-alert-close (partial utils/handle-alert-close #(set-error-text! ""))]
+                                    set-error-title!
+                                    set-error-text!)]
          ($ Stack {:direction "column"}
-            ($ Snackbar {:open     (not (str/blank? error-text))
-                         :on-close on-alert-close}
-               ($ Alert {:variant  "filled"
-                         :severity "error"
-                         :on-close on-alert-close}
-                  error-text))
+            ($ alert-dialog {:open?    (not (str/blank? error-title))
+                             :title    error-title
+                             :message  error-text
+                             :on-close #(set-error-title! "")})
             (for [item (sort #(compare (::gm/type %1)
                                        (::gm/type %2)) (conj groceries nil))]
               ($ grocery-entry {:item      item
