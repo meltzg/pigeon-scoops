@@ -59,17 +59,25 @@
 (defn make-grocery-manager []
   (map->GroceryManager {}))
 
-(defn add-grocery-item [grocery-manager new-grocery-item]
-  (let [conformed-ingredient (s/conform ::entry new-grocery-item)]
-    (if (s/invalid? conformed-ingredient)
-      (deref (::groceries grocery-manager))
-      (swap! (::groceries grocery-manager)
-             (fn [groceries]
-               (conj (remove #(= (::type %) (::type new-grocery-item)) groceries) conformed-ingredient))))))
-
 (defn get-groceries [grocery-manager & types]
   (cond->> (deref (::groceries grocery-manager))
            (not-empty types) (filter #(some #{(::type %)} types))))
+
+(defn add-grocery-item
+  ([grocery-manager new-grocery-item]
+   (add-grocery-item grocery-manager new-grocery-item false))
+  ([grocery-manager new-grocery-item update?]
+   (let [existing (first (get-groceries grocery-manager (::type new-grocery-item)))]
+     (if-not (or (and update? (not existing))
+                 (and (not update?) existing))
+       (or (s/explain-data ::entry new-grocery-item)
+           (swap! (::groceries grocery-manager)
+                  (fn [groceries]
+                    (conj (remove #(= (::type %) (::type new-grocery-item)) groceries) new-grocery-item))))))))
+
+(defn delete-grocery-item [grocery-manager type]
+  (swap! (::groceries grocery-manager)
+         (partial remove #(= (::type %) type))))
 
 (defn get-grocery-unit-for-amount [amount amount-unit {::keys [units]}]
   (let [unit-key (keyword (namespace ::g) (str "unit-" (units/to-unit-class amount-unit)))

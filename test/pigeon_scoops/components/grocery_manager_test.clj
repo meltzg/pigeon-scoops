@@ -74,20 +74,55 @@
                       ::g/description "heavy moo moo juice"))
 
 
-(deftest add-ingredient-test
-  (testing "Valid ingredients can be added to collection of ingredients"
-    (are [ingredients new-ingredient expected]
-      (= (set (g/add-grocery-item {::g/groceries (atom ingredients)} new-ingredient)) (set expected))
+(deftest add-grocery-item-test
+  (testing "Valid grocery items can be added to collection of grocery-items"
+    (are [grocery-items new-grocery-item expected valid?]
+      (let [actual (g/add-grocery-item {::g/groceries (atom grocery-items)} new-grocery-item)]
+        (if valid?
+          (= (set actual) (set expected))
+          (:clojure.spec.alpha/problems actual)))
       ;; add grocery item to nil collection
-      nil grocery-item (list grocery-item)
+      nil grocery-item (list grocery-item) true
       ;; add grocery item to empty collection
-      [] grocery-item [grocery-item]
+      [] grocery-item [grocery-item] true
       ;; add grocery item to existing collection
-      [grocery-item] another-grocery-item [grocery-item another-grocery-item]
+      [grocery-item] another-grocery-item [grocery-item another-grocery-item] true
+      ;; add duplicate returns nil
+      [grocery-item] (assoc grocery-item ::g/description "duplicate type") nil true
+      ;; add invalid returns error explanation
+      [grocery-item] (dissoc another-grocery-item ::g/type) [grocery-item] false)))
+
+(deftest update-grocery-item-test
+  (testing "Valid grocery items can be updated"
+    (are [grocery-items new-grocery-item expected valid?]
+      (let [actual (g/add-grocery-item {::g/groceries (atom grocery-items)} new-grocery-item true)]
+        (if valid?
+          (= (set actual) (set expected))
+          (:clojure.spec.alpha/problems actual)))
+      ;; add new grocery item to nil collection returns nil
+      nil grocery-item nil true
+      ;; add new grocery item to empty collection returns nil
+      [] grocery-item nil true
+      ;; add new grocery item returns nil
+      [grocery-item] another-grocery-item nil true
       ;; add duplicate type keeps new
-      [grocery-item] (assoc grocery-item ::g/description "duplicate type") [(assoc grocery-item ::g/description "duplicate type")]
-      ;; add invalid does not add
-      [grocery-item] (dissoc another-grocery-item ::g/type) [grocery-item])))
+      [grocery-item] (assoc grocery-item ::g/description "duplicate type") [(assoc grocery-item ::g/description "duplicate type")] true
+      ;; add new invalid returns nil
+      [grocery-item] (dissoc another-grocery-item ::g/units) nil true
+      ;; update existing with invalid returns error explanation
+      [grocery-item] (-> grocery-item
+                         (assoc ::g/description "duplicate type")
+                         (dissoc ::g/units)) nil false)))
+
+(deftest delete-grocery-item-test
+  (testing "Grocery items can be deleted"
+    (are [grocery-items type-to-delete expected]
+      (= (set (g/delete-grocery-item {::g/groceries (atom grocery-items)} type-to-delete))
+         (set expected))
+      ;; existing item is removed
+      [grocery-item another-grocery-item] (::g/type another-grocery-item) [grocery-item]
+      ;; missing item removes nothing
+      [grocery-item another-grocery-item] ::g/missing-type [grocery-item another-grocery-item])))
 
 (deftest get-groceries-test
   (testing "Groceries can be retrieved by type"
@@ -95,7 +130,8 @@
       (= (set (apply (partial g/get-groceries {::g/groceries (atom [grocery-item common-unit-grocery-item another-grocery-item])}) types)) (set expected))
       [] [grocery-item common-unit-grocery-item another-grocery-item]
       [(::g/type grocery-item)] [grocery-item]
-      [(::g/type another-grocery-item) (::g/type common-unit-grocery-item)] [another-grocery-item common-unit-grocery-item])))
+      [(::g/type another-grocery-item) (::g/type common-unit-grocery-item)] [another-grocery-item common-unit-grocery-item]
+      [::g/missing-type] [])))
 
 (deftest get-grocery-unit-for-amount
   (testing "smallest possible grocery unit is returned"
