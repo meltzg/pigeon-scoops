@@ -197,9 +197,9 @@
                   ($ grocery-unit-list {:initial-units units :on-change set-units!})
                   ($ Button {:variant  "contained"
                              :disabled (not unsaved-changes?)
-                             :on-click #(on-save {::gm/type        (keyword (namespace ::gm/type) grocery-type)
-                                                  ::gm/description description
-                                                  ::gm/units       units})}
+                             :on-click #(on-save (conj {::gm/type  (keyword (namespace ::gm/type) grocery-type)
+                                                        ::gm/units (or units [])}
+                                                       (when description [::gm/description description])))}
                      "Save")
                   ($ Button {:variant  "contained"
                              :disabled (not unsaved-changes?)
