@@ -20,7 +20,7 @@
 
 (defui recipe-entry [{:keys [recipe on-save on-delete]}]
        (let [recipe-id (::rs/id recipe)
-             [recipe-name recipe-name-valid? on-recipe-name-change] (utils/use-validation (::rs/name recipe)
+             [recipe-name recipe-name-valid? on-recipe-name-change] (utils/use-validation (or (::rs/name recipe) "")
                                                                                           #(not (str/blank? %)))]
          ($ Accordion (if (nil? recipe) {:expanded true} {})
             ($ AccordionSummary {:expandIcon ($ ExpandMoreIcon)}
