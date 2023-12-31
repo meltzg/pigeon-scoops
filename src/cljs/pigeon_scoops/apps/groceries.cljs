@@ -1,6 +1,7 @@
 (ns pigeon-scoops.apps.groceries
   (:require [ajax.core :as ajax]
             [clojure.string :as str]
+            [cljs.spec.alpha :as s]
             [pigeon-scoops.components.alert-dialog :refer [alert-dialog]]
             [pigeon-scoops.spec.groceries :as gs]
             [pigeon-scoops.units.common :as ucom]
@@ -39,25 +40,25 @@
 
 (defui unit-config [{:keys [initial-unit on-save on-close]}]
        (let [[source source-valid? on-source-change] (utils/use-validation (or (::gs/source initial-unit) "")
-                                                                           #(not (str/blank? %)))
+                                                                           #(s/valid? ::gs/source %))
              [mass mass-valid? on-mass-change] (utils/use-validation (or (::gs/unit-mass initial-unit) 0)
                                                                      #(and (re-matches #"^\d+\.?\d*$" (str %))
-                                                                           (> (js/parseFloat %) 0)))
+                                                                           (s/valid? ::gs/unit-mass (js/parseFloat %))))
              [mass-type mass-type-valid? on-mass-type-change] (utils/use-validation (or (::gs/unit-mass-type initial-unit) (first (keys mass/conversion-map)))
-                                                                                    #(some #{(keyword (namespace ::mass/kg) %)} (keys mass/conversion-map)))
+                                                                                    #(s/valid? ::gs/unit-mass-type (keyword (namespace ::mass/kg) %)))
              [volume volume-valid? on-volume-change] (utils/use-validation (or (::gs/unit-volume initial-unit) 0)
                                                                            #(and (re-matches #"^\d+\.?\d*$" (str %))
-                                                                                 (> (js/parseFloat %) 0)))
+                                                                                 (s/valid? ::gs/unit-volume (js/parseFloat %))))
              [volume-type volume-type-valid? on-volume-type-change] (utils/use-validation (or (::gs/unit-volume-type initial-unit) (first (keys volume/conversion-map)))
-                                                                                          #(some #{(keyword (namespace ::volume/c) %)} (keys volume/conversion-map)))
+                                                                                          #(s/valid? ::gs/unit-volume-type (keyword (namespace ::volume/c) %)))
              [common common-valid? on-common-change] (utils/use-validation (or (::gs/unit-common initial-unit) 0)
                                                                            #(and (re-matches #"^\d+\.?\d*$" (str %))
-                                                                                 (> (js/parseFloat %) 0)))
+                                                                                 (s/valid? ::gs/unit-common (js/parseFloat %))))
              [common-type common-type-valid? on-common-type-change] (utils/use-validation (or (::gs/unit-common-type initial-unit) (first ucom/other-units))
-                                                                                          #(some #{(keyword (namespace ::ucom/pinch) %)} ucom/other-units))
+                                                                                          #(s/valid? ::gs/unit-common-type (keyword (namespace ::ucom/pinch) %)))
              [cost cost-valid? on-cost-change] (utils/use-validation (or (::gs/unit-cost initial-unit) 0)
                                                                      #(and (re-matches #"^\d+\.?\d*$" (str %))
-                                                                           (> (js/parseFloat %) 0)))]
+                                                                           (s/valid? ::gs/unit-cost (js/parseFloat %))))]
          ($ Dialog {:open true :on-close on-close}
             ($ DialogTitle "Configure Unit")
             ($ DialogContent

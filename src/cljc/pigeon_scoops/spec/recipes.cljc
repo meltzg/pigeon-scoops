@@ -7,8 +7,10 @@
             [pigeon-scoops.units.volume :as vol]
             [pigeon-scoops.units.common :as units]))
 
+(def recipe-types #{::ice-cream ::sorbet ::mixin})
+
 (s/def ::id uuid?)
-(s/def ::type #{::ice-cream ::sorbet ::mixin})
+(s/def ::type recipe-types)
 (s/def ::name ::bs/non-empty-string)
 (s/def ::instructions (s/coll-of ::bs/non-empty-string))
 (s/def ::amount pos?)

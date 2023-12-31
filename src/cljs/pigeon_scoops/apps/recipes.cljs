@@ -1,6 +1,7 @@
 (ns pigeon-scoops.apps.recipes
   (:require [ajax.core :as ajax]
             [clojure.string :as str]
+            [cljs.spec.alpha :as s]
             [uix.core :as uix :refer [$ defui]]
             [pigeon-scoops.utils :as utils]
             [pigeon-scoops.components.alert-dialog :refer [alert-dialog]]
@@ -14,6 +15,10 @@
                                      AccordionActions
                                      AccordionDetails
                                      AccordionSummary
+                                     FormControl
+                                     InputLabel
+                                     MenuItem
+                                     Select
                                      Stack
                                      TextField
                                      Typography]]))
@@ -21,16 +26,26 @@
 (defui recipe-entry [{:keys [recipe on-save on-delete]}]
        (let [recipe-id (::rs/id recipe)
              [recipe-name recipe-name-valid? on-recipe-name-change] (utils/use-validation (or (::rs/name recipe) "")
-                                                                                          #(not (str/blank? %)))]
+                                                                                          #(s/valid? ::rs/name %))
+             [recipe-type recipe-type-valid? on-recipe-type-change] (utils/use-validation (or (::rs/type recipe)
+                                                                                              (first rs/recipe-types))
+                                                                                          #(s/valid? ::rs/type %))]
          ($ Accordion (if (nil? recipe) {:expanded true} {})
             ($ AccordionSummary {:expandIcon ($ ExpandMoreIcon)}
                ($ Typography (if recipe-id recipe-name "New Recipe")))
             ($ AccordionDetails
-               ($ Stack {:direction "column"}
+               ($ Stack {:direction "column"
+                         :spacing   1.25}
                   ($ TextField {:label     "Name"
                                 :error     (not recipe-name-valid?)
                                 :value     recipe-name
-                                :on-change on-recipe-name-change}))))))
+                                :on-change on-recipe-name-change})
+                  ($ FormControl {:full-width true
+                                  :error      (not recipe-type-valid?)}
+                     ($ InputLabel "Recipe type")
+                     ($ Select {:value     recipe-type
+                                :on-change on-recipe-type-change}
+                        (map #($ MenuItem {:value % :key %} (name %)) (sort rs/recipe-types)))))))))
 
 (defui recipe-list [{:keys [recipes groceries on-change active?]}]
        (let [[error-text set-error-text!] (uix/use-state "")
