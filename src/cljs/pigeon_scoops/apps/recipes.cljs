@@ -44,6 +44,12 @@
              [source source-valid? on-source-change] (utils/use-validation (or (::rs/source recipe) "")
                                                                            #(s/valid? ::rs/source %))]
 
+         (uix/use-effect
+           (fn []
+             (on-amount-unit-change (cond (= amount-unit-type (namespace ::mass/g)) (first (keys mass/conversion-map))
+                                          (= amount-unit-type (namespace ::volume/c)) (first (keys volume/conversion-map)))))
+           [amount-unit-type on-amount-unit-change])
+
          ($ Accordion (if (nil? recipe) {:expanded true} {})
             ($ AccordionSummary {:expandIcon ($ ExpandMoreIcon)}
                ($ Typography (if recipe-id recipe-name "New Recipe")))
