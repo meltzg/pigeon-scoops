@@ -19,6 +19,10 @@
                                      AccordionDetails
                                      AccordionSummary
                                      Button
+                                     Dialog
+                                     DialogActions
+                                     DialogContent
+                                     DialogTitle
                                      FormControl
                                      InputLabel
                                      List
@@ -31,8 +35,27 @@
                                      TextField
                                      Typography]]))
 
+(defui instructions-dialog [{:keys [instructions on-save on-close]}]
+       (let [convert-instructions #(remove str/blank? (str/split-lines %))
+             [new-instructions new-instructions-valid? on-new-instructions-change] (utils/use-validation (str/join "\n" instructions)
+                                                                                                         #(s/valid? ::rs/instructions (convert-instructions %)))]
+         ($ Dialog {:open true :on-close on-close}
+            ($ DialogTitle "Edit Instructions")
+            ($ DialogContent
+               ($ TextField {:label     "Instructions"
+                             :multiline true
+                             :max-rows  15
+                             :value     new-instructions
+                             :on-change on-new-instructions-change}))
+            ($ DialogActions
+               ($ Button {:on-click on-close} "Cancel")
+               ($ Button {:on-click #(on-save (convert-instructions new-instructions))
+                          :disabled (not new-instructions-valid?)}
+                  "Save")))))
+
 (defui recipe-entry [{:keys [recipe on-save on-delete]}]
        (let [recipe-id (::rs/id recipe)
+             [edit-instructions-open set-edit-instructions-open!] (uix/use-state false)
              [recipe-name recipe-name-valid? on-recipe-name-change] (utils/use-validation (or (::rs/name recipe) "")
                                                                                           #(s/valid? ::rs/name %))
              [recipe-type recipe-type-valid? on-recipe-type-change] (utils/use-validation (or (::rs/type recipe)
@@ -97,6 +120,11 @@
                                 :error     (not source-valid?)
                                 :value     source
                                 :on-change on-source-change})
+                  (when edit-instructions-open
+                    ($ instructions-dialog {:instructions instructions
+                                            :on-close     #(set-edit-instructions-open! false)
+                                            :on-save      #(do (on-instructions-change %)
+                                                               (set-edit-instructions-open! false))}))
                   ($ Typography
                      "Instructions")
                   ($ Paper
@@ -105,6 +133,9 @@
                                        ($ ListItem {:key text}
                                           ($ ListItemText {:primary (str (inc idx) ") " text)})))
                                      instructions)))
+                  ($ Button {:variant  "contained"
+                             :on-click #(set-edit-instructions-open! true)}
+                     "Edit Instructions")
                   ($ Button {:variant "contained"}
                      "Save")
                   ($ Button {:variant "contained"}
