@@ -15,14 +15,22 @@
                                      AccordionDetails
                                      AccordionSummary
                                      Stack
+                                     TextField
                                      Typography]]))
 
 (defui recipe-entry [{:keys [recipe on-save on-delete]}]
-       (let [[recipe-name recipe-name-valid? on-recipe-name-change] (utils/use-validation (::rm/name recipe)
+       (let [recipe-id (::rm/id recipe)
+             [recipe-name recipe-name-valid? on-recipe-name-change] (utils/use-validation (::rm/name recipe)
                                                                                           #(not (str/blank? %)))]
          ($ Accordion (if (nil? recipe) {:expanded true} {})
             ($ AccordionSummary {:expandIcon ($ ExpandMoreIcon)}
-               ($ Typography (or recipe-name "New Recipe"))))))
+               ($ Typography (if recipe-id recipe-name "New Recipe")))
+            ($ AccordionDetails
+               ($ Stack {:direction "column"}
+                  ($ TextField {:label     "Name"
+                                :error     (not recipe-name-valid?)
+                                :value     recipe-name
+                                :on-change on-recipe-name-change}))))))
 
 (defui recipe-list [{:keys [recipes groceries on-change active?]}]
        (let [[error-text set-error-text!] (uix/use-state "")
