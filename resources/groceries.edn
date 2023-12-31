@@ -1,4 +1,15 @@
 (#:pigeon-scoops.spec.groceries{:type
+                                :pigeon-scoops.spec.groceries/black-sesame-paste,
+                                :units
+                                [#:pigeon-scoops.spec.groceries{:source
+                                                                "h-mart",
+                                                                :unit-cost
+                                                                12.49,
+                                                                :unit-mass
+                                                                16,
+                                                                :unit-mass-type
+                                                                :pigeon-scoops.units.mass/oz}]}
+ #:pigeon-scoops.spec.groceries{:type
                                 :pigeon-scoops.spec.groceries/xanthan-gum,
                                 :units
                                 [#:pigeon-scoops.spec.groceries{:source
@@ -83,17 +94,6 @@
                                                                 :pigeon-scoops.units.volume/c,
                                                                 :unit-mass
                                                                 0.66,
-                                                                :unit-mass-type
-                                                                :pigeon-scoops.units.mass/oz}]}
- #:pigeon-scoops.spec.groceries{:type
-                                :pigeon-scoops.spec.groceries/black-sesame-paste,
-                                :units
-                                [#:pigeon-scoops.spec.groceries{:source
-                                                                "h-mart",
-                                                                :unit-cost
-                                                                12.49,
-                                                                :unit-mass
-                                                                16,
                                                                 :unit-mass-type
                                                                 :pigeon-scoops.units.mass/oz}]}
  #:pigeon-scoops.spec.groceries{:type
