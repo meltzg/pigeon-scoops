@@ -69,13 +69,13 @@
                                                             (set-menu-open! (not menu-open?)))}))))
             ($ Box
                ($ Toolbar)
-               (cond (= active-app :groceries)
-                     ($ grocery-list {:groceries groceries
-                                      :on-change #(set-refresh-groceries! (not refresh-groceries?))})
-                     (= active-app :recipes)
-                     ($ recipe-list {:recipes   recipes
-                                     :groceries groceries
-                                     :on-change #(set-refresh-recipes! (not refresh-recipes?))}))))))
+               ($ grocery-list {:groceries groceries
+                                :on-change #(set-refresh-groceries! (not refresh-groceries?))
+                                :active?   (= active-app :groceries)})
+               ($ recipe-list {:recipes   recipes
+                               :groceries groceries
+                               :on-change #(set-refresh-recipes! (not refresh-recipes?))
+                               :active?   (= active-app :recipes)})))))
 
 (defonce root
          (uix.dom/create-root (js/document.getElementById "root")))

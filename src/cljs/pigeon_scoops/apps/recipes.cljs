@@ -24,14 +24,14 @@
             ($ AccordionSummary {:expandIcon ($ ExpandMoreIcon)}
                ($ Typography (or recipe-name "New Recipe"))))))
 
-(defui recipe-list [{:keys [recipes groceries on-change]}]
+(defui recipe-list [{:keys [recipes groceries on-change active?]}]
        (let [[error-text set-error-text!] (uix/use-state "")
              [error-title set-error-title!] (uix/use-state "")
              [new-recipe-key set-new-recipe-key!] (uix/use-state (str (random-uuid)))
              error-handler (partial utils/error-handler
                                     set-error-title!
                                     set-error-text!)]
-         ($ Stack {:direction "column"}
+         ($ Stack {:direction "column" :display (if active? "block" "none")}
             ($ alert-dialog {:open?    (not (str/blank? error-title))
                              :title    error-title
                              :message  error-text

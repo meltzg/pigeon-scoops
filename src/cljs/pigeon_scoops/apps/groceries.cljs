@@ -213,14 +213,14 @@
                                :on-click #(on-delete (name grocery-type))}
                        "Delete")))))))
 
-(defui grocery-list [{:keys [groceries on-change]}]
+(defui grocery-list [{:keys [groceries on-change active?]}]
        (let [[error-text set-error-text!] (uix/use-state "")
              [error-title set-error-title!] (uix/use-state "")
              [new-item-key set-new-item-key!] (uix/use-state (str (random-uuid)))
              error-handler (partial utils/error-handler
                                     set-error-title!
                                     set-error-text!)]
-         ($ Stack {:direction "column"}
+         ($ Stack {:direction "column" :display (if active? "block" "none")}
             ($ alert-dialog {:open?    (not (str/blank? error-title))
                              :title    error-title
                              :message  error-text
