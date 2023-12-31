@@ -39,14 +39,14 @@
        (let [convert-instructions #(remove str/blank? (str/split-lines %))
              [new-instructions new-instructions-valid? on-new-instructions-change] (utils/use-validation (str/join "\n" instructions)
                                                                                                          #(s/valid? ::rs/instructions (convert-instructions %)))]
-         ($ Dialog {:open true :on-close on-close}
+         ($ Dialog {:open true :on-close on-close :full-screen true}
             ($ DialogTitle "Edit Instructions")
             ($ DialogContent
-               ($ TextField {:label     "Instructions"
-                             :multiline true
-                             :max-rows  15
-                             :value     new-instructions
-                             :on-change on-new-instructions-change}))
+               ($ TextField {:label      "Instructions"
+                             :multiline  true
+                             :full-width true
+                             :value      new-instructions
+                             :on-change  on-new-instructions-change}))
             ($ DialogActions
                ($ Button {:on-click on-close} "Cancel")
                ($ Button {:on-click #(on-save (convert-instructions new-instructions))
