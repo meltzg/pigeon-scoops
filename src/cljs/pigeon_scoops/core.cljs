@@ -67,7 +67,7 @@
                                       :set-active-app! #(do (prn %)
                                                             (set-active-app! %)
                                                             (set-menu-open! (not menu-open?)))}))))
-            ($ Box
+            ($ Box {:component "div"}
                ($ Toolbar)
                ($ grocery-list {:groceries groceries
                                 :on-change #(set-refresh-groceries! (not refresh-groceries?))

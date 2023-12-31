@@ -1,6 +1,5 @@
 (ns pigeon-scoops.apps.recipes
   (:require [ajax.core :as ajax]
-            [clojure.set :refer [union]]
             [clojure.string :as str]
             [cljs.spec.alpha :as s]
             [uix.core :as uix :refer [$ defui]]
@@ -19,9 +18,14 @@
                                      AccordionActions
                                      AccordionDetails
                                      AccordionSummary
+                                     Button
                                      FormControl
                                      InputLabel
+                                     List
+                                     ListItem
+                                     ListItemText
                                      MenuItem
+                                     Paper
                                      Select
                                      Stack
                                      TextField
@@ -42,7 +46,9 @@
                                                                                               (first (keys volume/conversion-map)))
                                                                                           #(s/valid? ::rs/amount-unit (keyword amount-unit-type %)))
              [source source-valid? on-source-change] (utils/use-validation (or (::rs/source recipe) "")
-                                                                           #(s/valid? ::rs/source %))]
+                                                                           #(s/valid? ::rs/source %))
+             [instructions instructions-valid? on-instructions-change] (utils/use-validation (::rs/instructions recipe)
+                                                                                             #(s/valid? ::rs/instructions %))]
 
          (uix/use-effect
            (fn []
@@ -90,7 +96,24 @@
                   ($ TextField {:label     "Source"
                                 :error     (not source-valid?)
                                 :value     source
-                                :on-change on-source-change}))))))
+                                :on-change on-source-change})
+                  ($ Typography
+                     "Instructions")
+                  ($ Paper
+                     ($ List
+                        (map-indexed (fn [idx, text]
+                                       ($ ListItem {:key text}
+                                          ($ ListItemText {:primary (str (inc idx) ") " text)})))
+                                     instructions)))
+                  ($ Button {:variant "contained"}
+                     "Save")
+                  ($ Button {:variant "contained"}
+                     "Reset")
+                  (when recipe
+                    ($ Button {:variant  "contained"
+                               :color    "error"
+                               :on-click #(on-delete recipe-id)}
+                       "Delete")))))))
 
 (defui recipe-list [{:keys [recipes groceries on-change active?]}]
        (let [[error-text set-error-text!] (uix/use-state "")
