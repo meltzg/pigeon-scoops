@@ -3,7 +3,8 @@
             (pigeon-scoops.components
               [api :as api]
               [config-manager :as cm]
-              [grocery-manager :as gm]))
+              [grocery-manager :as gm]
+              [recipe-manager :as rm]))
   (:gen-class))
 
 
@@ -15,6 +16,9 @@
      :grocery-manager (component/using
                         (gm/make-grocery-manager)
                         [:config-manager])
+     :recipe-manager (component/using
+                       (rm/make-recipe-manager)
+                       [:config-manager :grocery-manager])
      :api (component/using
             (api/make-api)
             [:config-manager :grocery-manager]))))
