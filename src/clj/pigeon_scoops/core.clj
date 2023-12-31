@@ -21,7 +21,7 @@
                        [:config-manager :grocery-manager])
      :api (component/using
             (api/make-api)
-            [:config-manager :grocery-manager]))))
+            [:config-manager :grocery-manager :recipe-manager]))))
 
 (defn -main
   [& args]

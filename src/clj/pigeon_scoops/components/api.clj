@@ -6,6 +6,8 @@
             [muuntaja.middleware :as mw]
             [pigeon-scoops.components.config-manager :as cm]
             [pigeon-scoops.components.grocery-manager :as gm]
+            [pigeon-scoops.components.grocery-manager :as gm]
+            [pigeon-scoops.components.recipe-manager :as rm]
             [ring.adapter.jetty :refer [run-jetty]]
             [ring.logger :as log-mw]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
@@ -43,24 +45,33 @@
                             (keyword (namespace ::gm/type) (:type body-params)))
     (resp/status 204)))
 
-(defn app-routes [config-manager grocery-manager]
+(defn get-recipes-handler [recipe-manager params]
+  (fn [& _]
+    (resp/response (apply (partial rm/get-recipes recipe-manager)
+                          (map parse-uuid
+                               (if (or (nil? (:ids params)) (coll? (:ids params)))
+                                 (:ids params)
+                                 [(:ids params)]))))))
+
+(defn app-routes [grocery-manager recipe-manager]
   (routes
     (GET "/" {} (resp/resource-response "index.html" {:root "public"}))
     (GET "/api/v1/groceries" {params :params} (get-groceries-handler grocery-manager params))
     (PUT "/api/v1/groceries" {} (add-grocery-item-handler grocery-manager false))
     (PATCH "/api/v1/groceries" {} (add-grocery-item-handler grocery-manager true))
     (DELETE "/api/v1/groceries" {} (delete-grocery-item-handler grocery-manager))
+    (GET "/api/v1/recipes" {params :params} (get-recipes-handler recipe-manager params))
     (route/resources "/")
     (route/not-found "Not Found")))
 
-(defrecord Api [config-manager grocery-manager]
+(defrecord Api [config-manager grocery-manager recipe-manager]
   component/Lifecycle
 
   (start [this]
     (let [{::cm/keys [app-host app-port]} (::cm/app-settings config-manager)]
       (logger/info (str "Starting server on host " app-host " port: " app-port))
       (assoc this :server (run-jetty
-                            (-> (app-routes config-manager grocery-manager)
+                            (-> (app-routes grocery-manager recipe-manager)
                                 log-mw/wrap-with-logger
                                 mw/wrap-format
                                 (wrap-keyword-params {:parse-namespaces? true})
