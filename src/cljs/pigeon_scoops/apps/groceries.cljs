@@ -2,7 +2,7 @@
   (:require [ajax.core :as ajax]
             [clojure.string :as str]
             [pigeon-scoops.components.alert-dialog :refer [alert-dialog]]
-            [pigeon-scoops.components.grocery-manager :as-alias gm]
+            [pigeon-scoops.spec.groceries :as gs]
             [pigeon-scoops.units.common :as ucom]
             [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.units.volume :as volume]
@@ -38,24 +38,24 @@
                                      Typography]]))
 
 (defui unit-config [{:keys [initial-unit on-save on-close]}]
-       (let [[source source-valid? on-source-change] (utils/use-validation (or (::gm/source initial-unit) "")
+       (let [[source source-valid? on-source-change] (utils/use-validation (or (::gs/source initial-unit) "")
                                                                            #(not (str/blank? %)))
-             [mass mass-valid? on-mass-change] (utils/use-validation (or (::gm/unit-mass initial-unit) 0)
+             [mass mass-valid? on-mass-change] (utils/use-validation (or (::gs/unit-mass initial-unit) 0)
                                                                      #(and (re-matches #"^\d+\.?\d*$" (str %))
                                                                            (> (js/parseFloat %) 0)))
-             [mass-type mass-type-valid? on-mass-type-change] (utils/use-validation (or (::gm/unit-mass-type initial-unit) (first (keys mass/conversion-map)))
+             [mass-type mass-type-valid? on-mass-type-change] (utils/use-validation (or (::gs/unit-mass-type initial-unit) (first (keys mass/conversion-map)))
                                                                                     #(some #{(keyword (namespace ::mass/kg) %)} (keys mass/conversion-map)))
-             [volume volume-valid? on-volume-change] (utils/use-validation (or (::gm/unit-volume initial-unit) 0)
+             [volume volume-valid? on-volume-change] (utils/use-validation (or (::gs/unit-volume initial-unit) 0)
                                                                            #(and (re-matches #"^\d+\.?\d*$" (str %))
                                                                                  (> (js/parseFloat %) 0)))
-             [volume-type volume-type-valid? on-volume-type-change] (utils/use-validation (or (::gm/unit-volume-type initial-unit) (first (keys volume/conversion-map)))
+             [volume-type volume-type-valid? on-volume-type-change] (utils/use-validation (or (::gs/unit-volume-type initial-unit) (first (keys volume/conversion-map)))
                                                                                           #(some #{(keyword (namespace ::volume/c) %)} (keys volume/conversion-map)))
-             [common common-valid? on-common-change] (utils/use-validation (or (::gm/unit-common initial-unit) 0)
+             [common common-valid? on-common-change] (utils/use-validation (or (::gs/unit-common initial-unit) 0)
                                                                            #(and (re-matches #"^\d+\.?\d*$" (str %))
                                                                                  (> (js/parseFloat %) 0)))
-             [common-type common-type-valid? on-common-type-change] (utils/use-validation (or (::gm/unit-common-type initial-unit) (first ucom/other-units))
+             [common-type common-type-valid? on-common-type-change] (utils/use-validation (or (::gs/unit-common-type initial-unit) (first ucom/other-units))
                                                                                           #(some #{(keyword (namespace ::ucom/pinch) %)} ucom/other-units))
-             [cost cost-valid? on-cost-change] (utils/use-validation (or (::gm/unit-cost initial-unit) 0)
+             [cost cost-valid? on-cost-change] (utils/use-validation (or (::gs/unit-cost initial-unit) 0)
                                                                      #(and (re-matches #"^\d+\.?\d*$" (str %))
                                                                            (> (js/parseFloat %) 0)))]
          ($ Dialog {:open true :on-close on-close}
@@ -102,14 +102,14 @@
                                 :on-change on-cost-change})))
             ($ DialogActions
                ($ Button {:on-click on-close} "Cancel")
-               ($ Button {:on-click #(on-save (cond-> {::gm/source    source
-                                                       ::gm/unit-cost (js/parseFloat cost)}
-                                                      mass-valid? (assoc ::gm/unit-mass (js/parseFloat mass)
-                                                                         ::gm/unit-mass-type (keyword (namespace ::mass/kg) mass-type))
-                                                      volume-valid? (assoc ::gm/unit-volume (js/parseFloat volume)
-                                                                           ::gm/unit-volume-type (keyword (namespace ::volume/c) volume-type))
-                                                      common-valid? (assoc ::gm/unit-common (js/parseFloat common)
-                                                                           ::gm/unit-common-type (keyword (namespace ::ucom/pinch) common-type))))
+               ($ Button {:on-click #(on-save (cond-> {::gs/source    source
+                                                       ::gs/unit-cost (js/parseFloat cost)}
+                                                      mass-valid? (assoc ::gs/unit-mass (js/parseFloat mass)
+                                                                         ::gs/unit-mass-type (keyword (namespace ::mass/kg) mass-type))
+                                                      volume-valid? (assoc ::gs/unit-volume (js/parseFloat volume)
+                                                                           ::gs/unit-volume-type (keyword (namespace ::volume/c) volume-type))
+                                                      common-valid? (assoc ::gs/unit-common (js/parseFloat common)
+                                                                           ::gs/unit-common-type (keyword (namespace ::ucom/pinch) common-type))))
                           :disabled (not (and source-valid?
                                               cost-valid?
                                               (or (and mass-valid? mass-type-valid?)
@@ -120,14 +120,14 @@
 (defui grocery-unit-row [{:keys [unit on-edit on-delete]}]
        (let [[config-open set-config-open!] (uix/use-state false)]
          ($ TableRow
-            ($ TableCell (::gm/source unit))
-            ($ TableCell (str (::gm/unit-mass unit) (when (::gm/unit-mass-type unit)
-                                                      (name (::gm/unit-mass-type unit)))))
-            ($ TableCell (str (::gm/unit-volume unit) (when (::gm/unit-volume-type unit)
-                                                        (name (::gm/unit-volume-type unit)))))
-            ($ TableCell (str (::gm/unit-common unit) " " (when (::gm/unit-common-type unit)
-                                                            (name (::gm/unit-common-type unit)))))
-            ($ TableCell (str "$" (::gm/unit-cost unit)))
+            ($ TableCell (::gs/source unit))
+            ($ TableCell (str (::gs/unit-mass unit) (when (::gs/unit-mass-type unit)
+                                                      (name (::gs/unit-mass-type unit)))))
+            ($ TableCell (str (::gs/unit-volume unit) (when (::gs/unit-volume-type unit)
+                                                        (name (::gs/unit-volume-type unit)))))
+            ($ TableCell (str (::gs/unit-common unit) " " (when (::gs/unit-common-type unit)
+                                                            (name (::gs/unit-common-type unit)))))
+            ($ TableCell (str "$" (::gs/unit-cost unit)))
             ($ TableCell
                (when config-open
                  ($ unit-config {:initial-unit unit
@@ -169,15 +169,17 @@
                "Add Unit"))))
 
 (defui grocery-entry [{:keys [item on-save on-delete]}]
-       (let [original-type (when item (name (::gm/type item)))
+       (let [original-type (when item (name (::gs/type item)))
              [grocery-type grocery-type-valid? on-grocery-type-change]
              (utils/use-validation (or original-type "")
                                    #(re-matches #"^[a-zA-Z0-9-]+$" %))
-             [description set-description!] (uix/use-state (::gm/description item))
-             [units set-units!] (uix/use-state (::gm/units item))
+             [description set-description!] (uix/use-state (::gs/description item))
+             [units set-units!] (uix/use-state (::gs/units item))
              unsaved-changes? (or (and grocery-type-valid? (not= grocery-type original-type))
-                                  (not= description (::gm/description item))
-                                  (not= units (::gm/units item)))]
+                                  (and (not= description (::gs/description item))
+                                       (not (and (str/blank? description)
+                                                 (str/blank? (::gs/description item)))))
+                                  (not= units (::gs/units item)))]
          ($ Accordion (if (nil? item) {:expanded true} {})
             ($ AccordionSummary {:expandIcon ($ ExpandMoreIcon)}
                ($ Typography (or original-type "New Grocery Item")))
@@ -197,14 +199,14 @@
                   ($ grocery-unit-list {:initial-units units :on-change set-units!})
                   ($ Button {:variant  "contained"
                              :disabled (not unsaved-changes?)
-                             :on-click #(on-save (conj {::gm/type  (keyword (namespace ::gm/type) grocery-type)
-                                                        ::gm/units (or units [])}
-                                                       (when description [::gm/description description])))}
+                             :on-click #(on-save (conj {::gs/type  (keyword (namespace ::gs/type) grocery-type)
+                                                        ::gs/units (or units [])}
+                                                       (when-not (str/blank? description) [::gs/description description])))}
                      "Save")
                   ($ Button {:variant  "contained"
                              :disabled (not unsaved-changes?)
-                             :on-click #(do (set-description! (::gm/description item))
-                                            (set-units! (::gm/units item))
+                             :on-click #(do (set-description! (::gs/description item))
+                                            (set-units! (::gs/units item))
                                             (when-not original-type (on-grocery-type-change "")))}
                      "Reset")
                   (when original-type
@@ -225,8 +227,8 @@
                              :title    error-title
                              :message  error-text
                              :on-close #(set-error-title! "")})
-            (for [item (sort #(compare (::gm/type %1)
-                                       (::gm/type %2)) (conj groceries nil))]
+            (for [item (sort #(compare (::gs/type %1)
+                                       (::gs/type %2)) (conj groceries nil))]
               ($ grocery-entry {:item      item
                                 :on-save   #((if item
                                                ajax/PATCH
@@ -244,4 +246,4 @@
                                                           :response-format :transit
                                                           :handler         on-change
                                                           :error-handler   error-handler})
-                                :key       (or (::gm/type item) new-item-key)})))))
+                                :key       (or (::gs/type item) new-item-key)})))))

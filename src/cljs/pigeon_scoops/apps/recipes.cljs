@@ -4,8 +4,8 @@
             [uix.core :as uix :refer [$ defui]]
             [pigeon-scoops.utils :as utils]
             [pigeon-scoops.components.alert-dialog :refer [alert-dialog]]
-            [pigeon-scoops.components.grocery-manager :as-alias gm]
-            [pigeon-scoops.components.recipe-manager :as-alias rm]
+            [pigeon-scoops.spec.groceries :as gs]
+            [pigeon-scoops.spec.recipes :as rs]
             ["@mui/icons-material/Add$default" :as AddIcon]
             ["@mui/icons-material/Delete$default" :as DeleteIcon]
             ["@mui/icons-material/Edit$default" :as EditIcon]
@@ -19,8 +19,8 @@
                                      Typography]]))
 
 (defui recipe-entry [{:keys [recipe on-save on-delete]}]
-       (let [recipe-id (::rm/id recipe)
-             [recipe-name recipe-name-valid? on-recipe-name-change] (utils/use-validation (::rm/name recipe)
+       (let [recipe-id (::rs/id recipe)
+             [recipe-name recipe-name-valid? on-recipe-name-change] (utils/use-validation (::rs/name recipe)
                                                                                           #(not (str/blank? %)))]
          ($ Accordion (if (nil? recipe) {:expanded true} {})
             ($ AccordionSummary {:expandIcon ($ ExpandMoreIcon)}
@@ -44,8 +44,8 @@
                              :title    error-title
                              :message  error-text
                              :on-close #(set-error-title! "")})
-            (for [recipe (sort #(compare (::rm/name %1)
-                                         (::rm/name %2)) (conj recipes nil))]
+            (for [recipe (sort #(compare (::rs/name %1)
+                                         (::rs/name %2)) (conj recipes nil))]
               ($ recipe-entry {:recipe    recipe
                                :on-save   #((if recipe
                                               ajax/PATCH
@@ -63,4 +63,4 @@
                                                          :response-format :transit
                                                          :handler         on-change
                                                          :error-handler   error-handler})
-                               :key       (or (::rm/id recipe) new-recipe-key)})))))
+                               :key       (or (::rs/id recipe) new-recipe-key)})))))

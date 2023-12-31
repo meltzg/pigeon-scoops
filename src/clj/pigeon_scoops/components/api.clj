@@ -8,6 +8,8 @@
             [pigeon-scoops.components.grocery-manager :as gm]
             [pigeon-scoops.components.grocery-manager :as gm]
             [pigeon-scoops.components.recipe-manager :as rm]
+            [pigeon-scoops.spec.recipes :as rs]
+            [pigeon-scoops.spec.groceries :as gs]
             [ring.adapter.jetty :refer [run-jetty]]
             [ring.logger :as log-mw]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
@@ -18,7 +20,7 @@
 (defn get-groceries-handler [grocery-manager params]
   (fn [& _]
     (resp/response (apply (partial gm/get-groceries grocery-manager)
-                          (map #(keyword (namespace ::gm/type) %)
+                          (map #(keyword (namespace ::gs/type) %)
                                (if (or (nil? (:types params)) (coll? (:types params)))
                                  (:types params)
                                  [(:types params)]))))))
@@ -28,8 +30,8 @@
     (let [updated-groceries (gm/add-grocery-item grocery-manager body-params update?)]
       (cond (nil? updated-groceries)
             (if update?
-              (resp/not-found (str "No grocery item with type " (::gm/type body-params)))
-              (-> (str "Grocery item with type " (::gm/type body-params) " already exists")
+              (resp/not-found (str "No grocery item with type " (::gs/type body-params)))
+              (-> (str "Grocery item with type " (::gs/type body-params) " already exists")
                   resp/bad-request
                   (resp/status 409)))
             (:clojure.spec.alpha/problems updated-groceries)
@@ -42,7 +44,7 @@
 (defn delete-grocery-item-handler [grocery-manager]
   (fn [{:keys [body-params]}]
     (gm/delete-grocery-item grocery-manager
-                            (keyword (namespace ::gm/type) (:type body-params)))
+                            (keyword (namespace ::gs/type) (:type body-params)))
     (resp/status 204)))
 
 (defn get-recipes-handler [recipe-manager params]

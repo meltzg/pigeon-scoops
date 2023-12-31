@@ -1,7 +1,7 @@
-(ns pigeon-scoops.basic-spec-test
+(ns pigeon-scoops.spec.basic-test
   (:require [clojure.spec.alpha :as s]
             [clojure.test :refer :all]
-            [pigeon-scoops.basic-spec :as bs]))
+            [pigeon-scoops.spec.basic :as bs]))
 
 (deftest non-empty-string?-valid
   (testing "Non-empty string is true"

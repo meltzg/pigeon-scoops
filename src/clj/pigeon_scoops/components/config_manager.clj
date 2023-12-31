@@ -4,7 +4,7 @@
             [clojure.spec.alpha :as s]
             [clojure.tools.logging :as logger]
             [com.stuartsierra.component :as component]
-            [pigeon-scoops.basic-spec :as bs]))
+            [pigeon-scoops.spec.basic :as bs]))
 
 (s/def ::app-host ::bs/non-empty-string)
 (s/def ::app-port pos?)
@@ -16,10 +16,10 @@
                                     ::recipes-file]))
 
 (def env-defaults
-  {::app-host (or (System/getenv "PIGEON_HOST") "0.0.0.0")
-   ::app-port (Integer/parseInt (or (System/getenv "PIGEON_PORT") "8080"))
+  {::app-host       (or (System/getenv "PIGEON_HOST") "0.0.0.0")
+   ::app-port       (Integer/parseInt (or (System/getenv "PIGEON_PORT") "8080"))
    ::groceries-file (or (System/getenv "PIGEON_GROCERIES") "resources/groceries.edn")
-   ::recipes-file (or (System/getenv "PIGEON_RECIPES") "resources/recipes.edn")})
+   ::recipes-file   (or (System/getenv "PIGEON_RECIPES") "resources/recipes.edn")})
 
 (defrecord ConfigManager [app-settings-file]
   component/Lifecycle
