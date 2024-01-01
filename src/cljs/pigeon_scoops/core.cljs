@@ -64,8 +64,7 @@
                                       :app-key         app-key
                                       :text            app-name
                                       :icon            app-icon
-                                      :set-active-app! #(do (prn %)
-                                                            (set-active-app! %)
+                                      :set-active-app! #(do (set-active-app! %)
                                                             (set-menu-open! (not menu-open?)))}))))
             ($ Box {:component "div"}
                ($ Toolbar)

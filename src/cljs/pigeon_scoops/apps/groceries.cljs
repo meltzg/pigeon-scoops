@@ -3,13 +3,13 @@
             [clojure.string :as str]
             [cljs.spec.alpha :as s]
             [pigeon-scoops.components.alert-dialog :refer [alert-dialog]]
+            [pigeon-scoops.components.entity-list :refer [entity-list]]
             [pigeon-scoops.spec.groceries :as gs]
             [pigeon-scoops.units.common :as ucom]
             [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.units.volume :as volume]
             [pigeon-scoops.utils :as utils]
             [uix.core :as uix :refer [$ defui]]
-            ["@mui/icons-material/Add$default" :as AddIcon]
             ["@mui/icons-material/Delete$default" :as DeleteIcon]
             ["@mui/icons-material/Edit$default" :as EditIcon]
             ["@mui/icons-material/ExpandMore$default" :as ExpandMoreIcon]
@@ -26,14 +26,9 @@
                                      IconButton
                                      InputLabel
                                      MenuItem
-                                     Paper
                                      Select
                                      Stack
-                                     Table
-                                     TableBody
                                      TableCell
-                                     TableContainer
-                                     TableHead
                                      TableRow
                                      TextField
                                      Typography]]))
@@ -118,20 +113,20 @@
                                                   (and common-valid? common-type-valid?))))}
                   "Save")))))
 
-(defui grocery-unit-row [{:keys [unit on-edit on-delete]}]
+(defui grocery-unit-row [{:keys [entity on-edit on-delete]}]
        (let [[config-open set-config-open!] (uix/use-state false)]
          ($ TableRow
-            ($ TableCell (::gs/source unit))
-            ($ TableCell (str (::gs/unit-mass unit) (when (::gs/unit-mass-type unit)
-                                                      (name (::gs/unit-mass-type unit)))))
-            ($ TableCell (str (::gs/unit-volume unit) (when (::gs/unit-volume-type unit)
-                                                        (name (::gs/unit-volume-type unit)))))
-            ($ TableCell (str (::gs/unit-common unit) " " (when (::gs/unit-common-type unit)
-                                                            (name (::gs/unit-common-type unit)))))
-            ($ TableCell (str "$" (::gs/unit-cost unit)))
+            ($ TableCell (::gs/source entity))
+            ($ TableCell (str (::gs/unit-mass entity) (when (::gs/unit-mass-type entity)
+                                                        (name (::gs/unit-mass-type entity)))))
+            ($ TableCell (str (::gs/unit-volume entity) (when (::gs/unit-volume-type entity)
+                                                          (name (::gs/unit-volume-type entity)))))
+            ($ TableCell (str (::gs/unit-common entity) " " (when (::gs/unit-common-type entity)
+                                                              (name (::gs/unit-common-type entity)))))
+            ($ TableCell (str "$" (::gs/unit-cost entity)))
             ($ TableCell
                (when config-open
-                 ($ unit-config {:initial-unit unit
+                 ($ unit-config {:initial-unit entity
                                  :on-close     #(set-config-open! false)
                                  :on-save      #(do (on-edit %)
                                                     (set-config-open! false))}))
@@ -140,34 +135,6 @@
                ($ IconButton {:color    "error"
                               :on-click on-delete}
                   ($ DeleteIcon))))))
-
-(defui grocery-unit-list [{:keys [initial-units on-change]}]
-       (let [[open-unit-dialog set-open-unit-dialog!] (uix/use-state false)]
-         ($ Stack {:direction "column" :spacing 1}
-            (when open-unit-dialog
-              ($ unit-config {:on-close #(set-open-unit-dialog! false)
-                              :on-save  #(do (on-change (conj initial-units %))
-                                             (set-open-unit-dialog! false))}))
-            ($ TableContainer {:component Paper}
-               ($ Table
-                  ($ TableHead
-                     ($ TableRow
-                        ($ TableCell "Source")
-                        ($ TableCell "Mass")
-                        ($ TableCell "Volume")
-                        ($ TableCell "Common Unit")
-                        ($ TableCell "Cost")
-                        ($ TableCell "Actions")))
-                  ($ TableBody (map-indexed (fn [idx unit]
-                                              ($ grocery-unit-row {:key       idx
-                                                                   :unit      unit
-                                                                   :on-edit   #(on-change (assoc initial-units idx %))
-                                                                   :on-delete #(on-change (vec (utils/drop-nth idx initial-units)))}))
-                                            initial-units))))
-            ($ Button {:variant  "contained"
-                       :on-click #(set-open-unit-dialog! true)}
-               ($ AddIcon)
-               "Add Unit"))))
 
 (defui grocery-entry [{:keys [item on-save on-delete]}]
        (let [original-type (when item (name (::gs/type item)))
@@ -197,7 +164,16 @@
                                 :max-rows  4
                                 :value     (or description "")
                                 :on-change #(set-description! (.. % -target -value))})
-                  ($ grocery-unit-list {:initial-units units :on-change set-units!})
+                  ($ entity-list {:entities       units
+                                  :column-headers ["Source"
+                                                   "Mass"
+                                                   "Volume"
+                                                   "Common Unit"
+                                                   "Cost"
+                                                   "Actions"]
+                                  :entity-config  unit-config
+                                  :entity-row     grocery-unit-row
+                                  :on-change      set-units!})
                   ($ Button {:variant  "contained"
                              :disabled (not unsaved-changes?)
                              :on-click #(on-save (conj {::gs/type  (keyword (namespace ::gs/type) grocery-type)
