@@ -52,11 +52,47 @@
                   "Save")))))
 
 (defui ingredient-config [{:keys [entity config-metadata on-save on-close]}]
-       (let [{:keys [groceries]} config-metadata]
+       (let [{:keys [groceries]} config-metadata
+             [ingredient-type ingredient-type-valid? on-ingredient-type-change] (utils/use-validation (or (::rs/ingredient-type entity)
+                                                                                                          (::gs/type (first groceries)))
+                                                                                                      #(s/valid? ::rs/ingredient-type (keyword (namespace ::gs/type) %)))
+             [amount amount-valid? on-amount-change] (utils/use-validation (or (::rs/amount entity) 0)
+                                                                           #(and (re-matches #"^\d+\.?\d*$" (str %))
+                                                                                 (s/valid? ::rs/amount (js/parseFloat %))))
+             [amount-unit-type set-amount-unit-type!] (uix/use-state (namespace (or (::rs/amount-unit entity) ::volume/c)))
+             [amount-unit amount-unit-valid? on-amount-unit-change] (utils/use-validation (or (::rs/amount-unit entity)
+                                                                                              (first (keys volume/conversion-map)))
+                                                                                          #(s/valid? ::rs/amount-unit %))]
+
+         (uix/use-effect
+           (fn []
+             (when (not= amount-unit-type (namespace amount-unit))
+               (on-amount-unit-change (cond (= amount-unit-type (namespace ::mass/g)) (first (keys mass/conversion-map))
+                                            (= amount-unit-type (namespace ::volume/c)) (first (keys volume/conversion-map))))))
+           [amount-unit amount-unit-type on-amount-unit-change])
+
          ($ Dialog {:open true :on-close on-close}
             ($ DialogTitle "Edit Ingredient")
             ($ DialogContent
-               ($ Stack {:direction "column" :spacing 2}))
+               ($ Stack {:direction "column" :spacing 2}
+                  ($ TextField {:label     "Amount"
+                                :error     (not amount-valid?)
+                                :value     amount
+                                :on-change on-amount-change})
+                  ($ FormControl {:full-width true}
+                     ($ InputLabel "Amount type")
+                     ($ Select {:value     amount-unit-type
+                                :on-change #(set-amount-unit-type! (.. % -target -value))}
+                        (map #($ MenuItem {:value % :key %} (last (str/split % #"\.")))
+                             (map namespace [::volume/c ::mass/g]))))
+                  ($ FormControl {:full-width true
+                                  :error      (not amount-unit-valid?)}
+                     ($ InputLabel "Amount unit")
+                     ($ Select {:value     amount-unit
+                                :on-change #(on-amount-unit-change (keyword amount-unit-type (.. % -target -value)))}
+                        (map #($ MenuItem {:value % :key %} (name %))
+                             (cond (= amount-unit-type (namespace ::mass/g)) (set (keys mass/conversion-map))
+                                   (= amount-unit-type (namespace ::volume/c)) (set (keys volume/conversion-map))))))))
             ($ DialogActions
                ($ Button {:on-click on-close} "Cancel")
                ($ Button "Save")))))
@@ -75,7 +111,7 @@
              [amount-unit-type set-amount-unit-type!] (uix/use-state (namespace ::volume/c))
              [amount-unit amount-unit-valid? on-amount-unit-change] (utils/use-validation (or (::rs/amount-unit recipe)
                                                                                               (first (keys volume/conversion-map)))
-                                                                                          #(s/valid? ::rs/amount-unit (keyword amount-unit-type %)))
+                                                                                          #(s/valid? ::rs/amount-unit %))
              [source source-valid? on-source-change] (utils/use-validation (or (::rs/source recipe) "")
                                                                            #(s/valid? ::rs/source %))
              [ingredients set-ingredients!] (uix/use-state (::rs/ingredients recipe))
@@ -118,7 +154,7 @@
                                   :error      (not amount-unit-valid?)}
                      ($ InputLabel "Amount unit")
                      ($ Select {:value     amount-unit
-                                :on-change on-amount-unit-change}
+                                :on-change #(on-amount-unit-change (keyword amount-unit-type (.. % -target -value)))}
                         (map #($ MenuItem {:value % :key %} (name %))
                              (cond (= amount-unit-type (namespace ::mass/g)) (set (keys mass/conversion-map))
                                    (= amount-unit-type (namespace ::volume/c)) (set (keys volume/conversion-map))))))
