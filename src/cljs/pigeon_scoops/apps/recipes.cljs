@@ -127,15 +127,13 @@
                                                                                               (first (keys volume/conversion-map)))
                                                                                           #(s/valid? ::rs/amount-unit %))
              [amount-unit-type set-amount-unit-type!] (uix/use-state (namespace amount-unit))
-             [source source-valid? on-source-change] (utils/use-validation (or (::rs/source recipe) "")
-                                                                           #(s/valid? ::rs/source %))
+             [source set-source!] (uix/use-state (::rs/source recipe))
              [ingredients set-ingredients!] (uix/use-state (::rs/ingredients recipe))
              [instructions set-instructions!] (uix/use-state (::rs/instructions recipe))
              recipe-valid? (and recipe-name-valid?
                                 recipe-type-valid?
                                 amount-valid?
-                                amount-unit-valid?
-                                source-valid?)
+                                amount-unit-valid?)
              unsaved-changes? (or (and (not= recipe-name (::rs/name recipe))
                                        (not (and (str/blank? recipe-name)
                                                  (str/blank? (::rs/name recipe)))))
@@ -190,9 +188,8 @@
                              (cond (= amount-unit-type (namespace ::mass/g)) (set (keys mass/conversion-map))
                                    (= amount-unit-type (namespace ::volume/c)) (set (keys volume/conversion-map))))))
                   ($ TextField {:label     "Source"
-                                :error     (not source-valid?)
-                                :value     source
-                                :on-change on-source-change})
+                                :value     (or source "")
+                                :on-change #(set-source! (.. % -target -value))})
                   (when edit-instructions-open
                     ($ instructions-dialog {:instructions instructions
                                             :on-close     #(set-edit-instructions-open! false)
@@ -224,7 +221,14 @@
                   ($ Button {:variant  "contained"
                              :disabled (or (not recipe-valid?)
                                            (not unsaved-changes?))
-                             :on-click #()}
+                             :on-click #(on-save (conj {::rs/name         recipe-name
+                                                        ::rs/type         recipe-type
+                                                        ::rs/amount       (js/parseFloat amount)
+                                                        ::rs/amount-unit  amount-unit
+                                                        ::rs/ingredients  ingredients
+                                                        ::rs/instructions instructions}
+                                                       (when (some? recipe-id) [::rs/id recipe-id])
+                                                       (when-not (str/blank? source) [::rs/source source])))}
                      "Save")
                   ($ Button {:variant  "contained"
                              :disabled (not unsaved-changes?)
@@ -236,7 +240,7 @@
                                               (do (set-amount-unit-type! (namespace original-amount-unit))
                                                   (on-amount-unit-change original-amount-unit))
                                               (do (set-amount-unit-type! (namespace ::volume/c))))
-                                            (on-source-change (or (::rs/source recipe) ""))
+                                            (set-source! (::rs/source recipe))
                                             (set-ingredients! (::rs/ingredients recipe))
                                             (set-instructions! (::rs/instructions recipe)))}
                      "Reset")
