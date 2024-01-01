@@ -35,17 +35,17 @@
                                                                      #(and (re-matches #"^\d+\.?\d*$" (str %))
                                                                            (s/valid? ::gs/unit-mass (js/parseFloat %))))
              [mass-type mass-type-valid? on-mass-type-change] (utils/use-validation (or (::gs/unit-mass-type entity) (first (keys mass/conversion-map)))
-                                                                                    #(s/valid? ::gs/unit-mass-type (keyword (namespace ::mass/kg) %)))
+                                                                                    #(s/valid? ::gs/unit-mass-type %))
              [volume volume-valid? on-volume-change] (utils/use-validation (or (::gs/unit-volume entity) 0)
                                                                            #(and (re-matches #"^\d+\.?\d*$" (str %))
                                                                                  (s/valid? ::gs/unit-volume (js/parseFloat %))))
              [volume-type volume-type-valid? on-volume-type-change] (utils/use-validation (or (::gs/unit-volume-type entity) (first (keys volume/conversion-map)))
-                                                                                          #(s/valid? ::gs/unit-volume-type (keyword (namespace ::volume/c) %)))
+                                                                                          #(s/valid? ::gs/unit-volume-type %))
              [common common-valid? on-common-change] (utils/use-validation (or (::gs/unit-common entity) 0)
                                                                            #(and (re-matches #"^\d+\.?\d*$" (str %))
                                                                                  (s/valid? ::gs/unit-common (js/parseFloat %))))
              [common-type common-type-valid? on-common-type-change] (utils/use-validation (or (::gs/unit-common-type entity) (first ucom/other-units))
-                                                                                          #(s/valid? ::gs/unit-common-type (keyword (namespace ::ucom/pinch) %)))
+                                                                                          #(s/valid? ::gs/unit-common-type %))
              [cost cost-valid? on-cost-change] (utils/use-validation (or (::gs/unit-cost entity) 0)
                                                                      #(and (re-matches #"^\d+\.?\d*$" (str %))
                                                                            (s/valid? ::gs/unit-cost (js/parseFloat %))))]
@@ -65,7 +65,7 @@
                                   :error      (not mass-type-valid?)}
                      ($ InputLabel "Unit type")
                      ($ Select {:value     mass-type
-                                :on-change on-mass-type-change}
+                                :on-change #(on-mass-type-change (keyword (namespace ::mass/kg) (.. % -target -value)))}
                         (map #($ MenuItem {:value % :key %} (name %)) (sort (keys mass/conversion-map)))))
                   ($ TextField {:label     "Volume"
                                 :value     volume
@@ -75,7 +75,7 @@
                                   :error      (not volume-type-valid?)}
                      ($ InputLabel "Unit type")
                      ($ Select {:value     volume-type
-                                :on-change on-volume-type-change}
+                                :on-change #(on-volume-type-change (keyword (namespace ::volume/c) (.. % -target -value)))}
                         (map #($ MenuItem {:value % :key %} (name %)) (sort (keys volume/conversion-map)))))
                   ($ TextField {:label     "Common units"
                                 :value     common
@@ -85,7 +85,7 @@
                                   :error      (not common-type-valid?)}
                      ($ InputLabel "Unit type")
                      ($ Select {:value     common-type
-                                :on-change on-common-type-change}
+                                :on-change #(on-common-type-change (keyword (namespace ::ucom/pinch) (.. % -target -value)))}
                         (map #($ MenuItem {:value % :key %} (name %)) (sort ucom/other-units))))
                   ($ TextField {:label     "Cost ($)"
                                 :value     cost
@@ -96,11 +96,11 @@
                ($ Button {:on-click #(on-save (cond-> {::gs/source    source
                                                        ::gs/unit-cost (js/parseFloat cost)}
                                                       mass-valid? (assoc ::gs/unit-mass (js/parseFloat mass)
-                                                                         ::gs/unit-mass-type (keyword (namespace ::mass/kg) mass-type))
+                                                                         ::gs/unit-mass-type mass-type)
                                                       volume-valid? (assoc ::gs/unit-volume (js/parseFloat volume)
-                                                                           ::gs/unit-volume-type (keyword (namespace ::volume/c) volume-type))
+                                                                           ::gs/unit-volume-type volume-type)
                                                       common-valid? (assoc ::gs/unit-common (js/parseFloat common)
-                                                                           ::gs/unit-common-type (keyword (namespace ::ucom/pinch) common-type))))
+                                                                           ::gs/unit-common-type common-type)))
                           :disabled (not (and source-valid?
                                               cost-valid?
                                               (or (and mass-valid? mass-type-valid?)

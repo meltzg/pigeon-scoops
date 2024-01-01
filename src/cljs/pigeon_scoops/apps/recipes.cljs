@@ -119,7 +119,7 @@
                                                                                           #(s/valid? ::rs/name %))
              [recipe-type recipe-type-valid? on-recipe-type-change] (utils/use-validation (or (::rs/type recipe)
                                                                                               (first rs/recipe-types))
-                                                                                          #(s/valid? ::rs/type (keyword (namespace ::rs/type) %)))
+                                                                                          #(s/valid? ::rs/type %))
              [amount amount-valid? on-amount-change] (utils/use-validation (or (::rs/amount recipe) 0)
                                                                            #(and (re-matches #"^\d+\.?\d*$" (str %))
                                                                                  (s/valid? ::rs/amount (js/parseFloat %))))
@@ -153,7 +153,7 @@
                                   :error      (not recipe-type-valid?)}
                      ($ InputLabel "Recipe type")
                      ($ Select {:value     recipe-type
-                                :on-change on-recipe-type-change}
+                                :on-change #(on-recipe-type-change (keyword (namespace ::rs/type) (.. % -target -value)))}
                         (map #($ MenuItem {:value % :key %} (name %)) (sort rs/recipe-types))))
                   ($ TextField {:label     "Amount"
                                 :error     (not amount-valid?)
