@@ -34,13 +34,26 @@
   (cond->> (deref (::recipes recipe-manager))
            (not-empty ids) (filter #(some #{(::rs/id %)} ids))))
 
-(defn add-recipe [recipes new-recipe]
-  (let [recipe-id (or (::rs/id new-recipe)
-                      (UUID/randomUUID))
-        conformed-recipe (s/conform ::rs/entry (assoc new-recipe ::rs/id recipe-id))]
-    (if (s/invalid? conformed-recipe)
-      recipes
-      (conj (remove #(= (::rs/id %) recipe-id) recipes) conformed-recipe))))
+(defn add-recipe
+  ([recipe-manager new-recipe]
+   (add-recipe recipe-manager new-recipe false))
+  ([recipe-manager new-recipe update?]
+   (let [recipe-id (if update?
+                     (::rs/id new-recipe)
+                     (or (::rs/id new-recipe) (UUID/randomUUID)))
+         existing (first (get-recipes recipe-manager recipe-id))
+         new-recipe (assoc new-recipe ::rs/id recipe-id)]
+     (when-not (or (and update? (not existing))
+                   (and (not update?) existing))
+       (or (s/explain-data ::rs/entry new-recipe)
+           (swap! (::recipes recipe-manager)
+                  (fn [groceries]
+                    (conj (remove #(= (::rs/id %) recipe-id) groceries) new-recipe))))))))
+
+(defn delete-recipe [recipe-manager recipe-id]
+  (logger/info (str "Deleting " recipe-id))
+  (swap! (::recipes recipe-manager)
+         (partial remove #(= (::rs/id %) recipe-id))))
 
 (defn scale-recipe [recipe amount amount-unit]
   (let [scale-factor (units/scale-factor (::rs/amount recipe)

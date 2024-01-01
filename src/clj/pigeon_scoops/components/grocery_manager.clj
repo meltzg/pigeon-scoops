@@ -36,8 +36,8 @@
    (add-grocery-item grocery-manager new-grocery-item false))
   ([grocery-manager new-grocery-item update?]
    (let [existing (first (get-groceries grocery-manager (::gs/type new-grocery-item)))]
-     (if-not (or (and update? (not existing))
-                 (and (not update?) existing))
+     (when-not (or (and update? (not existing))
+                   (and (not update?) existing))
        (or (s/explain-data ::gs/entry new-grocery-item)
            (swap! (::groceries grocery-manager)
                   (fn [groceries]

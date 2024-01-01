@@ -106,25 +106,53 @@
 
 (deftest add-recipe-test
   (testing "Valid recipes can be added to collection of recipes"
-    (are [recipes new-recipe expected]
-      (= (set (rm/add-recipe recipes new-recipe)) (set expected))
+    (are [recipes new-recipe expected valid?]
+      (let [actual (rm/add-recipe {::rm/recipes (atom recipes)} new-recipe)]
+        (if valid?
+          (and (every? #(uuid? (::rs/id %)) actual)
+               (= (set (map #(dissoc % ::rs/id) actual))
+                  (set (map #(dissoc % ::rs/id) expected))))
+          (:clojure.spec.alpha/problems actual)))
       ;; add recipe to nil collection
-      nil recipe-with-id (list recipe-with-id)
+      nil recipe-no-id (list recipe-no-id) true
       ;; add recipe to empty collection
-      [] recipe-with-id [recipe-with-id]
+      [] recipe-no-id [recipe-no-id] true
       ;; add recipe to existing collection
-      [recipe-with-id] another-recipe-with-id [recipe-with-id another-recipe-with-id]
-      ;; add duplicate ID keeps new
-      [recipe-with-id] (assoc recipe-with-id ::rs/name "duplicate ID") [(assoc recipe-with-id ::rs/name "duplicate ID")]
-      ;; add invalid does not add
-      [recipe-with-id] (dissoc another-recipe-with-id ::rs/name) [recipe-with-id])))
+      [recipe-with-id] recipe-no-id-different-ingredients [recipe-with-id recipe-no-id-different-ingredients] true
+      ;; add duplicate ID returns nil
+      [recipe-with-id] (assoc recipe-with-id ::rs/name "duplicate ID") nil true
+      ;; add invalid returns error explanation
+      [recipe-with-id] (dissoc another-recipe-with-id ::rs/name) [recipe-with-id] false)))
 
-(deftest add-recipe-no-id-test
-  (testing "A recipe with no ID is assigned one"
-    (is (let [added-recipe (first (rm/add-recipe nil recipe-no-id))]
-          (and (not (contains? recipe-no-id ::rs/id))
-               (contains? added-recipe ::rs/id)
-               (= (dissoc added-recipe ::rs/id) recipe-no-id))))))
+(deftest update-recipe-test
+  (testing "Valid recipes can be updated"
+    (are [recipes new-recipe expected valid?]
+      (let [actual (rm/add-recipe {::rm/recipes (atom recipes)} new-recipe true)]
+        (if valid?
+          (= (set actual) (set expected))
+          (:clojure.spec.alpha/problems actual)))
+      ;; add new recipe with ID to nil collection returns nil
+      nil recipe-with-id nil true
+      ;; add new recipe with ID to empty collection returns nil
+      [] recipe-with-id nil true
+      ;; add recipe with new ID returns nil
+      [another-recipe-with-id] recipe-with-id nil true
+      ;; add recipe with no ID returns nil
+      [recipe-with-id] recipe-no-id nil true
+      ;; add invalid recipe returns error explanation
+      [recipe-with-id] (dissoc recipe-with-id ::rs/type) nil false
+      ;; update an existing recipe saves the new one
+      [recipe-with-id] (assoc recipe-with-id ::rs/name "new name") [(assoc recipe-with-id ::rs/name "new name")] true)))
+
+(deftest delete-recipe-test
+  (testing "Recipes can be deleted"
+    (are [recipes id-to-delete expected]
+      (= (set (rm/delete-recipe {::rm/recipes (atom recipes)} id-to-delete))
+         (set expected))
+      ;; existing item is removed
+      [recipe-with-id another-recipe-with-id] (::rs/id another-recipe-with-id) [recipe-with-id]
+      ;; missing item removes nothing
+      [recipe-with-id another-recipe-with-id] (random-uuid) [recipe-with-id another-recipe-with-id])))
 
 (deftest materialize-mixins-test
   (testing "Mixins can recursively be materialized"
