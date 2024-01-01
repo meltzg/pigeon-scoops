@@ -2,7 +2,10 @@
   (:require [uix.core :as uix :refer [$ defui]]
             [pigeon-scoops.utils :as utils]
             ["@mui/icons-material/Add$default" :as AddIcon]
+            ["@mui/icons-material/Delete$default" :as DeleteIcon]
+            ["@mui/icons-material/Edit$default" :as EditIcon]
             ["@mui/material" :refer [Button
+                                     IconButton
                                      Paper
                                      Stack
                                      Table
@@ -12,7 +15,24 @@
                                      TableHead
                                      TableRow]]))
 
-(defui entity-list [{:keys [entities column-headers entity-config entity-row on-change]}]
+(defui entity-row [{:keys [entity cell-text entity-config on-edit on-delete]}]
+       (let [[open-entity-dialog? set-open-entity-dialog!] (uix/use-state false)]
+         ($ TableRow
+            (for [text cell-text]
+              ($ TableCell {:key (random-uuid)} text))
+            ($ TableCell
+               (when open-entity-dialog?
+                 ($ entity-config {:entity   entity
+                                   :on-close #(set-open-entity-dialog! false)
+                                   :on-save  #(do (on-edit %)
+                                                  (set-open-entity-dialog! false))}))
+               ($ IconButton {:on-click #(set-open-entity-dialog! true)}
+                  ($ EditIcon))
+               ($ IconButton {:color    "error"
+                              :on-click on-delete}
+                  ($ DeleteIcon))))))
+
+(defui entity-list [{:keys [entities column-headers cell-text entity-config on-change]}]
        (let [[open-entity-dialog? set-open-entity-dialog!] (uix/use-state false)]
          ($ Stack {:direction "column" :spacing 1}
             (when open-entity-dialog?
@@ -26,12 +46,14 @@
                         (for [header column-headers]
                           ($ TableCell {:key header} header))))
                   ($ TableBody
-                     (map-indexed (fn [idx, entity]
-                                    ($ entity-row {:key       idx
-                                                   :entity    entity
-                                                   :on-edit   #(on-change (assoc entities idx %))
-                                                   :on-delete #(on-change (vec (utils/drop-nth idx entities)))}))
-                                  entities))))
+                     (map-indexed (fn [idx, [entity text]]
+                                    ($ entity-row {:key           (random-uuid)
+                                                   :entity        entity
+                                                   :cell-text     text
+                                                   :entity-config entity-config
+                                                   :on-edit       #(on-change (assoc entities idx %))
+                                                   :on-delete     #(on-change (vec (utils/drop-nth idx entities)))}))
+                                  (map vector entities cell-text)))))
             ($ Button {:variant  "contained"
                        :on-click #(set-open-entity-dialog! true)}
                ($ AddIcon)
