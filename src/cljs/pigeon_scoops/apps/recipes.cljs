@@ -83,9 +83,10 @@
 
          (uix/use-effect
            (fn []
-             (on-amount-unit-change (cond (= amount-unit-type (namespace ::mass/g)) (first (keys mass/conversion-map))
-                                          (= amount-unit-type (namespace ::volume/c)) (first (keys volume/conversion-map)))))
-           [amount-unit-type on-amount-unit-change])
+             (when (not= amount-unit-type (namespace amount-unit))
+               (on-amount-unit-change (cond (= amount-unit-type (namespace ::mass/g)) (first (keys mass/conversion-map))
+                                            (= amount-unit-type (namespace ::volume/c)) (first (keys volume/conversion-map))))))
+           [amount-unit amount-unit-type on-amount-unit-change])
 
          ($ Accordion (if (nil? recipe) {:expanded true} {})
             ($ AccordionSummary {:expandIcon ($ ExpandMoreIcon)}
@@ -110,10 +111,7 @@
                   ($ FormControl {:full-width true}
                      ($ InputLabel "Amount type")
                      ($ Select {:value     amount-unit-type
-                                :on-change #(let [new-type (.. % -target -value)]
-                                              (on-amount-unit-change (cond (= new-type (namespace ::mass/g)) (first (keys mass/conversion-map))
-                                                                           (= new-type (namespace ::volume/c)) (first (keys volume/conversion-map))))
-                                              (set-amount-unit-type! new-type))}
+                                :on-change #(set-amount-unit-type! (.. % -target -value))}
                         (map #($ MenuItem {:value % :key %} (last (str/split % #"\.")))
                              (map namespace [::volume/c ::mass/g]))))
                   ($ FormControl {:full-width true
