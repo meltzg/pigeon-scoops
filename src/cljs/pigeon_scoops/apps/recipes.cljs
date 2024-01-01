@@ -55,7 +55,7 @@
        (let [{:keys [groceries]} config-metadata
              [ingredient-type ingredient-type-valid? on-ingredient-type-change] (utils/use-validation (or (::rs/ingredient-type entity)
                                                                                                           (::gs/type (first groceries)))
-                                                                                                      #(s/valid? ::rs/ingredient-type (keyword (namespace ::gs/type) %)))
+                                                                                                      #(s/valid? ::rs/ingredient-type %))
              [amount amount-valid? on-amount-change] (utils/use-validation (or (::rs/amount entity) 0)
                                                                            #(and (re-matches #"^\d+\.?\d*$" (str %))
                                                                                  (s/valid? ::rs/amount (js/parseFloat %))))
@@ -75,6 +75,13 @@
             ($ DialogTitle "Edit Ingredient")
             ($ DialogContent
                ($ Stack {:direction "column" :spacing 2}
+                  ($ FormControl {:full-width true
+                                  :error      (not ingredient-type-valid?)}
+                     ($ InputLabel "Type")
+                     ($ Select {:value     ingredient-type
+                                :on-change #(on-ingredient-type-change (keyword (namespace ::gs/type) (.. % -target -value)))}
+                        (map #($ MenuItem {:value % :key %} (name %))
+                             (sort (map ::gs/type groceries)))))
                   ($ TextField {:label     "Amount"
                                 :error     (not amount-valid?)
                                 :value     amount
