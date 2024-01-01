@@ -115,7 +115,8 @@
                                    #(re-matches #"^[a-zA-Z0-9-]+$" %))
              [description set-description!] (uix/use-state (::gs/description item))
              [units set-units!] (uix/use-state (::gs/units item))
-             unsaved-changes? (or (and grocery-type-valid? (not= grocery-type original-type))
+             grocery-valid? grocery-type-valid?
+             unsaved-changes? (or (not= grocery-type original-type)
                                   (and (not= description (::gs/description item))
                                        (not (and (str/blank? description)
                                                  (str/blank? (::gs/description item)))))
@@ -155,7 +156,8 @@
                                   :entity-config  unit-config
                                   :on-change      set-units!})
                   ($ Button {:variant  "contained"
-                             :disabled (not unsaved-changes?)
+                             :disabled (or (not grocery-valid?)
+                                           (not unsaved-changes?))
                              :on-click #(on-save (conj {::gs/type  (keyword (namespace ::gs/type) grocery-type)
                                                         ::gs/units (or units [])}
                                                        (when-not (str/blank? description) [::gs/description description])))}

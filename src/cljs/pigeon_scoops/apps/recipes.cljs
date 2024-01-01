@@ -123,14 +123,30 @@
              [amount amount-valid? on-amount-change] (utils/use-validation (or (::rs/amount recipe) 0)
                                                                            #(and (re-matches #"^\d+\.?\d*$" (str %))
                                                                                  (s/valid? ::rs/amount (js/parseFloat %))))
-             [amount-unit-type set-amount-unit-type!] (uix/use-state (namespace ::volume/c))
              [amount-unit amount-unit-valid? on-amount-unit-change] (utils/use-validation (or (::rs/amount-unit recipe)
                                                                                               (first (keys volume/conversion-map)))
                                                                                           #(s/valid? ::rs/amount-unit %))
+             [amount-unit-type set-amount-unit-type!] (uix/use-state (namespace amount-unit))
              [source source-valid? on-source-change] (utils/use-validation (or (::rs/source recipe) "")
                                                                            #(s/valid? ::rs/source %))
              [ingredients set-ingredients!] (uix/use-state (::rs/ingredients recipe))
-             [instructions set-instructions!] (uix/use-state (::rs/instructions recipe))]
+             [instructions set-instructions!] (uix/use-state (::rs/instructions recipe))
+             recipe-valid? (and recipe-name-valid?
+                                recipe-type-valid?
+                                amount-valid?
+                                amount-unit-valid?
+                                source-valid?)
+             unsaved-changes? (or (and (not= recipe-name (::rs/name recipe))
+                                       (not (and (str/blank? recipe-name)
+                                                 (str/blank? (::rs/name recipe)))))
+                                  (not= recipe-type (::rs/type recipe))
+                                  (not= (js/parseFloat amount) (::rs/amount recipe))
+                                  (not= amount-unit (::rs/amount-unit recipe))
+                                  (and (not= source (::rs/source recipe))
+                                       (not (and (str/blank? source)
+                                                 (str/blank? (::rs/source recipe)))))
+                                  (not= ingredients (::rs/ingredients recipe))
+                                  (not= instructions (::rs/instructions recipe)))]
 
          (uix/use-effect
            (fn []
@@ -205,9 +221,24 @@
                   ($ Button {:variant  "contained"
                              :on-click #(set-edit-instructions-open! true)}
                      "Edit Instructions")
-                  ($ Button {:variant "contained"}
+                  ($ Button {:variant  "contained"
+                             :disabled (or (not recipe-valid?)
+                                           (not unsaved-changes?))
+                             :on-click #()}
                      "Save")
-                  ($ Button {:variant "contained"}
+                  ($ Button {:variant  "contained"
+                             :disabled (not unsaved-changes?)
+                             :on-click #(do (on-recipe-name-change (or (::rs/name recipe) ""))
+                                            (on-recipe-type-change (or (::rs/type recipe)
+                                                                       (first rs/recipe-types)))
+                                            (on-amount-change (or (::rs/amount recipe) 0))
+                                            (if-let [original-amount-unit (::rs/amount-unit recipe)]
+                                              (do (set-amount-unit-type! (namespace original-amount-unit))
+                                                  (on-amount-unit-change original-amount-unit))
+                                              (do (set-amount-unit-type! (namespace ::volume/c))))
+                                            (on-source-change (or (::rs/source recipe) ""))
+                                            (set-ingredients! (::rs/ingredients recipe))
+                                            (set-instructions! (::rs/instructions recipe)))}
                      "Reset")
                   (when recipe
                     ($ Button {:variant  "contained"
