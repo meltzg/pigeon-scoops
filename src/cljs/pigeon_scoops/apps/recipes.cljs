@@ -225,8 +225,8 @@
                                                         ::rs/type         recipe-type
                                                         ::rs/amount       (js/parseFloat amount)
                                                         ::rs/amount-unit  amount-unit
-                                                        ::rs/ingredients  ingredients
-                                                        ::rs/instructions instructions}
+                                                        ::rs/ingredients  (or ingredients [])
+                                                        ::rs/instructions (or instructions [])}
                                                        (when (some? recipe-id) [::rs/id recipe-id])
                                                        (when-not (str/blank? source) [::rs/source source])))}
                      "Save")

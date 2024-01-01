@@ -55,6 +55,27 @@
                                  (:ids params)
                                  [(:ids params)]))))))
 
+(defn add-recipe-handler [recipe-manager update?]
+  (fn [{:keys [body-params]}]
+    (let [updated-recipes (rm/add-recipe recipe-manager body-params update?)]
+      (cond (nil? updated-recipes)
+            (if update?
+              (resp/not-found (str "No recipe item with id " (::rs/id body-params)))
+              (-> (str "Recipe with ID " (::rs/id body-params) " already exists")
+                  resp/bad-request
+                  (resp/status 409)))
+            (:clojure.spec.alpha/problems updated-recipes)
+            (-> updated-recipes
+                resp/bad-request
+                (resp/status 422))
+            :otherwise-success
+            (resp/response updated-recipes)))))
+
+(defn delete-recipe-handler [recipe-manager]
+  (fn [{:keys [body-params]}]
+    (rm/delete-recipe recipe-manager (:id body-params))
+    (resp/status 204)))
+
 (defn app-routes [grocery-manager recipe-manager]
   (routes
     (GET "/" {} (resp/resource-response "index.html" {:root "public"}))
@@ -63,6 +84,9 @@
     (PATCH "/api/v1/groceries" {} (add-grocery-item-handler grocery-manager true))
     (DELETE "/api/v1/groceries" {} (delete-grocery-item-handler grocery-manager))
     (GET "/api/v1/recipes" {params :params} (get-recipes-handler recipe-manager params))
+    (PUT "/api/v1/recipes" {} (add-recipe-handler recipe-manager false))
+    (PATCH "/api/v1/recipes" {} (add-recipe-handler recipe-manager true))
+    (DELETE "/api/v1/recipes" {} (delete-recipe-handler recipe-manager))
     (route/resources "/")
     (route/not-found "Not Found")))
 
