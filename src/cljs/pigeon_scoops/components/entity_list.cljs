@@ -37,9 +37,10 @@
        (let [[open-entity-dialog? set-open-entity-dialog!] (uix/use-state false)]
          ($ Stack {:direction "column" :spacing 1}
             (when open-entity-dialog?
-              ($ entity-config {:on-close #(set-open-entity-dialog! false)
-                                :on-save  #(do (on-change (conj entities %))
-                                               (set-open-entity-dialog! false))}))
+              ($ entity-config {:config-metadata config-metadata
+                                :on-close        #(set-open-entity-dialog! false)
+                                :on-save         #(do (on-change (conj entities %))
+                                                      (set-open-entity-dialog! false))}))
             ($ TableContainer {:component Paper}
                ($ Table
                   ($ TableHead
