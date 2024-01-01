@@ -68,7 +68,8 @@
            (fn []
              (when (not= amount-unit-type (namespace amount-unit))
                (on-amount-unit-change (cond (= amount-unit-type (namespace ::mass/g)) (first (keys mass/conversion-map))
-                                            (= amount-unit-type (namespace ::volume/c)) (first (keys volume/conversion-map))))))
+                                            (= amount-unit-type (namespace ::volume/c)) (first (keys volume/conversion-map))
+                                            (= amount-unit-type (namespace ::ucom/pinch)) (first ucom/other-units)))))
            [amount-unit amount-unit-type on-amount-unit-change])
 
          ($ Dialog {:open true :on-close on-close}
@@ -91,7 +92,7 @@
                      ($ Select {:value     amount-unit-type
                                 :on-change #(set-amount-unit-type! (.. % -target -value))}
                         (map #($ MenuItem {:value % :key %} (last (str/split % #"\.")))
-                             (map namespace [::volume/c ::mass/g]))))
+                             (map namespace [::volume/c ::mass/g ::ucom/pinch]))))
                   ($ FormControl {:full-width true
                                   :error      (not amount-unit-valid?)}
                      ($ InputLabel "Amount unit")
@@ -99,10 +100,17 @@
                                 :on-change #(on-amount-unit-change (keyword amount-unit-type (.. % -target -value)))}
                         (map #($ MenuItem {:value % :key %} (name %))
                              (cond (= amount-unit-type (namespace ::mass/g)) (set (keys mass/conversion-map))
-                                   (= amount-unit-type (namespace ::volume/c)) (set (keys volume/conversion-map))))))))
+                                   (= amount-unit-type (namespace ::volume/c)) (set (keys volume/conversion-map))
+                                   (= amount-unit-type (namespace ::ucom/pinch)) ucom/other-units))))))
             ($ DialogActions
                ($ Button {:on-click on-close} "Cancel")
-               ($ Button "Save")))))
+               ($ Button {:on-click #(on-save {::rs/ingredient-type ingredient-type
+                                               ::rs/amount          (js/parseFloat amount)
+                                               ::rs/amount-unit     amount-unit})
+                          :disabled (not (and ingredient-type-valid?
+                                              amount-valid?
+                                              amount-unit-valid?))}
+                  "Save")))))
 
 (defui recipe-entry [{:keys [recipe groceries on-save on-delete]}]
        (let [recipe-id (::rs/id recipe)
