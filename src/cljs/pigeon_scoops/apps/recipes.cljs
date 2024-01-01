@@ -5,14 +5,12 @@
             [uix.core :as uix :refer [$ defui]]
             [pigeon-scoops.utils :as utils]
             [pigeon-scoops.components.alert-dialog :refer [alert-dialog]]
+            [pigeon-scoops.components.entity-list :refer [entity-list]]
             [pigeon-scoops.spec.groceries :as gs]
             [pigeon-scoops.spec.recipes :as rs]
             [pigeon-scoops.units.common :as ucom]
             [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.units.volume :as volume]
-            ["@mui/icons-material/Add$default" :as AddIcon]
-            ["@mui/icons-material/Delete$default" :as DeleteIcon]
-            ["@mui/icons-material/Edit$default" :as EditIcon]
             ["@mui/icons-material/ExpandMore$default" :as ExpandMoreIcon]
             ["@mui/material" :refer [Accordion
                                      AccordionActions
@@ -53,7 +51,17 @@
                           :disabled (not new-instructions-valid?)}
                   "Save")))))
 
-(defui recipe-entry [{:keys [recipe on-save on-delete]}]
+(defui ingredient-config [{:keys [entity config-metadata on-save on-close]}]
+       (let [{:keys [groceries]} config-metadata]
+         ($ Dialog {:open true :on-close on-close}
+            ($ DialogTitle "Edit Ingredient")
+            ($ DialogContent
+               ($ Stack {:direction "column" :spacing 2}))
+            ($ DialogActions
+               ($ Button {:on-click on-close} "Cancel")
+               ($ Button "Save")))))
+
+(defui recipe-entry [{:keys [recipe groceries on-save on-delete]}]
        (let [recipe-id (::rs/id recipe)
              [edit-instructions-open set-edit-instructions-open!] (uix/use-state false)
              [recipe-name recipe-name-valid? on-recipe-name-change] (utils/use-validation (or (::rs/name recipe) "")
@@ -70,8 +78,8 @@
                                                                                           #(s/valid? ::rs/amount-unit (keyword amount-unit-type %)))
              [source source-valid? on-source-change] (utils/use-validation (or (::rs/source recipe) "")
                                                                            #(s/valid? ::rs/source %))
-             [instructions instructions-valid? on-instructions-change] (utils/use-validation (::rs/instructions recipe)
-                                                                                             #(s/valid? ::rs/instructions %))]
+             [ingredients set-ingredients!] (uix/use-state (::rs/ingredients recipe))
+             [instructions set-instructions!] (uix/use-state (::rs/instructions recipe))]
 
          (uix/use-effect
            (fn []
@@ -123,8 +131,20 @@
                   (when edit-instructions-open
                     ($ instructions-dialog {:instructions instructions
                                             :on-close     #(set-edit-instructions-open! false)
-                                            :on-save      #(do (on-instructions-change %)
+                                            :on-save      #(do (set-instructions! %)
                                                                (set-edit-instructions-open! false))}))
+                  ($ entity-list {:entity-name     "Ingredient"
+                                  :entities        ingredients
+                                  :column-headers  ["Type"
+                                                    "Amount"]
+                                  :cell-text       (for [ingredient ingredients]
+                                                     [(name (::rs/ingredient-type ingredient))
+                                                      (str (::rs/amount ingredient)
+                                                           " "
+                                                           (name (::rs/amount-unit ingredient)))])
+                                  :config-metadata {:groceries groceries}
+                                  :entity-config   ingredient-config
+                                  :on-change       set-ingredients!})
                   ($ Typography
                      "Instructions")
                   ($ Paper
@@ -161,6 +181,7 @@
             (for [recipe (sort #(compare (::rs/name %1)
                                          (::rs/name %2)) (conj recipes nil))]
               ($ recipe-entry {:recipe    recipe
+                               :groceries groceries
                                :on-save   #((if recipe
                                               ajax/PATCH
                                               ajax/PUT) (str utils/api-url "recipes")

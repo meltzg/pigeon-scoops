@@ -136,13 +136,13 @@
                                 :max-rows  4
                                 :value     (or description "")
                                 :on-change #(set-description! (.. % -target -value))})
-                  ($ entity-list {:entities       units
+                  ($ entity-list {:entity-name    "Unit"
+                                  :entities       units
                                   :column-headers ["Source"
                                                    "Mass"
                                                    "Volume"
                                                    "Common Unit"
-                                                   "Cost"
-                                                   "Actions"]
+                                                   "Cost"]
                                   :cell-text      (for [unit units]
                                                     [(::gs/source unit)
                                                      (str (::gs/unit-mass unit) (when (::gs/unit-mass-type unit)
