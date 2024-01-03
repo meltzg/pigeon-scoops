@@ -1,11 +1,14 @@
 (ns pigeon-scoops.components.api
   (:require [clojure.tools.logging :as logger]
             [com.stuartsierra.component :as component]
-            [compojure.core :refer :all]
+            [compojure.core :refer [routes
+                                    GET
+                                    PATCH
+                                    PUT
+                                    DELETE]]
             [compojure.route :as route]
             [muuntaja.middleware :as mw]
             [pigeon-scoops.components.config-manager :as cm]
-            [pigeon-scoops.components.grocery-manager :as gm]
             [pigeon-scoops.components.grocery-manager :as gm]
             [pigeon-scoops.components.recipe-manager :as rm]
             [pigeon-scoops.spec.recipes :as rs]
@@ -38,7 +41,7 @@
             (-> updated-groceries
                 resp/bad-request
                 (resp/status 422))
-            :otherwise-success
+            :else
             (resp/response updated-groceries)))))
 
 (defn delete-grocery-item-handler [grocery-manager]
@@ -68,7 +71,7 @@
             (-> updated-recipes
                 resp/bad-request
                 (resp/status 422))
-            :otherwise-success
+            :else
             (resp/response updated-recipes)))))
 
 (defn delete-recipe-handler [recipe-manager]

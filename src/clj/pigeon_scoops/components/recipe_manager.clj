@@ -1,5 +1,6 @@
 (ns pigeon-scoops.components.recipe-manager
   (:require [clojure.edn :as edn]
+            [clojure.pprint :refer [pprint]]
             [clojure.spec.alpha :as s]
             [clojure.tools.logging :as logger]
             [com.stuartsierra.component :as component]
@@ -24,7 +25,7 @@
   (stop [this]
     (logger/info "Saving changes to groceries")
     (spit (-> config-manager ::cm/app-settings ::cm/recipes-file)
-          (with-out-str (clojure.pprint/pprint (deref (::recipes this)))))
+          (with-out-str (pprint (deref (::recipes this)))))
     (assoc this ::recipes nil)))
 
 (defn make-recipe-manager []

@@ -34,4 +34,5 @@
                  "src/cljc"
                  "src/cljs"
                  "dev"]
+  :plugins [[com.github.clj-kondo/lein-clj-kondo "0.2.5"]]
   :profiles {:uberjar {:aot :all}})

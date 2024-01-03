@@ -1,5 +1,6 @@
 (ns pigeon-scoops.components.grocery-manager
   (:require [clojure.edn :as edn]
+            [clojure.pprint :refer [pprint]]
             [clojure.spec.alpha :as s]
             [clojure.tools.logging :as logger]
             [com.stuartsierra.component :as component]
@@ -21,7 +22,7 @@
   (stop [this]
     (logger/info "Saving changes to groceries")
     (spit (-> config-manager ::cm/app-settings ::cm/groceries-file)
-          (with-out-str (clojure.pprint/pprint (deref (::groceries this)))))
+          (with-out-str (pprint (deref (::groceries this)))))
     (assoc this ::groceries nil)))
 
 (defn make-grocery-manager []
@@ -56,7 +57,7 @@
       (or (first (filter #(>= (units/convert (unit-key %) (unit-type-key %) amount-unit) amount)
                          (sort-by unit-comparator units)))
           (first (sort-by (comp - unit-comparator) units)))
-      (catch NullPointerException e
+      (catch NullPointerException _
         nil))))
 
 (defn divide-grocery [amount amount-unit grocery-item]

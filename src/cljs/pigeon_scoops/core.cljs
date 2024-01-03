@@ -17,7 +17,6 @@
                                      ListItemButton
                                      ListItemIcon
                                      ListItemText
-                                     Stack
                                      Toolbar
                                      Typography]]))
 

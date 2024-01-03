@@ -13,7 +13,6 @@
             [pigeon-scoops.units.volume :as volume]
             ["@mui/icons-material/ExpandMore$default" :as ExpandMoreIcon]
             ["@mui/material" :refer [Accordion
-                                     AccordionActions
                                      AccordionDetails
                                      AccordionSummary
                                      Button
@@ -239,7 +238,7 @@
                                             (if-let [original-amount-unit (::rs/amount-unit recipe)]
                                               (do (set-amount-unit-type! (namespace original-amount-unit))
                                                   (on-amount-unit-change original-amount-unit))
-                                              (do (set-amount-unit-type! (namespace ::volume/c))))
+                                              (set-amount-unit-type! (namespace ::volume/c)))
                                             (set-source! (::rs/source recipe))
                                             (set-ingredients! (::rs/ingredients recipe))
                                             (set-instructions! (::rs/instructions recipe)))}

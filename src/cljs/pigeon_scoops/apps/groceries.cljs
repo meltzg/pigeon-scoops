@@ -12,7 +12,6 @@
             [uix.core :as uix :refer [$ defui]]
             ["@mui/icons-material/ExpandMore$default" :as ExpandMoreIcon]
             ["@mui/material" :refer [Accordion
-                                     AccordionActions
                                      AccordionDetails
                                      AccordionSummary
                                      Button

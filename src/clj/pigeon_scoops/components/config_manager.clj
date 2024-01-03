@@ -26,8 +26,8 @@
 
   (start [this]
     (let [app-settings (merge env-defaults
-                              (if (and (some? app-settings-file)
-                                       (.exists (as-file app-settings-file)))
+                              (when (and (some? app-settings-file)
+                                         (.exists (as-file app-settings-file)))
                                 (-> app-settings-file
                                     slurp
                                     edn/read-string)))]

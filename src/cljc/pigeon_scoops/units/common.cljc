@@ -40,5 +40,5 @@
     (convert amount amount-unit ::mass/g)
     (some #{amount-unit} (keys vol/conversion-map))
     (convert amount amount-unit ::vol/ml)
-    :otherwise
+    :else
     amount))

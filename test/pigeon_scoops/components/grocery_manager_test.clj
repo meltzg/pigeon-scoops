@@ -1,5 +1,5 @@
 (ns pigeon-scoops.components.grocery-manager-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :as t]
             [pigeon-scoops.components.grocery-manager :as gm]
             [pigeon-scoops.spec.groceries :as gs]
             [pigeon-scoops.units.common :as u]
@@ -75,9 +75,9 @@
                       ::gs/description "heavy moo moo juice"))
 
 
-(deftest add-grocery-item-test
-  (testing "Valid grocery items can be added to collection of grocery-items"
-    (are [grocery-items new-grocery-item expected valid?]
+(t/deftest add-grocery-item-test
+  (t/testing "Valid grocery items can be added to collection of grocery-items"
+    (t/are [grocery-items new-grocery-item expected valid?]
       (let [actual (gm/add-grocery-item {::gm/groceries (atom grocery-items)} new-grocery-item)]
         (if valid?
           (= (set actual) (set expected))
@@ -93,9 +93,9 @@
       ;; add invalid returns error explanation
       [grocery-item] (dissoc another-grocery-item ::gs/type) [grocery-item] false)))
 
-(deftest update-grocery-item-test
-  (testing "Valid grocery items can be updated"
-    (are [grocery-items new-grocery-item expected valid?]
+(t/deftest update-grocery-item-test
+  (t/testing "Valid grocery items can be updated"
+    (t/are [grocery-items new-grocery-item expected valid?]
       (let [actual (gm/add-grocery-item {::gm/groceries (atom grocery-items)} new-grocery-item true)]
         (if valid?
           (= (set actual) (set expected))
@@ -115,9 +115,9 @@
                          (assoc ::gs/description "duplicate type")
                          (dissoc ::gs/units)) nil false)))
 
-(deftest delete-grocery-item-test
-  (testing "Grocery items can be deleted"
-    (are [grocery-items type-to-delete expected]
+(t/deftest delete-grocery-item-test
+  (t/testing "Grocery items can be deleted"
+    (t/are [grocery-items type-to-delete expected]
       (= (set (gm/delete-grocery-item {::gm/groceries (atom grocery-items)} type-to-delete))
          (set expected))
       ;; existing item is removed
@@ -125,18 +125,18 @@
       ;; missing item removes nothing
       [grocery-item another-grocery-item] ::gs/missing-type [grocery-item another-grocery-item])))
 
-(deftest get-groceries-test
-  (testing "Groceries can be retrieved by type"
-    (are [types expected]
+(t/deftest get-groceries-test
+  (t/testing "Groceries can be retrieved by type"
+    (t/are [types expected]
       (= (set (apply (partial gm/get-groceries {::gm/groceries (atom [grocery-item common-unit-grocery-item another-grocery-item])}) types)) (set expected))
       [] [grocery-item common-unit-grocery-item another-grocery-item]
       [(::gs/type grocery-item)] [grocery-item]
       [(::gs/type another-grocery-item) (::gs/type common-unit-grocery-item)] [another-grocery-item common-unit-grocery-item]
       [::gs/missing-type] [])))
 
-(deftest get-grocery-unit-for-amount
-  (testing "smallest possible grocery unit is returned"
-    (are [amount amount-unit item expected]
+(t/deftest get-grocery-unit-for-amount
+  (t/testing "smallest possible grocery unit is returned"
+    (t/are [amount amount-unit item expected]
       (= (gm/get-grocery-unit-for-amount amount amount-unit item) expected)
       1 ::u/unit common-unit-grocery-item eggs-12
       12 ::u/unit common-unit-grocery-item eggs-12
@@ -148,9 +148,9 @@
       4 ::u/pinch no-units-grocery-item nil
       4 ::vol/qt mass-only-unit-grocery-item nil)))
 
-(deftest divide-grocery-test
-  (testing "an amount can be divided into a set of unit amounts"
-    (are [amount amount-unit item expected]
+(t/deftest divide-grocery-test
+  (t/testing "an amount can be divided into a set of unit amounts"
+    (t/are [amount amount-unit item expected]
       (= (gm/divide-grocery amount amount-unit item) (assoc item ::gs/units expected
                                                                  ::gs/amount-needed amount
                                                                  ::gs/amount-needed-unit amount-unit))
