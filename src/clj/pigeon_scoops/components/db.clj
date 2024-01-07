@@ -8,25 +8,13 @@
   component/Lifecycle
 
   (start [this]
-    (let [[db_url
-           db_host
-           db_port
-           db_name
-           db_user
-           db_password] ((juxt ::cm/db_url
-                               ::cm/db_host
-                               ::cm/db_port
-                               ::cm/db_name
-                               ::cm/db_user
-                               ::cm/db_password) (::cm/app-settings config-manager))
-          db_spec (jdbc/get-datasource (or db_url
-                                           (format "jdbc:postgresql://%s:%d/%s?user=%s&password=%s"
-                                                   db_host
-                                                   db_port
-                                                   db_name
-                                                   db_user
-                                                   db_password)))]
-      (println db_spec)
+    (let [db_spec (jdbc/get-datasource (or (-> config-manager ::cm/app-settings ::cm/db_url)
+                                           (apply (partial format "jdbc:postgresql://%s:%d/%s?user=%s&password=%s")
+                                                  ((juxt ::cm/db_host
+                                                         ::cm/db_port
+                                                         ::cm/db_name
+                                                         ::cm/db_user
+                                                         ::cm/db_password) (::cm/app-settings config-manager)))))]
       (assoc this ::connection (jdbc/get-connection db_spec))))
 
   (stop [this]
