@@ -3,6 +3,7 @@
             (pigeon-scoops.components
               [api :as api]
               [config-manager :as cm]
+              [db :as db]
               [grocery-manager :as gm]
               [recipe-manager :as rm]))
   (:gen-class))
@@ -13,6 +14,9 @@
   ([app-settings-file]
    (component/system-map
      :config-manager (cm/make-config-manager app-settings-file)
+     :database (component/using
+                 (db/make-database)
+                 [:config-manager])
      :grocery-manager (component/using
                         (gm/make-grocery-manager)
                         [:config-manager])

@@ -11,15 +11,18 @@
                  [ring-logger "1.1.1"]
                  [com.stuartsierra/component "1.1.0"]
                  [metosin/muuntaja "0.6.8"]
+                 [com.github.seancorfield/honeysql "2.5.1103"]
+                 [com.github.seancorfield/next.jdbc "1.3.909"]
+                 [org.postgresql/postgresql "42.7.1"]
 
                  ;; Logging
                  [ch.qos.logback/logback-classic "1.4.14"]
                  [ch.qos.logback/logback-core "1.4.14"]
-                 [org.slf4j/slf4j-api "2.0.9"]
-                 [org.slf4j/jcl-over-slf4j "2.0.9"]
-                 [org.slf4j/log4j-over-slf4j "2.0.9"]
-                 [org.slf4j/osgi-over-slf4j "2.0.9"]
-                 [org.slf4j/jul-to-slf4j "2.0.9"]
+                 [org.slf4j/slf4j-api "2.0.10"]
+                 [org.slf4j/jcl-over-slf4j "2.0.10"]
+                 [org.slf4j/log4j-over-slf4j "2.0.10"]
+                 [org.slf4j/osgi-over-slf4j "2.0.10"]
+                 [org.slf4j/jul-to-slf4j "2.0.10"]
                  [org.apache.logging.log4j/log4j-to-slf4j "2.22.1"]
 
                  ;; CLJS Dependencies
@@ -34,5 +37,6 @@
                  "src/cljc"
                  "src/cljs"
                  "dev"]
-  :plugins [[com.github.clj-kondo/lein-clj-kondo "0.2.5"]]
+  :plugins [[com.github.clj-kondo/lein-clj-kondo "0.2.5"]
+            [lein-ancient "0.7.0"]]
   :profiles {:uberjar {:aot :all}})

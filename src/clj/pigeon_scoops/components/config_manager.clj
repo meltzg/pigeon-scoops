@@ -19,7 +19,13 @@
   {::app-host       (or (System/getenv "PIGEON_HOST") "0.0.0.0")
    ::app-port       (Integer/parseInt (or (System/getenv "PIGEON_PORT") "8080"))
    ::groceries-file (or (System/getenv "PIGEON_GROCERIES") "resources/groceries.edn")
-   ::recipes-file   (or (System/getenv "PIGEON_RECIPES") "resources/recipes.edn")})
+   ::recipes-file   (or (System/getenv "PIGEON_RECIPES") "resources/recipes.edn")
+   ::db_url         (System/getenv "DATABASE_URL")
+   ::db_host        (or (System/getenv "DATABASE_HOST") "localhost")
+   ::db_port        (or (System/getenv "DATABASE_PORT") 5432)
+   ::db_name        (or (System/getenv "DATABASE_NAME") "pigeon-scoops-db")
+   ::db_user        (or (System/getenv "DATABASE_USER") "pigeon-scoops-user")
+   ::db_password    (or (System/getenv "DATABASE_PASSWORD") "password")})
 
 (defrecord ConfigManager [app-settings-file]
   component/Lifecycle
