@@ -19,7 +19,7 @@
                  [:config-manager])
      :grocery-manager (component/using
                         (gm/make-grocery-manager)
-                        [:config-manager])
+                        [:config-manager :database])
      :recipe-manager (component/using
                        (rm/make-recipe-manager)
                        [:config-manager :grocery-manager])
