@@ -81,71 +81,56 @@
                                          (from :groceries))
                                      (not-empty types) (where [:in :type (map name types)])
                                      :then sql/format))
-        units (jdbc/execute! (-> grocery-manager :database ::db/connection)
-                             (-> (select :*)
-                                 (from :grocery-units)
-                                 (where [:in :type (map :groceries/type items)])
-                                 sql/format))]
+        units (when (not-empty items)
+                (jdbc/execute! (-> grocery-manager :database ::db/connection)
+                               (-> (select :*)
+                                   (from :grocery-units)
+                                   (where [:in :type (map :groceries/type items)])
+                                   sql/format)))]
     (from-db items units)))
 
-(defn add-grocery-item
-  ([grocery-manager new-grocery-item]
-   (add-grocery-item grocery-manager new-grocery-item false))
-  ([grocery-manager new-grocery-item update?]
-   (let [existing nil
-         ;(first (get-groceries grocery-manager (::gs/type new-grocery-item)))
-         ]
-     (when-not (or (and update? (not existing))
-                   (and (not update?) existing))
-       (or (s/explain-data ::gs/entry new-grocery-item)
-           (swap! (::groceries grocery-manager)
-                  (fn [groceries]
-                    (conj (remove #(= (::gs/type %) (::gs/type new-grocery-item)) groceries) new-grocery-item))))))))
+(defn- unsafe-delete-grocery-item! [conn type]
+  (jdbc/execute! conn
+                 (-> (delete-from :grocery-units)
+                     (where [:= :type (name type)])
+                     sql/format))
+  (jdbc/execute! conn
+                 (-> (delete-from :groceries)
+                     (where [:= :type (name type)])
+                     sql/format)))
+
+(defn delete-grocery-item! [grocery-manager type]
+  (logger/info (str "Deleting " type))
+  (jdbc/with-transaction [conn (-> grocery-manager :database ::db/connection)]
+                         (unsafe-delete-grocery-item! conn type)))
 
 (defn add-grocery-item!
   ([grocery-manager new-grocery-item]
    (add-grocery-item! grocery-manager new-grocery-item false))
   ([grocery-manager new-grocery-item update?]
-   (let [item-vals (-> (update new-grocery-item ::gs/type name)
-                       (dissoc ::gs/units)
-                       (update-keys (comp keyword name)))]
-     (jdbc/with-transaction [conn (-> grocery-manager :database ::db/connection)]
-                            (jdbc/execute! conn
-                                           (-> (delete-from :grocery-units)
-                                               (where [:= :type (name (::gs/type new-grocery-item))])
-                                               sql/format))
-                            (jdbc/execute! conn
-                                           (if update?
-                                             (-> (sql-help/update :groceries)
-                                                 (sql-help/set (dissoc item-vals :type))
-                                                 (where [:= :type (-> new-grocery-item ::gs/type name)])
-                                                 sql/format)
-                                             (-> (insert-into :groceries)
-                                                 (values [item-vals])
-                                                 sql/format)))
-                            (jdbc/execute! conn
-                                           (-> (insert-into :grocery-units)
-                                               (values (map #(conj {:type (-> new-grocery-item ::gs/type name)}
-                                                                   (update-keys
-                                                                     (cond-> %
-                                                                             (::gs/unit-mass-type %) (update ::gs/unit-mass-type name)
-                                                                             (::gs/unit-volume-type %) (update ::gs/unit-volume-type name)
-                                                                             (::gs/unit-common-type %) (update ::gs/unit-common-type name))
-                                                                     (comp keyword name)))
-                                                            (::gs/units new-grocery-item)))
-                                               sql/format))))))
-
-(defn delete-grocery-item! [grocery-manager type]
-  (logger/info (str "Deleting " type))
-  (jdbc/with-transaction [conn (-> grocery-manager :database ::db/connection)]
-                         (jdbc/execute! conn
-                                        (-> (delete-from :grocery-units)
-                                            (where [:= :type (name type)])
-                                            sql/format))
-                         (jdbc/execute! conn
-                                        (-> (delete-from :groceries)
-                                            (where [:= :type (name type)])
-                                            sql/format))))
+   (let [existing (first (get-groceries! grocery-manager (::gs/type new-grocery-item)))]
+     (when-not (or (and update? (not existing))
+                   (and (not update?) existing))
+       (jdbc/with-transaction
+         [conn (-> grocery-manager :database ::db/connection)]
+         (unsafe-delete-grocery-item! conn (::gs/type new-grocery-item))
+         (jdbc/execute! conn
+                        (-> (insert-into :groceries)
+                            (values [(-> (update new-grocery-item ::gs/type name)
+                                         (dissoc ::gs/units)
+                                         (update-keys (comp keyword name)))])
+                            sql/format))
+         (jdbc/execute! conn
+                        (-> (insert-into :grocery-units)
+                            (values (map #(conj {:type (-> new-grocery-item ::gs/type name)}
+                                                (update-keys
+                                                  (cond-> %
+                                                          (::gs/unit-mass-type %) (update ::gs/unit-mass-type name)
+                                                          (::gs/unit-volume-type %) (update ::gs/unit-volume-type name)
+                                                          (::gs/unit-common-type %) (update ::gs/unit-common-type name))
+                                                  (comp keyword name)))
+                                         (::gs/units new-grocery-item)))
+                            sql/format)))))))
 
 (defn get-grocery-unit-for-amount [amount amount-unit {::gs/keys [units]}]
   (let [unit-key (keyword (namespace ::gs/unit) (str "unit-" (units/to-unit-class amount-unit)))
