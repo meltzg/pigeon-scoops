@@ -22,7 +22,7 @@
 
 (defn get-groceries-handler [grocery-manager params]
   (fn [& _]
-    (resp/response (apply (partial gm/get-groceries grocery-manager)
+    (resp/response (apply (partial gm/get-groceries! grocery-manager)
                           (map #(keyword (namespace ::gs/type) %)
                                (if (or (nil? (:types params)) (coll? (:types params)))
                                  (:types params)
@@ -46,8 +46,8 @@
 
 (defn delete-grocery-item-handler [grocery-manager]
   (fn [{:keys [body-params]}]
-    (gm/delete-grocery-item grocery-manager
-                            (keyword (namespace ::gs/type) (:type body-params)))
+    (gm/delete-grocery-item! grocery-manager
+                             (keyword (namespace ::gs/type) (:type body-params)))
     (resp/status 204)))
 
 (defn get-recipes-handler [recipe-manager params]
