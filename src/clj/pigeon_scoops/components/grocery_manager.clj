@@ -1,22 +1,21 @@
 (ns pigeon-scoops.components.grocery-manager
-  (:require [clojure.pprint :refer [pprint]]
+  (:require [clojure.java.io :as io]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
             [clojure.tools.logging :as logger]
             [com.stuartsierra.component :as component]
-            [pigeon-scoops.components.config-manager :as cm]
             [pigeon-scoops.components.db :as db]
             [pigeon-scoops.units.common :as units]
             [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.units.volume :as volume]
             [pigeon-scoops.spec.groceries :as gs]
             [honey.sql :as sql]
-            [honey.sql.helpers :as sql-help :refer [select
-                                                    from
-                                                    where
-                                                    delete-from
-                                                    insert-into
-                                                    values]]
+            [honey.sql.helpers :refer [select
+                                       from
+                                       where
+                                       delete-from
+                                       insert-into
+                                       values]]
             [next.jdbc :as jdbc]))
 
 (def create-grocery-table-statement {:create-table [:groceries :if-not-exists]
@@ -35,23 +34,6 @@
                                            [:unit-volume-type :text]
                                            [:unit-common :real]
                                            [:unit-common-type :text]]})
-
-(defrecord GroceryManager [config-manager database]
-  component/Lifecycle
-
-  (start [this]
-    (jdbc/execute! (::db/connection database) (sql/format create-grocery-table-statement))
-    (jdbc/execute! (::db/connection database) (sql/format create-grocery-unit-table-statement))
-    (assoc this ::groceries {}))
-
-  (stop [this]
-    (logger/info "Saving changes to groceries")
-    (spit (-> config-manager ::cm/app-settings ::cm/groceries-file)
-          (with-out-str (pprint (deref (::groceries this)))))
-    (assoc this ::groceries nil)))
-
-(defn make-grocery-manager []
-  (map->GroceryManager {}))
 
 (defn from-db-namespace [entity]
   (->> (update-keys entity #(keyword (namespace ::gs/entry) (str/replace (name %) #"_" "-")))
@@ -108,29 +90,54 @@
   ([grocery-manager new-grocery-item]
    (add-grocery-item! grocery-manager new-grocery-item false))
   ([grocery-manager new-grocery-item update?]
-   (let [existing (first (get-groceries! grocery-manager (::gs/type new-grocery-item)))]
-     (when-not (or (and update? (not existing))
-                   (and (not update?) existing))
-       (jdbc/with-transaction
-         [conn (-> grocery-manager :database ::db/connection)]
-         (unsafe-delete-grocery-item! conn (::gs/type new-grocery-item))
-         (jdbc/execute! conn
-                        (-> (insert-into :groceries)
-                            (values [(-> (update new-grocery-item ::gs/type name)
-                                         (dissoc ::gs/units)
-                                         (update-keys (comp keyword name)))])
-                            sql/format))
-         (jdbc/execute! conn
-                        (-> (insert-into :grocery-units)
-                            (values (map #(conj {:type (-> new-grocery-item ::gs/type name)}
-                                                (update-keys
-                                                  (cond-> %
-                                                          (::gs/unit-mass-type %) (update ::gs/unit-mass-type name)
-                                                          (::gs/unit-volume-type %) (update ::gs/unit-volume-type name)
-                                                          (::gs/unit-common-type %) (update ::gs/unit-common-type name))
-                                                  (comp keyword name)))
-                                         (::gs/units new-grocery-item)))
-                            sql/format)))))))
+   (logger/info (str "Adding " ::gs/type new-grocery-item))
+   (let [existing (first (get-groceries! grocery-manager (::gs/type new-grocery-item)))
+         error-data (s/explain-data ::gs/entry new-grocery-item)]
+     (or error-data
+         (when-not (or (and update? (not existing))
+                       (and (not update?) existing))
+           (jdbc/with-transaction
+             [conn (-> grocery-manager :database ::db/connection)]
+             (unsafe-delete-grocery-item! conn (::gs/type new-grocery-item))
+             (jdbc/execute! conn
+                            (-> (insert-into :groceries)
+                                (values [(-> (update new-grocery-item ::gs/type name)
+                                             (dissoc ::gs/units)
+                                             (update-keys (comp keyword name)))])
+                                sql/format))
+             (when-not (empty? (::gs/units new-grocery-item))
+               (jdbc/execute! conn
+                              (-> (insert-into :grocery-units)
+                                  (values (map #(conj {:type (-> new-grocery-item ::gs/type name)}
+                                                      (update-keys
+                                                        (cond-> %
+                                                                (::gs/unit-mass-type %) (update ::gs/unit-mass-type name)
+                                                                (::gs/unit-volume-type %) (update ::gs/unit-volume-type name)
+                                                                (::gs/unit-common-type %) (update ::gs/unit-common-type name))
+                                                        (comp keyword name)))
+                                               (::gs/units new-grocery-item)))
+                                  sql/format)))
+             new-grocery-item))))))
+
+(defrecord GroceryManager [database]
+  component/Lifecycle
+
+  (start [this]
+    (jdbc/execute! (::db/connection database) (sql/format create-grocery-table-statement))
+    (jdbc/execute! (::db/connection database) (sql/format create-grocery-unit-table-statement))
+    (->> "groceries.edn"
+         io/resource
+         slurp
+         clojure.edn/read-string
+         (map (partial add-grocery-item! this))
+         doall)
+    (assoc this ::groceries {}))
+
+  (stop [this]
+    (assoc this ::groceries nil)))
+
+(defn make-grocery-manager []
+  (map->GroceryManager {}))
 
 (defn get-grocery-unit-for-amount [amount amount-unit {::gs/keys [units]}]
   (let [unit-key (keyword (namespace ::gs/unit) (str "unit-" (units/to-unit-class amount-unit)))
