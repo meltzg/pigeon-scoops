@@ -30,7 +30,7 @@
 
 (defn add-grocery-item-handler [grocery-manager update?]
   (fn [{:keys [body-params]}]
-    (let [updated-groceries (gm/add-grocery-item grocery-manager body-params update?)]
+    (let [updated-groceries (gm/add-grocery-item! grocery-manager body-params update?)]
       (cond (nil? updated-groceries)
             (if update?
               (resp/not-found (str "No grocery item with type " (::gs/type body-params)))
@@ -60,19 +60,19 @@
 
 (defn add-recipe-handler [recipe-manager update?]
   (fn [{:keys [body-params]}]
-    (let [updated-recipes (rm/add-recipe recipe-manager body-params update?)]
-      (cond (nil? updated-recipes)
+    (let [updated-recipe (rm/add-recipe recipe-manager body-params update?)]
+      (cond (nil? updated-recipe)
             (if update?
               (resp/not-found (str "No recipe item with id " (::rs/id body-params)))
               (-> (str "Recipe with ID " (::rs/id body-params) " already exists")
                   resp/bad-request
                   (resp/status 409)))
-            (:clojure.spec.alpha/problems updated-recipes)
-            (-> updated-recipes
+            (:clojure.spec.alpha/problems updated-recipe)
+            (-> updated-recipe
                 resp/bad-request
                 (resp/status 422))
             :else
-            (resp/response updated-recipes)))))
+            (resp/created updated-recipe)))))
 
 (defn delete-recipe-handler [recipe-manager]
   (fn [{:keys [body-params]}]
