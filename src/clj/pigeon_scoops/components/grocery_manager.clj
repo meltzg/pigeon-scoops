@@ -1,7 +1,7 @@
 (ns pigeon-scoops.components.grocery-manager
   (:require [clojure.java.io :as io]
+            [clojure.edn :as edn]
             [clojure.spec.alpha :as s]
-            [clojure.string :as str]
             [clojure.tools.logging :as logger]
             [com.stuartsierra.component :as component]
             [pigeon-scoops.components.db :as db]
@@ -35,13 +35,8 @@
                                            [:unit-common :real]
                                            [:unit-common-type :text]]})
 
-(defn from-db-namespace [entity]
-  (->> (update-keys entity #(keyword (namespace ::gs/entry) (str/replace (name %) #"_" "-")))
-       (filter #(some? (second %)))
-       (into {})))
-
 (defn unit-from-db [unit]
-  (let [initial (dissoc (from-db-namespace unit) ::gs/type)]
+  (let [initial (dissoc (db/from-db-namespace ::gs/entry unit) ::gs/type)]
     (cond-> initial
             (::gs/unit-mass-type initial) (update ::gs/unit-mass-type (partial keyword (namespace ::mass/g)))
             (::gs/unit-volume-type initial) (update ::gs/unit-volume-type (partial keyword (namespace ::volume/c)))
@@ -53,7 +48,7 @@
               (assoc item ::gs/units (map unit-from-db
                                           (filter #(= (:grocery_units/type %)
                                                       (:groceries/type item)) units)))))
-       (map from-db-namespace)
+       (map (partial db/from-db-namespace ::gs/entry))
        (map (fn [item]
               (update item ::gs/type #(keyword (namespace ::gs/type) %))))))
 
@@ -91,9 +86,8 @@
    (add-grocery-item! grocery-manager new-grocery-item false))
   ([grocery-manager new-grocery-item update?]
    (logger/info (str "Adding " ::gs/type new-grocery-item))
-   (let [existing (first (get-groceries! grocery-manager (::gs/type new-grocery-item)))
-         error-data (s/explain-data ::gs/entry new-grocery-item)]
-     (or error-data
+   (let [existing (first (get-groceries! grocery-manager (::gs/type new-grocery-item)))]
+     (or (s/explain-data ::gs/entry new-grocery-item)
          (when-not (or (and update? (not existing))
                        (and (not update?) existing))
            (jdbc/with-transaction
@@ -128,7 +122,7 @@
     (->> "groceries.edn"
          io/resource
          slurp
-         clojure.edn/read-string
+         edn/read-string
          (map (partial add-grocery-item! this))
          doall)
     (assoc this ::groceries {}))

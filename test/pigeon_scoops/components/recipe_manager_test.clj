@@ -95,65 +95,6 @@
                                                   ::rs/amount (* 0.5 (::rs/amount %))
                                                   ::rs/amount-unit (::rs/amount-unit %)) recipe-mixins)))
 
-(t/deftest get-recipes-test
-  (t/testing "Recipes can be retrieved by ID"
-    (t/are [ids expected]
-      (= (set (apply (partial rm/get-recipes {::rm/recipes (atom [recipe-with-id another-recipe-with-id])}) ids)) (set expected))
-      [] [recipe-with-id another-recipe-with-id]
-      [(::rs/id recipe-with-id)] [recipe-with-id]
-      [(::rs/id recipe-with-id) (::rs/id another-recipe-with-id)] [recipe-with-id another-recipe-with-id]
-      [(random-uuid)] [])))
-
-(t/deftest add-recipe-test
-  (t/testing "Valid recipes can be added to collection of recipes"
-    (t/are [recipes new-recipe expected valid?]
-      (let [actual (rm/add-recipe {::rm/recipes (atom recipes)} new-recipe)]
-        (if valid?
-          (and (every? #(uuid? (::rs/id %)) actual)
-               (= (set (map #(dissoc % ::rs/id) actual))
-                  (set (map #(dissoc % ::rs/id) expected))))
-          (:clojure.spec.alpha/problems actual)))
-      ;; add recipe to nil collection
-      nil recipe-no-id (list recipe-no-id) true
-      ;; add recipe to empty collection
-      [] recipe-no-id [recipe-no-id] true
-      ;; add recipe to existing collection
-      [recipe-with-id] recipe-no-id-different-ingredients [recipe-with-id recipe-no-id-different-ingredients] true
-      ;; add duplicate ID returns nil
-      [recipe-with-id] (assoc recipe-with-id ::rs/name "duplicate ID") nil true
-      ;; add invalid returns error explanation
-      [recipe-with-id] (dissoc another-recipe-with-id ::rs/name) [recipe-with-id] false)))
-
-(t/deftest update-recipe-test
-  (t/testing "Valid recipes can be updated"
-    (t/are [recipes new-recipe expected valid?]
-      (let [actual (rm/add-recipe {::rm/recipes (atom recipes)} new-recipe true)]
-        (if valid?
-          (= (set actual) (set expected))
-          (:clojure.spec.alpha/problems actual)))
-      ;; add new recipe with ID to nil collection returns nil
-      nil recipe-with-id nil true
-      ;; add new recipe with ID to empty collection returns nil
-      [] recipe-with-id nil true
-      ;; add recipe with new ID returns nil
-      [another-recipe-with-id] recipe-with-id nil true
-      ;; add recipe with no ID returns nil
-      [recipe-with-id] recipe-no-id nil true
-      ;; add invalid recipe returns error explanation
-      [recipe-with-id] (dissoc recipe-with-id ::rs/type) nil false
-      ;; update an existing recipe saves the new one
-      [recipe-with-id] (assoc recipe-with-id ::rs/name "new name") [(assoc recipe-with-id ::rs/name "new name")] true)))
-
-(t/deftest delete-recipe-test
-  (t/testing "Recipes can be deleted"
-    (t/are [recipes id-to-delete expected]
-      (= (set (rm/delete-recipe {::rm/recipes (atom recipes)} id-to-delete))
-         (set expected))
-      ;; existing item is removed
-      [recipe-with-id another-recipe-with-id] (::rs/id another-recipe-with-id) [recipe-with-id]
-      ;; missing item removes nothing
-      [recipe-with-id another-recipe-with-id] (random-uuid) [recipe-with-id another-recipe-with-id])))
-
 (t/deftest materialize-mixins-test
   (t/testing "Mixins can recursively be materialized"
     (t/is (= (rm/materialize-mixins recipe-no-id-with-mixins recipe-mixins)

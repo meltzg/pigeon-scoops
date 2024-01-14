@@ -2,7 +2,15 @@
   (:require [com.stuartsierra.component :as component]
             [pigeon-scoops.components.config-manager :as cm]
             [next.jdbc :as jdbc]
-            [honey.sql :as sql]))
+            [clojure.string :as str]
+            [next.jdbc.result-set :as res])
+  (:import [java.sql Array]))
+
+
+(extend-protocol res/ReadableColumn
+  Array
+  (read-column-by-label [^Array v _] (vec (.getArray v)))
+  (read-column-by-index [^Array v _ _] (vec (.getArray v))))
 
 (defrecord DataBase [config-manager]
   component/Lifecycle
@@ -23,3 +31,8 @@
 
 (defn make-database []
   (map->DataBase {}))
+
+(defn from-db-namespace [entity-spec entity]
+  (->> (update-keys entity #(keyword (namespace entity-spec) (str/replace (name %) #"_" "-")))
+       (filter #(some? (second %)))
+       (into {})))
