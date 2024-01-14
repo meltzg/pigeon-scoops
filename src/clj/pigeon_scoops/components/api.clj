@@ -52,7 +52,7 @@
 
 (defn get-recipes-handler [recipe-manager params]
   (fn [& _]
-    (resp/response (apply (partial rm/get-recipes recipe-manager)
+    (resp/response (apply (partial rm/get-recipes! recipe-manager)
                           (map parse-uuid
                                (if (or (nil? (:ids params)) (coll? (:ids params)))
                                  (:ids params)
@@ -60,7 +60,7 @@
 
 (defn add-recipe-handler [recipe-manager update?]
   (fn [{:keys [body-params]}]
-    (let [updated-recipe (rm/add-recipe recipe-manager body-params update?)]
+    (let [updated-recipe (rm/add-recipe! recipe-manager body-params update?)]
       (cond (nil? updated-recipe)
             (if update?
               (resp/not-found (str "No recipe item with id " (::rs/id body-params)))
@@ -72,11 +72,11 @@
                 resp/bad-request
                 (resp/status 422))
             :else
-            (resp/created updated-recipe)))))
+            (resp/response updated-recipe)))))
 
 (defn delete-recipe-handler [recipe-manager]
   (fn [{:keys [body-params]}]
-    (rm/delete-recipe recipe-manager (:id body-params))
+    (rm/delete-recipe! recipe-manager (:id body-params))
     (resp/status 204)))
 
 (defn app-routes [grocery-manager recipe-manager]

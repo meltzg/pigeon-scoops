@@ -1,60 +1,152 @@
 (ns pigeon-scoops.components.recipe-manager
-  (:require [clojure.edn :as edn]
-            [clojure.pprint :refer [pprint]]
+  (:require [clojure.java.io :as io]
+            [clojure.edn :as edn]
             [clojure.spec.alpha :as s]
             [clojure.tools.logging :as logger]
             [com.stuartsierra.component :as component]
+            [pigeon-scoops.components.db :as db]
             [pigeon-scoops.components.grocery-manager :as gm]
-            [pigeon-scoops.components.config-manager :as cm]
             [pigeon-scoops.units.common :as units]
             [pigeon-scoops.spec.recipes :as rs]
-            [pigeon-scoops.spec.groceries :as gs])
+            [pigeon-scoops.spec.groceries :as gs]
+            [honey.sql :as sql]
+            [honey.sql.helpers :refer [select
+                                       from
+                                       where
+                                       delete-from
+                                       insert-into
+                                       values]]
+            [next.jdbc :as jdbc])
   (:import (java.util UUID)))
 
-(defrecord RecipeManager [config-manager grocery-manager]
+(def create-recipe-table-statement {:create-table [:recipes :if-not-exists]
+                                    :with-columns
+                                    [[:id :uuid [:not nil] :primary-key]
+                                     [:type :text [:not nil]]
+                                     [:name :text [:not nil]]
+                                     [:instructions :text :array]
+                                     [:amount :real [:not nil]]
+                                     [:amount-unit :text [:not nil]]
+                                     [:amount-unit-type :text [:not nil]]
+                                     [:source :text]]})
+
+(def create-ingredient-table {:create-table [:ingredients :if-not-exists]
+                              :with-columns
+                              [[:recipe-id :uuid [:not nil]]
+                               [:ingredient-type :text [:references :groceries :type] [:not nil]]
+                               [:amount :real [:not nil]]
+                               [:amount-unit :text [:not nil]]
+                               [:amount-unit-type :text [:not nil]]
+                               [:primary :key [:composite :recipe-id :ingredient-type]]]})
+
+(defn ingredient-from-db [ingredient]
+  (-> (db/from-db-namespace ::rs/ingredient ingredient)
+      (dissoc ::rs/recipe-id ::rs/amount-unit-type)
+      (update ::rs/amount-unit #(keyword (:ingredients/amount_unit_type ingredient) %))
+      (update ::rs/ingredient-type #(keyword (namespace ::gs/entry) %))))
+
+(defn from-db [recipes ingredients]
+  (->> recipes
+       (map (partial db/from-db-namespace ::rs/entry))
+       (map (fn [recipe]
+              (-> recipe
+                  (assoc ::rs/ingredients (map ingredient-from-db
+                                               (filter #(= (:ingredients/recipe_id %)
+                                                           (::rs/id recipe)) ingredients)))
+                  (dissoc ::rs/amount-unit-type)
+                  (update ::rs/amount-unit #(keyword (::rs/amount-unit-type recipe) %))
+                  (update ::rs/type #(keyword (namespace ::rs/entry) %)))))))
+
+(defn get-recipes! [recipe-manager & ids]
+  (let [recipes (jdbc/execute! (-> recipe-manager :database ::db/connection)
+                               (cond-> (-> (select :*)
+                                           (from :recipes))
+                                       (not-empty ids) (where [:in :id ids])
+                                       :then sql/format))
+        ingredients (when (not-empty recipes)
+                      (jdbc/execute! (-> recipe-manager :database ::db/connection)
+                                     (-> (select :*)
+                                         (from :ingredients)
+                                         (where [:in :recipe-id (map :recipes/id recipes)])
+                                         sql/format)))]
+    (from-db recipes ingredients)))
+
+(defn unsafe-delete-recipe! [conn id]
+  (jdbc/execute! conn
+                 (-> (delete-from :ingredients)
+                     (where [:= :recipe-id id])
+                     sql/format))
+  (jdbc/execute! conn
+                 (-> (delete-from :recipes)
+                     (where [:= :id id])
+                     sql/format)))
+
+(defn delete-recipe! [recipe-manager id]
+  (logger/info (str "Deleting " id))
+  (jdbc/with-transaction [conn (-> recipe-manager :database ::db/connection)]
+                         (unsafe-delete-recipe! conn id)))
+
+(defn add-recipe!
+  ([recipe-manager new-recipe]
+   (add-recipe! recipe-manager new-recipe false))
+  ([recipe-manager new-recipe update?]
+   (logger/info (str "Adding " (::rs/name new-recipe)))
+   (let [recipe-id (if update?
+                     (::rs/id new-recipe)
+                     (or (::rs/id new-recipe) (UUID/randomUUID)))
+         existing (first (get-recipes! recipe-manager recipe-id))
+         new-recipe (assoc new-recipe ::rs/id recipe-id)
+         recipe-statement (-> (insert-into :recipes)
+                              (values [(-> new-recipe
+                                           (dissoc ::rs/ingredients)
+                                           (update ::rs/amount-unit name)
+                                           (update ::rs/type name)
+                                           (update ::rs/instructions #(vec [:array % :text]))
+                                           (assoc ::rs/amount-unit-type (namespace (::rs/amount-unit new-recipe)))
+                                           (update-keys (comp keyword name)))])
+                              sql/format)
+         ingredients-statement (-> (insert-into :ingredients)
+                                   (values (map #(conj {:recipe-id        recipe-id
+                                                        :amount-unit-type (namespace (::rs/amount-unit %))}
+                                                       (update-keys
+                                                         (-> %
+                                                             (update ::rs/amount-unit name)
+                                                             (update ::rs/ingredient-type name))
+                                                         (comp keyword name)))
+                                                (::rs/ingredients new-recipe)))
+                                   sql/format)]
+     (or (s/explain-data ::rs/entry new-recipe)
+         (when-not (or (and update? (not existing))
+                       (and (not update?) existing))
+           (jdbc/with-transaction
+             [conn (-> recipe-manager :database ::db/connection)]
+             (unsafe-delete-recipe! conn recipe-id)
+             (jdbc/execute! conn
+                            recipe-statement)
+             (when-not (empty? (::rs/ingredients new-recipe))
+               (jdbc/execute! conn
+                              ingredients-statement))
+             new-recipe))))))
+
+(defrecord RecipeManager [database grocery-manager]
   component/Lifecycle
 
   (start [this]
-    (assoc this ::recipes (-> config-manager
-                              ::cm/app-settings
-                              ::cm/recipes-file
-                              slurp
-                              edn/read-string
-                              atom)))
+    (jdbc/execute! (::db/connection database) (sql/format create-recipe-table-statement))
+    (jdbc/execute! (::db/connection database) (sql/format create-ingredient-table))
+    (->> "recipes.edn"
+         io/resource
+         slurp
+         edn/read-string
+         (map (partial add-recipe! this))
+         doall)
+    (assoc this ::recipe {}))
 
   (stop [this]
-    (logger/info "Saving changes to groceries")
-    (spit (-> config-manager ::cm/app-settings ::cm/recipes-file)
-          (with-out-str (pprint (deref (::recipes this)))))
     (assoc this ::recipes nil)))
 
 (defn make-recipe-manager []
   (map->RecipeManager {}))
-
-(defn get-recipes [recipe-manager & ids]
-  (cond->> (deref (::recipes recipe-manager))
-           (not-empty ids) (filter #(some #{(::rs/id %)} ids))))
-
-(defn add-recipe
-  ([recipe-manager new-recipe]
-   (add-recipe recipe-manager new-recipe false))
-  ([recipe-manager new-recipe update?]
-   (let [recipe-id (if update?
-                     (::rs/id new-recipe)
-                     (or (::rs/id new-recipe) (UUID/randomUUID)))
-         existing (first (get-recipes recipe-manager recipe-id))
-         new-recipe (assoc new-recipe ::rs/id recipe-id)]
-     (when-not (or (and update? (not existing))
-                   (and (not update?) existing))
-       (or (s/explain-data ::rs/entry new-recipe)
-           (swap! (::recipes recipe-manager)
-                  (fn [groceries]
-                    (conj (remove #(= (::rs/id %) recipe-id) groceries) new-recipe))))))))
-
-(defn delete-recipe [recipe-manager recipe-id]
-  (logger/info (str "Deleting " recipe-id))
-  (swap! (::recipes recipe-manager)
-         (partial remove #(= (::rs/id %) recipe-id))))
 
 (defn scale-recipe [recipe amount amount-unit]
   (let [scale-factor (units/scale-factor (::rs/amount recipe)

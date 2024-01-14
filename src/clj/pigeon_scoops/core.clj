@@ -22,7 +22,7 @@
                         [:database])
      :recipe-manager (component/using
                        (rm/make-recipe-manager)
-                       [:config-manager :grocery-manager])
+                       [:database :grocery-manager])
      :api (component/using
             (api/make-api)
             [:config-manager :grocery-manager :recipe-manager]))))
