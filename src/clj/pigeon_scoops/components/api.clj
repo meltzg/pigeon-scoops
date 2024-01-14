@@ -11,7 +11,9 @@
             [pigeon-scoops.components.config-manager :as cm]
             [pigeon-scoops.components.grocery-manager :as gm]
             [pigeon-scoops.components.recipe-manager :as rm]
+            [pigeon-scoops.components.flavor-manager :as fm]
             [pigeon-scoops.spec.recipes :as rs]
+            [pigeon-scoops.spec.flavors :as fs]
             [pigeon-scoops.spec.groceries :as gs]
             [ring.adapter.jetty :refer [run-jetty]]
             [ring.logger :as log-mw]
@@ -79,7 +81,36 @@
     (rm/delete-recipe! recipe-manager (:id body-params))
     (resp/status 204)))
 
-(defn app-routes [grocery-manager recipe-manager]
+(defn get-flavors-handler [flavor-manager params]
+  (fn [& _]
+    (resp/response (apply (partial fm/get-flavors! flavor-manager)
+                          (map parse-uuid
+                               (if (or (nil? (:ids params)) (coll? (:ids params)))
+                                 (:ids params)
+                                 [(:ids params)]))))))
+
+(defn add-flavor-handler [flavor-manager update?]
+  (fn [{:keys [body-params]}]
+    (let [updated-flavor (fm/add-flavor! flavor-manager body-params update?)]
+      (cond (nil? updated-flavor)
+            (if update?
+              (resp/not-found (str "No flavor item with id " (::fs/id body-params)))
+              (-> (str "flavor with ID " (::fs/id body-params) " already exists")
+                  resp/bad-request
+                  (resp/status 409)))
+            (:clojure.spec.alpha/problems updated-flavor)
+            (-> updated-flavor
+                resp/bad-request
+                (resp/status 422))
+            :else
+            (resp/response updated-flavor)))))
+
+(defn delete-flavor-handler [flavor-manager]
+  (fn [{:keys [body-params]}]
+    (fm/delete-flavor! flavor-manager (:id body-params))
+    (resp/status 204)))
+
+(defn app-routes [grocery-manager recipe-manager flavor-manager]
   (routes
     (GET "/" {} (resp/resource-response "index.html" {:root "public"}))
     (GET "/api/v1/groceries" {params :params} (get-groceries-handler grocery-manager params))
@@ -90,17 +121,21 @@
     (PUT "/api/v1/recipes" {} (add-recipe-handler recipe-manager false))
     (PATCH "/api/v1/recipes" {} (add-recipe-handler recipe-manager true))
     (DELETE "/api/v1/recipes" {} (delete-recipe-handler recipe-manager))
+    (GET "/api/v1/flavors" {params :params} (get-flavors-handler flavor-manager params))
+    (PUT "/api/v1/flavors" {} (add-flavor-handler flavor-manager false))
+    (PATCH "/api/v1/flavors" {} (add-flavor-handler flavor-manager true))
+    (DELETE "/api/v1/flavors" {} (delete-flavor-handler flavor-manager))
     (route/resources "/")
     (route/not-found "Not Found")))
 
-(defrecord Api [config-manager grocery-manager recipe-manager]
+(defrecord Api [config-manager grocery-manager recipe-manager flavor-manager]
   component/Lifecycle
 
   (start [this]
     (let [{::cm/keys [app-host app-port]} (::cm/app-settings config-manager)]
       (logger/info (str "Starting server on host " app-host " port: " app-port))
       (assoc this :server (run-jetty
-                            (-> (app-routes grocery-manager recipe-manager)
+                            (-> (app-routes grocery-manager recipe-manager flavor-manager)
                                 log-mw/wrap-with-logger
                                 mw/wrap-format
                                 (wrap-keyword-params {:parse-namespaces? true})

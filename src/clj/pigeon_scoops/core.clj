@@ -4,6 +4,7 @@
               [api :as api]
               [config-manager :as cm]
               [db :as db]
+              [flavor-manager :as fm]
               [grocery-manager :as gm]
               [recipe-manager :as rm]))
   (:gen-class))
@@ -23,9 +24,12 @@
      :recipe-manager (component/using
                        (rm/make-recipe-manager)
                        [:database :grocery-manager])
+     :flavor-manager (component/using
+                       (fm/make-flavor-manager)
+                       [:database :recipe-manager])
      :api (component/using
             (api/make-api)
-            [:config-manager :grocery-manager :recipe-manager]))))
+            [:config-manager :grocery-manager :recipe-manager :flavor-manager]))))
 
 (defn -main
   [& args]

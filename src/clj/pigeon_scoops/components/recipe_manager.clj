@@ -32,7 +32,7 @@
 
 (def create-ingredient-table {:create-table [:ingredients :if-not-exists]
                               :with-columns
-                              [[:recipe-id :uuid [:not nil]]
+                              [[:recipe-id :uuid [:references :recipes :id] [:not nil]]
                                [:ingredient-type :text [:references :groceries :type] [:not nil]]
                                [:amount :real [:not nil]]
                                [:amount-unit :text [:not nil]]
