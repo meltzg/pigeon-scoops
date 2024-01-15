@@ -8,12 +8,15 @@
                                     DELETE]]
             [compojure.route :as route]
             [muuntaja.middleware :as mw]
-            [pigeon-scoops.components.config-manager :as cm]
-            [pigeon-scoops.components.grocery-manager :as gm]
-            [pigeon-scoops.components.recipe-manager :as rm]
-            [pigeon-scoops.components.flavor-manager :as fm]
+            (pigeon-scoops.components
+              [config-manager :as cm]
+              [flavor-manager :as fm]
+              [grocery-manager :as gm]
+              [order-manager :as om]
+              [recipe-manager :as rm])
             [pigeon-scoops.spec.recipes :as rs]
             [pigeon-scoops.spec.flavors :as fs]
+            [pigeon-scoops.spec.orders :as os]
             [pigeon-scoops.spec.groceries :as gs]
             [ring.adapter.jetty :refer [run-jetty]]
             [ring.logger :as log-mw]
@@ -110,7 +113,36 @@
     (fm/delete-flavor! flavor-manager (:id body-params))
     (resp/status 204)))
 
-(defn app-routes [grocery-manager recipe-manager flavor-manager]
+(defn get-orders-handler [order-manager params]
+  (fn [& _]
+    (resp/response (apply (partial om/get-orders! order-manager)
+                          (map parse-uuid
+                               (if (or (nil? (:ids params)) (coll? (:ids params)))
+                                 (:ids params)
+                                 [(:ids params)]))))))
+
+(defn add-order-handler [order-manager update?]
+  (fn [{:keys [body-params]}]
+    (let [updated-order (om/add-order! order-manager body-params update?)]
+      (cond (nil? updated-order)
+            (if update?
+              (resp/not-found (str "No order item with id " (::os/id body-params)))
+              (-> (str "order with ID " (::os/id body-params) " already exists")
+                  resp/bad-request
+                  (resp/status 409)))
+            (:clojure.spec.alpha/problems updated-order)
+            (-> updated-order
+                resp/bad-request
+                (resp/status 422))
+            :else
+            (resp/response updated-order)))))
+
+(defn delete-order-handler [order-manager]
+  (fn [{:keys [body-params]}]
+    (om/delete-order! order-manager (:id body-params))
+    (resp/status 204)))
+
+(defn app-routes [grocery-manager recipe-manager flavor-manager order-manager]
   (routes
     (GET "/" {} (resp/resource-response "index.html" {:root "public"}))
     (GET "/api/v1/groceries" {params :params} (get-groceries-handler grocery-manager params))
@@ -125,17 +157,21 @@
     (PUT "/api/v1/flavors" {} (add-flavor-handler flavor-manager false))
     (PATCH "/api/v1/flavors" {} (add-flavor-handler flavor-manager true))
     (DELETE "/api/v1/flavors" {} (delete-flavor-handler flavor-manager))
+    (GET "/api/v1/orders" {params :params} (get-orders-handler flavor-manager params))
+    (PUT "/api/v1/orders" {} (add-order-handler flavor-manager false))
+    (PATCH "/api/v1/orders" {} (add-order-handler flavor-manager true))
+    (DELETE "/api/v1/orders" {} (delete-order-handler flavor-manager))
     (route/resources "/")
     (route/not-found "Not Found")))
 
-(defrecord Api [config-manager grocery-manager recipe-manager flavor-manager]
+(defrecord Api [config-manager grocery-manager recipe-manager flavor-manager order-manager]
   component/Lifecycle
 
   (start [this]
     (let [{::cm/keys [app-host app-port]} (::cm/app-settings config-manager)]
       (logger/info (str "Starting server on host " app-host " port: " app-port))
       (assoc this :server (run-jetty
-                            (-> (app-routes grocery-manager recipe-manager flavor-manager)
+                            (-> (app-routes grocery-manager recipe-manager flavor-manager order-manager)
                                 log-mw/wrap-with-logger
                                 mw/wrap-format
                                 (wrap-keyword-params {:parse-namespaces? true})
