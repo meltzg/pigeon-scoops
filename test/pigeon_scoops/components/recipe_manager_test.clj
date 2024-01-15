@@ -68,69 +68,6 @@
   (assoc recipe-no-id ::rs/id (java.util.UUID/randomUUID)
                       ::rs/name "another"))
 
-(def recipe-mixins [{::rs/id           #uuid"c7044068-329e-4323-b814-d65bf3da6ba3"
-                     ::rs/name         "crushed oreo"
-                     ::rs/type         ::rs/mixin
-                     ::rs/instructions ["crush 'em"]
-                     ::rs/amount       0.5
-                     ::rs/amount-unit  ::vol/c
-                     ::rs/ingredients  [{::rs/ingredient-type ::gs/oreo
-                                         ::rs/amount          12
-                                         ::rs/amount-unit     ::u/unit}]}
-                    {::rs/id           #uuid"dc5edc8e-79cf-4601-aab6-778d4897106a"
-                     ::rs/name         "oreo milk"
-                     ::rs/type         ::rs/mixin
-                     ::rs/instructions ["more"]
-                     ::rs/amount       1
-                     ::rs/amount-unit  ::vol/c
-                     ::rs/ingredients  [{::rs/ingredient-type ::gs/milk
-                                         ::rs/amount          1
-                                         ::rs/amount-unit     ::vol/c}]
-                     ::rs/mixins       [{::rs/id          #uuid"c7044068-329e-4323-b814-d65bf3da6ba3"
-                                         ::rs/amount      0.25
-                                         ::rs/amount-unit ::vol/c}]}])
-
-(def recipe-no-id-with-mixins
-  (assoc recipe-no-id ::rs/mixins (map #(hash-map ::rs/id (::rs/id %)
-                                                  ::rs/amount (* 0.5 (::rs/amount %))
-                                                  ::rs/amount-unit (::rs/amount-unit %)) recipe-mixins)))
-
-(t/deftest materialize-mixins-test
-  (t/testing "Mixins can recursively be materialized"
-    (t/is (= (rm/materialize-mixins recipe-no-id-with-mixins recipe-mixins)
-             '(#::rs{:amount       0.25
-                     :amount-unit  ::vol/c
-                     :id           #uuid "c7044068-329e-4323-b814-d65bf3da6ba3"
-                     :ingredients  (#::rs{:amount          1.5
-                                          :amount-unit     ::u/unit
-                                          :ingredient-type ::gs/oreo})
-                     :instructions ["crush 'em"]
-                     :mixins       ()
-                     :name         "crushed oreo"
-                     :type         ::rs/mixin}
-                #::rs{:amount       0.5
-                      :amount-unit  ::vol/c
-                      :id           #uuid "dc5edc8e-79cf-4601-aab6-778d4897106a"
-                      :ingredients  (#::rs{:amount          0.5
-                                           :amount-unit     ::vol/c
-                                           :ingredient-type ::gs/milk})
-                      :instructions ["more"]
-                      :mixins       (#::rs{:amount      0.125
-                                           :amount-unit ::vol/c
-                                           :id          #uuid "c7044068-329e-4323-b814-d65bf3da6ba3"})
-                      :name         "oreo milk"
-                      :type         ::rs/mixin}
-                #::rs{:amount       0.125
-                      :amount-unit  ::vol/c
-                      :id           #uuid "c7044068-329e-4323-b814-d65bf3da6ba3"
-                      :ingredients  (#::rs{:amount          0.75
-                                           :amount-unit     ::u/unit
-                                           :ingredient-type ::gs/oreo})
-                      :instructions ["crush 'em"]
-                      :mixins       ()
-                      :name         "crushed oreo"
-                      :type         ::rs/mixin})))))
-
 (t/deftest scale-recipe-test
   (t/testing "A recipe can be scaled up and down"
     (t/are [recipe amount amount-unit expected]
@@ -145,8 +82,7 @@
                                                    ::rs/amount-unit     ::vol/c}
                                                   {::rs/ingredient-type ::gs/heavy-cream
                                                    ::rs/amount          6.0
-                                                   ::rs/amount-unit     ::vol/c}]
-                               ::rs/mixins       []}
+                                                   ::rs/amount-unit     ::vol/c}]}
       recipe-no-id 0.5 ::vol/qt {::rs/name         "foobar"
                                  ::rs/type         ::rs/ice-cream
                                  ::rs/instructions ["mix it all together"]
@@ -157,8 +93,7 @@
                                                      ::rs/amount-unit     ::vol/c}
                                                     {::rs/ingredient-type ::gs/heavy-cream
                                                      ::rs/amount          1.0
-                                                     ::rs/amount-unit     ::vol/c}]
-                                 ::rs/mixins       []}
+                                                     ::rs/amount-unit     ::vol/c}]}
       recipe-no-id 4 ::vol/c {::rs/name         "foobar"
                               ::rs/type         ::rs/ice-cream
                               ::rs/instructions ["mix it all together"]
@@ -169,8 +104,7 @@
                                                   ::rs/amount-unit     ::vol/c}
                                                  {::rs/ingredient-type ::gs/heavy-cream
                                                   ::rs/amount          2.0
-                                                  ::rs/amount-unit     ::vol/c}]
-                              ::rs/mixins       []}
+                                                  ::rs/amount-unit     ::vol/c}]}
       recipe-no-id 2 ::vol/l {::rs/name         "foobar"
                               ::rs/type         ::rs/ice-cream
                               ::rs/instructions ["mix it all together"]
@@ -181,30 +115,12 @@
                                                   ::rs/amount-unit     ::vol/c}
                                                  {::rs/ingredient-type ::gs/heavy-cream
                                                   ::rs/amount          (* 2 2 (u/convert 1 ::vol/l ::vol/qt))
-                                                  ::rs/amount-unit     ::vol/c}]
-                              ::rs/mixins       []}
-      recipe-no-id-with-mixins 3 ::vol/qt {::rs/name         "foobar"
-                                           ::rs/type         ::rs/ice-cream
-                                           ::rs/instructions ["mix it all together"]
-                                           ::rs/amount       3
-                                           ::rs/amount-unit  ::vol/qt
-                                           ::rs/ingredients  [{::rs/ingredient-type ::gs/milk
-                                                               ::rs/amount          3.0
-                                                               ::rs/amount-unit     ::vol/c}
-                                                              {::rs/ingredient-type ::gs/heavy-cream
-                                                               ::rs/amount          6.0
-                                                               ::rs/amount-unit     ::vol/c}]
-                                           ::rs/mixins       [{::rs/amount      0.75
-                                                               ::rs/amount-unit ::vol/c
-                                                               ::rs/id          #uuid "c7044068-329e-4323-b814-d65bf3da6ba3"}
-                                                              {::rs/amount      1.5
-                                                               ::rs/amount-unit ::vol/c
-                                                               ::rs/id          #uuid "dc5edc8e-79cf-4601-aab6-778d4897106a"}]})))
+                                                  ::rs/amount-unit     ::vol/c}]})))
 
 (t/deftest merge-recipe-ingredients-test
   (t/testing "a list of ingredients can be made from combining several recipes"
     (t/are [recipes expected]
-      (= (rm/merge-recipe-ingredients recipes (concat recipe-mixins recipes)) expected)
+      (= (rm/merge-recipe-ingredients recipes) expected)
       [recipe-no-id (rm/scale-recipe recipe-no-id 2 ::vol/qt)] [{::rs/ingredient-type ::gs/milk
                                                                  ::rs/amount          3.0
                                                                  ::rs/amount-unit     ::vol/c}
@@ -219,24 +135,14 @@
                                                           ::rs/amount-unit     ::vol/c}
                                                          {::rs/ingredient-type ::gs/salt
                                                           ::rs/amount          1
-                                                          ::rs/amount-unit     ::u/pinch}]
-      [recipe-no-id-with-mixins (rm/scale-recipe recipe-no-id-with-mixins 2 ::vol/qt)] [{::rs/ingredient-type ::gs/oreo
-                                                                                         ::rs/amount          6.75
-                                                                                         ::rs/amount-unit     ::u/unit}
-                                                                                        {::rs/ingredient-type ::gs/milk
-                                                                                         ::rs/amount          4.5
-                                                                                         ::rs/amount-unit     ::vol/c}
-                                                                                        {::rs/ingredient-type ::gs/heavy-cream
-                                                                                         ::rs/amount          6.0
-                                                                                         ::rs/amount-unit     ::vol/c}])))
+                                                          ::rs/amount-unit     ::u/pinch}])))
 
 (t/deftest to-grocery-purchase-list-test
   (t/testing "recipe ingredients can be turned into grocery lists"
     (t/is (= (rm/to-grocery-purchase-list
                (rm/merge-recipe-ingredients
                  [(rm/scale-recipe recipe-no-id-different-ingredients 1 ::vol/gal)
-                  recipe-no-id]
-                 [recipe-no-id])
+                  recipe-no-id])
                groceries)
              {:purchase-list '(#::gs{:type                   ::gs/milk
                                      :amount-needed          4.5

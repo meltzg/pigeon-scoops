@@ -155,29 +155,11 @@
                                          amount-unit)]
     (-> recipe
         (update ::rs/ingredients (partial map #(update % ::rs/amount * scale-factor)))
-        (update ::rs/mixins (partial map #(update % ::rs/amount * scale-factor)))
         (assoc ::rs/amount amount
                ::rs/amount-unit amount-unit))))
 
-
-(defn materialize-mixins [recipe-to-materialize recipe-library]
-  (loop [to-materialize (::rs/mixins recipe-to-materialize)
-         materialized-mixins []]
-    (if (empty? to-materialize)
-      materialized-mixins
-      (let [mixin-recipes (map (fn [mixin]
-                                 (scale-recipe (->> recipe-library
-                                                    (filter #(= (::rs/id %) (::rs/id mixin)))
-                                                    first)
-                                               (::rs/amount mixin)
-                                               (::rs/amount-unit mixin)))
-                               to-materialize)
-            new-mixins (mapcat ::rs/mixins mixin-recipes)]
-        (recur new-mixins (concat materialized-mixins mixin-recipes))))))
-
-(defn merge-recipe-ingredients [recipes-to-merge recipe-library]
+(defn merge-recipe-ingredients [recipes-to-merge]
   (->> (mapcat ::rs/ingredients recipes-to-merge)
-       (concat (mapcat #(mapcat ::rs/ingredients (materialize-mixins % recipe-library)) recipes-to-merge))
        (group-by #(list (::rs/ingredient-type %) (namespace (::rs/amount-unit %))))
        vals
        (map #(reduce (fn [acc ingredient]

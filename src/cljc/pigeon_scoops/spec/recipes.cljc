@@ -25,12 +25,6 @@
                                   ::amount-unit]))
 (s/def ::ingredients (s/coll-of ::ingredient))
 
-(s/def ::mixin (s/keys :req [::id
-                             ::amount
-                             ::amount-unit]))
-
-(s/def ::mixins (s/coll-of ::mixin))
-
 (s/def ::entry (s/keys :req [::id
                              ::type
                              ::name
@@ -38,5 +32,4 @@
                              ::amount
                              ::amount-unit
                              ::ingredients]
-                       :opt [::source
-                             ::mixins]))
+                       :opt [::source]))

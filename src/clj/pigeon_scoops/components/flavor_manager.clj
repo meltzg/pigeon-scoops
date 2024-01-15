@@ -11,7 +11,10 @@
                                        values]]
             [next.jdbc :as jdbc]
             [pigeon-scoops.components.db :as db]
-            [pigeon-scoops.spec.flavors :as fs])
+            [pigeon-scoops.components.recipe-manager :as rm]
+            [pigeon-scoops.spec.flavors :as fs]
+            [pigeon-scoops.spec.recipes :as rs]
+            [pigeon-scoops.units.common :as units])
   (:import (java.util UUID)))
 
 (def create-flavor-table-statement {:create-table [:flavors :if-not-exists]
@@ -49,6 +52,17 @@
                   (dissoc ::fs/amount-unit-type)
                   (update ::fs/amount-unit #(keyword (::fs/amount-unit-type flavor) %)))))))
 
+
+(defn scale-flavor [flavor amount amount-unit]
+  (let [scale-factor (units/scale-factor (::fs/amount flavor)
+                                         (::fs/amount-unit flavor)
+                                         amount
+                                         amount-unit)]
+    (-> flavor
+        (update ::fs/mixins (partial map #(update % ::fs/amount * scale-factor)))
+        (assoc ::fs/amount amount
+               ::fs/amount-unit amount-unit))))
+
 (defn get-flavors! [flavor-manager & ids]
   (let [flavors (jdbc/execute! (-> flavor-manager :database ::db/connection)
                                (cond-> (-> (select :*)
@@ -82,7 +96,7 @@
   ([flavor-manager new-flavor]
    (add-flavor! flavor-manager new-flavor false))
   ([flavor-manager new-flavor update?]
-   (logger/info (str "Adding " ::fs/name))
+   (logger/info (str "Adding " (::fs/name new-flavor)))
    (let [flavor-id (if update?
                      (::fs/id new-flavor)
                      (or (::fs/id new-flavor) (UUID/randomUUID)))
@@ -116,6 +130,19 @@
                (jdbc/execute! conn
                               mixin-statement))
              new-flavor))))))
+
+(defn materialize-recipes! [flavor-manager flavor]
+  (let [recipe-ids (concat [(::fs/recipe-id flavor)] (map ::fs/recipe-id (::fs/mixins flavor)))
+        recipe-map (into {} (map #(vec [(::rs/id %) %])
+                                 (apply (partial rm/get-recipes! (:recipe-manager flavor-manager))
+                                        recipe-ids)))]
+    (concat [(rm/scale-recipe (get recipe-map (::fs/recipe-id flavor))
+                              (::fs/amount flavor)
+                              (::fs/amount-unit flavor))]
+            (map #(rm/scale-recipe (get recipe-map (::fs/recipe-id %))
+                                   (::fs/amount %)
+                                   (::fs/amount-unit %))
+                 (::fs/mixins flavor)))))
 
 (defrecord FlavorManager [database recipe-manager]
   component/Lifecycle
