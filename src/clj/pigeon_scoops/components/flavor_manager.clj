@@ -3,12 +3,12 @@
             [clojure.spec.alpha :as s]
             [com.stuartsierra.component :as component]
             [honey.sql :as sql]
-            [honey.sql.helpers :refer [select
-                                       from
-                                       where
-                                       delete-from
-                                       insert-into
-                                       values]]
+            [honey.sql.helpers :as hsql :refer [select
+                                                from
+                                                where
+                                                delete-from
+                                                insert-into
+                                                values]]
             [next.jdbc :as jdbc]
             [pigeon-scoops.components.db :as db]
             [pigeon-scoops.components.recipe-manager :as rm]
@@ -102,14 +102,20 @@
                      (or (::fs/id new-flavor) (UUID/randomUUID)))
          existing (first (get-flavors! flavor-manager flavor-id))
          new-flavor (assoc new-flavor ::fs/id flavor-id)
-         flavor-statement (-> (insert-into :flavors)
-                              (values [(-> new-flavor
-                                           (dissoc ::fs/mixins)
-                                           (update ::fs/amount-unit name)
-                                           (update ::fs/instructions #(vec [:array % :text]))
-                                           (assoc ::fs/amount-unit-type (namespace (::fs/amount-unit new-flavor)))
-                                           (update-keys (comp keyword name)))])
-                              sql/format)
+         flavor-values (-> new-flavor
+                           (dissoc ::fs/mixins)
+                           (update ::fs/amount-unit name)
+                           (update ::fs/instructions #(vec [:array % :text]))
+                           (assoc ::fs/amount-unit-type (namespace (::fs/amount-unit new-flavor)))
+                           (update-keys (comp keyword name)))
+         flavor-statement (if update?
+                            (-> (hsql/update :flavors)
+                                (hsql/set flavor-values)
+                                (where [:= :id flavor-id])
+                                sql/format)
+                            (-> (insert-into :flavors)
+                                (values [flavor-values])
+                                sql/format))
          mixin-statement (-> (insert-into :mixins)
                              (values (map #(conj {:flavor-id        flavor-id
                                                   :amount-unit-type (namespace (::fs/amount-unit %))}
@@ -123,7 +129,10 @@
                        (and (not update?) existing))
            (jdbc/with-transaction
              [conn (-> flavor-manager :database ::db/connection)]
-             (unsafe-delete-flavor! conn flavor-id)
+             (jdbc/execute! conn
+                            (-> (delete-from :mixins)
+                                (where [:= :flavor-id flavor-id])
+                                sql/format))
              (jdbc/execute! conn
                             flavor-statement)
              (when-not (empty? (::fs/mixins new-flavor))

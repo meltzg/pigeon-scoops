@@ -10,12 +10,12 @@
             [pigeon-scoops.units.volume :as volume]
             [pigeon-scoops.spec.groceries :as gs]
             [honey.sql :as sql]
-            [honey.sql.helpers :refer [select
-                                       from
-                                       where
-                                       delete-from
-                                       insert-into
-                                       values]]
+            [honey.sql.helpers :as hsql :refer [select
+                                                from
+                                                where
+                                                delete-from
+                                                insert-into
+                                                values]]
             [next.jdbc :as jdbc]))
 
 (def create-grocery-table-statement {:create-table [:groceries :if-not-exists]
@@ -86,19 +86,29 @@
    (add-grocery-item! grocery-manager new-grocery-item false))
   ([grocery-manager new-grocery-item update?]
    (logger/info (str "Adding " ::gs/type new-grocery-item))
-   (let [existing (first (get-groceries! grocery-manager (::gs/type new-grocery-item)))]
+   (let [existing (first (get-groceries! grocery-manager (::gs/type new-grocery-item)))
+         item-values (-> (update new-grocery-item ::gs/type name)
+                         (dissoc ::gs/units)
+                         (assoc ::gs/description (::gs/description new-grocery-item))
+                         (update-keys (comp keyword name)))]
      (or (s/explain-data ::gs/entry new-grocery-item)
          (when-not (or (and update? (not existing))
                        (and (not update?) existing))
            (jdbc/with-transaction
              [conn (-> grocery-manager :database ::db/connection)]
-             (unsafe-delete-grocery-item! conn (::gs/type new-grocery-item))
              (jdbc/execute! conn
-                            (-> (insert-into :groceries)
-                                (values [(-> (update new-grocery-item ::gs/type name)
-                                             (dissoc ::gs/units)
-                                             (update-keys (comp keyword name)))])
+                            (-> (delete-from :grocery-units)
+                                (where [:= :type (-> new-grocery-item ::gs/type name)])
                                 sql/format))
+             (jdbc/execute! conn
+                            (if update?
+                              (-> (hsql/update :groceries)
+                                  (hsql/set item-values)
+                                  (where [:= :type (-> new-grocery-item ::gs/type name)])
+                                  sql/format)
+                              (-> (insert-into :groceries)
+                                  (values [item-values])
+                                  sql/format)))
              (when-not (empty? (::gs/units new-grocery-item))
                (jdbc/execute! conn
                               (-> (insert-into :grocery-units)

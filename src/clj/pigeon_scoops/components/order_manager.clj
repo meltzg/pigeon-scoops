@@ -3,12 +3,12 @@
             [clojure.spec.alpha :as s]
             [com.stuartsierra.component :as component]
             [honey.sql :as sql]
-            [honey.sql.helpers :refer [select
-                                       from
-                                       where
-                                       delete-from
-                                       insert-into
-                                       values]]
+            [honey.sql.helpers :as hsql :refer [select
+                                                from
+                                                where
+                                                delete-from
+                                                insert-into
+                                                values]]
             [next.jdbc :as jdbc]
             [pigeon-scoops.components.db :as db]
             [pigeon-scoops.components.flavor-manager :as fm]
@@ -85,11 +85,17 @@
                     (or (::os/id new-order) (UUID/randomUUID)))
          existing (first (get-orders! order-manager order-id))
          new-order (assoc new-order ::os/id order-id)
-         order-statement (-> (insert-into :orders)
-                             (values [(-> new-order
-                                          (dissoc ::os/flavors)
-                                          (update-keys (comp keyword name)))])
-                             sql/format)
+         order-values (-> new-order
+                          (dissoc ::os/flavors)
+                          (update-keys (comp keyword name)))
+         order-statement (if update?
+                           (-> (hsql/update :orders)
+                               (hsql/set order-values)
+                               (where [:= :order-id order-id])
+                               sql/format)
+                           (-> (insert-into :orders)
+                               (values [order-values])
+                               sql/format))
          flavor-amounts-statement (-> (insert-into :flavor-amounts)
                                       (values (map #(conj {:order-id         order-id
                                                            :amount-unit-type (namespace (::os/amount-unit %))}
@@ -105,7 +111,10 @@
                        (and (not update?) existing))
            (jdbc/with-transaction
              [conn (-> order-manager :database ::db/connection)]
-             (unsafe-delete-order! conn order-id)
+             (jdbc/execute! conn
+                            (-> (delete-from :flavor-amounts)
+                                (where [:= :order-id order-id])
+                                sql/format))
              (jdbc/execute! conn
                             order-statement)
              (when-not (empty? (::os/flavors new-order))

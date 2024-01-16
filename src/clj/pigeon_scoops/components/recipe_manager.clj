@@ -10,12 +10,12 @@
             [pigeon-scoops.spec.recipes :as rs]
             [pigeon-scoops.spec.groceries :as gs]
             [honey.sql :as sql]
-            [honey.sql.helpers :refer [select
-                                       from
-                                       where
-                                       delete-from
-                                       insert-into
-                                       values]]
+            [honey.sql.helpers :as hsql :refer [select
+                                                from
+                                                where
+                                                delete-from
+                                                insert-into
+                                                values]]
             [next.jdbc :as jdbc])
   (:import (java.util UUID)))
 
@@ -96,15 +96,22 @@
                      (or (::rs/id new-recipe) (UUID/randomUUID)))
          existing (first (get-recipes! recipe-manager recipe-id))
          new-recipe (assoc new-recipe ::rs/id recipe-id)
-         recipe-statement (-> (insert-into :recipes)
-                              (values [(-> new-recipe
-                                           (dissoc ::rs/ingredients)
-                                           (update ::rs/amount-unit name)
-                                           (update ::rs/type name)
-                                           (update ::rs/instructions #(vec [:array % :text]))
-                                           (assoc ::rs/amount-unit-type (namespace (::rs/amount-unit new-recipe)))
-                                           (update-keys (comp keyword name)))])
-                              sql/format)
+         recipe-values (-> new-recipe
+                           (dissoc ::rs/ingredients)
+                           (update ::rs/amount-unit name)
+                           (update ::rs/type name)
+                           (update ::rs/instructions #(vec [:array % :text]))
+                           (assoc ::rs/amount-unit-type (namespace (::rs/amount-unit new-recipe))
+                                  ::rs/source (::rs/source new-recipe))
+                           (update-keys (comp keyword name)))
+         recipe-statement (if update?
+                            (-> (hsql/update :recipes)
+                                (hsql/set recipe-values)
+                                (where [:= :id recipe-id])
+                                sql/format)
+                            (-> (insert-into :recipes)
+                                (values [recipe-values])
+                                sql/format))
          ingredients-statement (-> (insert-into :ingredients)
                                    (values (map #(conj {:recipe-id        recipe-id
                                                         :amount-unit-type (namespace (::rs/amount-unit %))}
@@ -120,7 +127,10 @@
                        (and (not update?) existing))
            (jdbc/with-transaction
              [conn (-> recipe-manager :database ::db/connection)]
-             (unsafe-delete-recipe! conn recipe-id)
+             (jdbc/execute! conn
+                            (-> (delete-from :ingredients)
+                                (where [:= :recipe-id recipe-id])
+                                sql/format))
              (jdbc/execute! conn
                             recipe-statement)
              (when-not (empty? (::rs/ingredients new-recipe))
