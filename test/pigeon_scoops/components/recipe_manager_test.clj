@@ -49,6 +49,14 @@
                                        ::rs/amount          2
                                        ::rs/amount-unit     ::vol/c}]})
 
+(def small-recipe-no-id {::rs/name        "itty bitty"
+                         ::rs/type        ::rs/mixin
+                         ::rs/amount      0.25
+                         ::rs/amount-unit ::vol/tsp
+                         ::rs/ingredients [{::rs/ingredient-type ::gs/xanthan-gum
+                                            ::rs/amount          0.25
+                                            ::rs/amount-unit     ::vol/tsp}]})
+
 (def recipe-no-id-different-ingredients
   (assoc recipe-no-id ::rs/ingredients [{::rs/ingredient-type ::gs/milk
                                          ::rs/amount          1
@@ -115,7 +123,8 @@
                                                   ::rs/amount-unit     ::vol/c}
                                                  {::rs/ingredient-type ::gs/heavy-cream
                                                   ::rs/amount          (* 2 2 (u/convert 1 ::vol/l ::vol/qt))
-                                                  ::rs/amount-unit     ::vol/c}]})))
+                                                  ::rs/amount-unit     ::vol/c}]}
+      small-recipe-no-id 0.25 ::vol/tsp small-recipe-no-id)))
 
 (t/deftest merge-recipe-ingredients-test
   (t/testing "a list of ingredients can be made from combining several recipes"

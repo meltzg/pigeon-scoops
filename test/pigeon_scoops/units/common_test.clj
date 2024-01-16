@@ -50,14 +50,16 @@
           (nil? actual)))
       1 ::vol/qt 2 ::vol/gal 8.0
       1 ::vol/qt 0.125 ::vol/gal 0.5
-      2 ::vol/l 5 ::vol/c 2.36588
-      2 ::mass/lb 4 ::mass/oz 0.5
+      2 ::vol/l 5 ::vol/c 0.5914699999999999
+      2 ::mass/lb 4 ::mass/oz 0.125
       2 ::mass/lb 2 ::vol/l -1
       2 ::vol/c 2 ::mass/g -1
       2 ::units/pinch 3 ::units/pinch 1.5
       2 ::units/pinch 3 ::units/unit -1
       2 ::units/pinch 3 ::vol/c -1
-      2 ::vol/c 3 ::units/unit -1)))
+      2 ::vol/c 3 ::units/unit -1
+      1 ::vol/c 2 ::vol/c 2
+      0.25 ::vol/c 0.5 ::vol/c 2)))
 
 (t/deftest to-comparable-test
   (t/testing "can convert an amount to it's comparable unit amount"

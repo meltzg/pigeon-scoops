@@ -29,7 +29,7 @@
            (= unit-from unit-to))
     (/ amount-to amount-from)
     (when-let [conversion-factor (convert 1 unit-to unit-from)]
-      (* amount-from amount-to conversion-factor))))
+      (* (/ amount-to amount-from) conversion-factor))))
 
 (defn to-unit-class [amount-unit]
   (last (string/split (namespace amount-unit) #"\.")))
