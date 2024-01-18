@@ -54,7 +54,7 @@
                                                    :cell-text       text
                                                    :entity-config   entity-config
                                                    :config-metadata config-metadata
-                                                   :on-edit         #(on-change (assoc entities idx %))
+                                                   :on-edit         #(on-change (assoc (vec entities) idx %))
                                                    :on-delete       #(on-change (vec (utils/drop-nth idx entities)))}))
                                   (map vector entities cell-text)))))
             ($ Button {:variant  "contained"
