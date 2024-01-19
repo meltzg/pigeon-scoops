@@ -14,8 +14,8 @@
                                     ::recipes-file]))
 
 (def env-defaults
-  {::app-host     (or (System/getenv "PIGEON_HOST") "0.0.0.0")
-   ::app-port     (Integer/parseInt (or (System/getenv "PIGEON_PORT") "8080"))
+  {::app-host     (or (System/getenv "HOST") "0.0.0.0")
+   ::app-port     (Integer/parseInt (or (System/getenv "PORT") "8080"))
    ::recipes-file (or (System/getenv "PIGEON_RECIPES") "resources/recipes.edn")
    ::db_url       (System/getenv "DATABASE_URL")
    ::db_host      (or (System/getenv "DATABASE_HOST") "localhost")
