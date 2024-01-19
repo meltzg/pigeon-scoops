@@ -33,6 +33,7 @@
                  [cljs-ajax "0.8.4"]
                  [binaryage/devtools "1.0.7"]]
   :main ^:skip-aot pigeon-scoops.core
+  :jvm-opts ["-Xmx256m" "-Xss512k" "-XX:CICompilerCount=2"]
   :target-path "target/%s"
   :source-paths ["src/clj"
                  "src/cljc"
