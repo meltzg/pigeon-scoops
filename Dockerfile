@@ -15,4 +15,6 @@ COPY . ./
 RUN npm install
 RUN npx shadow-cljs release app
 
+EXPOSE $PORT
+
 ENTRYPOINT lein run
