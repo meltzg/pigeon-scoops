@@ -1,1 +1,1 @@
-web: lein run
+web: npx shadow-cljs release app && lein run
