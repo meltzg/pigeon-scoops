@@ -15,6 +15,8 @@
                  [com.github.seancorfield/honeysql "2.5.1103"]
                  [com.github.seancorfield/next.jdbc "1.3.909"]
                  [org.postgresql/postgresql "42.7.1"]
+                 [buddy/buddy-hashers "2.0.167"]
+                 [jdbc-ring-session "1.5.3"]
 
                  ;; Logging
                  [ch.qos.logback/logback-classic "1.4.14"]

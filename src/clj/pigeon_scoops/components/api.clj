@@ -4,16 +4,21 @@
             [compojure.core :refer [routes
                                     GET
                                     PATCH
+                                    POST
                                     PUT
                                     DELETE]]
             [compojure.route :as route]
             [muuntaja.middleware :as mw]
-            (pigeon-scoops.components
-              [config-manager :as cm]
-              [flavor-manager :as fm]
-              [grocery-manager :as gm]
-              [order-manager :as om]
-              [recipe-manager :as rm])
+            [jdbc-ring-session.core :as jdbc-ring-session]
+            [ring.middleware.session :as ring-session]
+            [pigeon-scoops.components
+             [config-manager :as cm]
+             [flavor-manager :as fm]
+             [grocery-manager :as gm]
+             [order-manager :as om]
+             [recipe-manager :as rm]
+             [auth-manager :as am]
+             [db :as db]]
             [pigeon-scoops.spec.recipes :as rs]
             [pigeon-scoops.spec.flavors :as fs]
             [pigeon-scoops.spec.orders :as os]
@@ -142,9 +147,25 @@
     (om/delete-order! order-manager (:id body-params))
     (resp/status 204)))
 
-(defn app-routes [grocery-manager recipe-manager flavor-manager order-manager]
+(defn check-sign-up-handler [session]
+  (if (seq session)
+    (resp/status 200)
+    (resp/status 401)))
+
+(defn sign-in-handler [auth-manager]
+  (fn [{:keys [body-params]}]
+    (let [{:keys [email password]} body-params
+          [account valid?] (am/sign-in! auth-manager email password)]
+      (if (and account valid?)
+        (-> (resp/status 200)
+            (resp/header :session account))
+        (-> (resp/status 401))))))
+
+(defn app-routes [auth-manager grocery-manager recipe-manager flavor-manager order-manager]
   (routes
     (GET "/" {} (resp/resource-response "index.html" {:root "public"}))
+    (GET "/api/v1/signUp" {session :session} (check-sign-up-handler session))
+    (POST "/api/v1/signIn" {} (sign-in-handler auth-manager))
     (GET "/api/v1/groceries" {params :params} (get-groceries-handler grocery-manager params))
     (PUT "/api/v1/groceries" {} (add-grocery-item-handler grocery-manager false))
     (PATCH "/api/v1/groceries" {} (add-grocery-item-handler grocery-manager true))
@@ -164,19 +185,22 @@
     (route/resources "/")
     (route/not-found "Not Found")))
 
-(defrecord Api [config-manager grocery-manager recipe-manager flavor-manager order-manager]
+(defrecord Api [config-manager database auth-manager grocery-manager recipe-manager flavor-manager order-manager]
   component/Lifecycle
 
   (start [this]
     (let [{::cm/keys [app-host app-port]} (::cm/app-settings config-manager)]
       (logger/info (str "Starting server on host " app-host " port: " app-port))
       (assoc this :server (run-jetty
-                            (-> (app-routes grocery-manager recipe-manager flavor-manager order-manager)
+                            (-> (app-routes auth-manager grocery-manager recipe-manager flavor-manager order-manager)
                                 log-mw/wrap-with-logger
                                 mw/wrap-format
                                 (wrap-keyword-params {:parse-namespaces? true})
                                 wrap-params
-                                wrap-nested-params)
+                                wrap-nested-params
+                                (ring-session/wrap-session {:store (jdbc-ring-session/jdbc-store
+                                                                     (::db/spec database)
+                                                                     {:table :sessions})}))
                             {:host  app-host
                              :port  app-port
                              :join? false}))))

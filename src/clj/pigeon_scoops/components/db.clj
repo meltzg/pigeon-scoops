@@ -23,7 +23,8 @@
                                                          ::cm/db_name
                                                          ::cm/db_user
                                                          ::cm/db_password) (::cm/app-settings config-manager)))))]
-      (assoc this ::connection (jdbc/get-connection db_spec))))
+      (assoc this ::connection (jdbc/get-connection db_spec)
+                  ::spec db_spec)))
 
   (stop [this]
     (.close (::connection this))

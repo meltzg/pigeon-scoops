@@ -7,7 +7,8 @@
               [flavor-manager :as fm]
               [grocery-manager :as gm]
               [order-manager :as om]
-              [recipe-manager :as rm]))
+              [recipe-manager :as rm]
+              [auth-manager :as am]))
   (:gen-class))
 
 
@@ -19,6 +20,9 @@
      :database (component/using
                  (db/make-database)
                  [:config-manager])
+     :auth-manager (component/using
+                     (am/make-auth-manager)
+                     [:database])
      :grocery-manager (component/using
                         (gm/make-grocery-manager)
                         [:database])
@@ -33,7 +37,13 @@
                       [:database :grocery-manager :recipe-manager :flavor-manager])
      :api (component/using
             (api/make-api)
-            [:config-manager :grocery-manager :recipe-manager :flavor-manager :order-manager]))))
+            [:config-manager
+             :database
+             :auth-manager
+             :grocery-manager
+             :recipe-manager
+             :flavor-manager
+             :order-manager]))))
 
 (defn -main
   [& args]
