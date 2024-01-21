@@ -185,8 +185,7 @@
                              :title    error-title
                              :message  error-text
                              :on-close #(set-error-title! "")})
-            (for [item (sort #(compare (::gs/type %1)
-                                       (::gs/type %2)) (conj groceries nil))]
+            (for [item (sort-by ::gs/type (conj groceries nil))]
               ($ grocery-entry {:item      item
                                 :on-save   #((if item
                                                ajax/PATCH

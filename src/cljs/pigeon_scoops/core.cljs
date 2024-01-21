@@ -2,11 +2,13 @@
   (:require [ajax.core :as ajax]
             [pigeon-scoops.apps.groceries :refer [grocery-list]]
             [pigeon-scoops.apps.recipes :refer [recipe-list]]
+            [pigeon-scoops.apps.flavors :refer [flavor-list]]
             [pigeon-scoops.apps.auth :refer [authenticator]]
             [pigeon-scoops.utils :refer [api-url]]
             [uix.core :as uix :refer [$ defui]]
             [uix.dom]
             ["@mui/icons-material/Menu$default" :as MenuIcon]
+            ["@mui/icons-material/Icecream$default" :as IcecreamIcon]
             ["@mui/icons-material/LocalGroceryStore$default" :as LocalGroceryStoreIcon]
             ["@mui/icons-material/MenuBook$default" :as MenuBookIcon]
             ["@mui/material" :refer [AppBar
@@ -35,6 +37,8 @@
              [refresh-groceries? set-refresh-groceries!] (uix/use-state true)
              [recipes set-recipes!] (uix/use-state nil)
              [refresh-recipes? set-refresh-recipes!] (uix/use-state true)
+             [flavors set-flavors!] (uix/use-state nil)
+             [refresh-flavors? set-refresh-flavors!] (uix/use-state true)
              [signed-in? set-signed-in!] (uix/use-state false)]
          (uix/use-effect
            (fn []
@@ -56,6 +60,14 @@
                         :error-handler   (fn [_]
                                            (set-recipes! []))}))
            [refresh-recipes?])
+         (uix/use-effect
+           (fn []
+             (ajax/GET (str api-url "flavors")
+                       {:response-format :transit
+                        :handler         set-flavors!
+                        :error-handler   (fn [_]
+                                           (set-flavors! []))}))
+           [refresh-flavors?])
          ($ Box
             ($ AppBar
                ($ Toolbar
@@ -71,7 +83,8 @@
                        :on-close #(set-menu-open! (not menu-open?))}
                ($ List
                   (for [[app-name app-icon app-key] [["Groceries" LocalGroceryStoreIcon :groceries]
-                                                     ["Recipes" MenuBookIcon :recipes]]]
+                                                     ["Recipes" MenuBookIcon :recipes]
+                                                     ["Flavors" IcecreamIcon :flavors]]]
                     ($ app-menu-item {:key             app-key
                                       :app-key         app-key
                                       :text            app-name
@@ -86,7 +99,11 @@
                ($ recipe-list {:recipes   recipes
                                :groceries groceries
                                :on-change #(set-refresh-recipes! (not refresh-recipes?))
-                               :active?   (= active-app :recipes)})))))
+                               :active?   (= active-app :recipes)})
+               ($ flavor-list {:flavors   flavors
+                               :recipes   recipes
+                               :on-change #(set-refresh-flavors! (not refresh-flavors?))
+                               :active?   (= active-app :flavors)})))))
 
 (defonce root
          (uix.dom/create-root (js/document.getElementById "root")))

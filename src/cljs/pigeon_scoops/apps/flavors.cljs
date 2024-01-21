@@ -1,4 +1,4 @@
-(ns pigeon-scoops.apps.recipes
+(ns pigeon-scoops.apps.flavors
   (:require [ajax.core :as ajax]
             [clojure.string :as str]
             [cljs.spec.alpha :as s]
@@ -7,7 +7,7 @@
             [pigeon-scoops.components.alert-dialog :refer [alert-dialog]]
             [pigeon-scoops.components.entity-list :refer [entity-list]]
             [pigeon-scoops.components.instructions-dialog :refer [instructions-dialog]]
-            [pigeon-scoops.spec.groceries :as gs]
+            [pigeon-scoops.spec.flavors :as fs]
             [pigeon-scoops.spec.recipes :as rs]
             [pigeon-scoops.units.common :as ucom]
             [pigeon-scoops.units.mass :as mass]
@@ -33,19 +33,21 @@
                                      TextField
                                      Typography]]))
 
-(defui ingredient-config [{:keys [entity config-metadata on-save on-close]}]
-       (let [{:keys [groceries]} config-metadata
-             [ingredient-type ingredient-type-valid? on-ingredient-type-change] (utils/use-validation (or (::rs/ingredient-type entity)
-                                                                                                          (::gs/type (first groceries)))
-                                                                                                      #(s/valid? ::rs/ingredient-type %))
-             [amount amount-valid? on-amount-change] (utils/use-validation (or (::rs/amount entity) 0)
+(defui mixin-config [{:keys [entity config-metadata on-save on-close]}]
+       (let [{:keys [recipes]} config-metadata
+             mixin-recipes (->> recipes
+                                (filter #(= (::rs/type %) ::rs/mixin))
+                                (sort-by ::rs/name))
+             [amount amount-valid? on-amount-change] (utils/use-validation (or (::fs/amount entity) 0)
                                                                            #(and (re-matches #"^\d+\.?\d*$" (str %))
-                                                                                 (s/valid? ::rs/amount (js/parseFloat %))))
-             [amount-unit-type set-amount-unit-type!] (uix/use-state (namespace (or (::rs/amount-unit entity) ::volume/c)))
-             [amount-unit amount-unit-valid? on-amount-unit-change] (utils/use-validation (or (::rs/amount-unit entity)
+                                                                                 (s/valid? ::fs/amount (js/parseFloat %))))
+             [amount-unit amount-unit-valid? on-amount-unit-change] (utils/use-validation (or (::fs/amount-unit entity)
                                                                                               (first (keys volume/conversion-map)))
-                                                                                          #(s/valid? ::rs/amount-unit %))]
-
+                                                                                          #(s/valid? ::fs/amount-unit %))
+             [recipe-id recipe-id-valid? on-recipe-id-change] (utils/use-validation (or (::fs/recipe-id entity)
+                                                                                        (::rs/id (first mixin-recipes)))
+                                                                                    #(s/valid? ::fs/recipe-id %))
+             [amount-unit-type set-amount-unit-type!] (uix/use-state (namespace amount-unit))]
          (uix/use-effect
            (fn []
              (when (not= amount-unit-type (namespace amount-unit))
@@ -55,16 +57,15 @@
            [amount-unit amount-unit-type on-amount-unit-change])
 
          ($ Dialog {:open true :on-close on-close}
-            ($ DialogTitle "Edit Ingredient")
+            ($ DialogTitle "Edit Mixin")
             ($ DialogContent
                ($ Stack {:direction "column" :spacing 2}
                   ($ FormControl {:full-width true
-                                  :error      (not ingredient-type-valid?)}
-                     ($ InputLabel "Type")
-                     ($ Select {:value     ingredient-type
-                                :on-change #(on-ingredient-type-change (keyword (namespace ::gs/type) (.. % -target -value)))}
-                        (map #($ MenuItem {:value % :key %} (name %))
-                             (sort (map ::gs/type groceries)))))
+                                  :error      (not recipe-id-valid?)}
+                     ($ InputLabel "Mixin Recipe")
+                     ($ Select {:value     recipe-id
+                                :on-change #(on-recipe-id-change (uuid (.. % -target -value)))}
+                        (map #($ MenuItem {:value (str (::rs/id %)) :key (str (::rs/id %))} (::rs/name %)) mixin-recipes)))
                   ($ TextField {:label     "Amount"
                                 :error     (not amount-valid?)
                                 :value     amount
@@ -74,7 +75,7 @@
                      ($ Select {:value     amount-unit-type
                                 :on-change #(set-amount-unit-type! (.. % -target -value))}
                         (map #($ MenuItem {:value % :key %} (last (str/split % #"\.")))
-                             (map namespace [::volume/c ::mass/g ::ucom/pinch]))))
+                             (map namespace [::volume/c ::mass/g]))))
                   ($ FormControl {:full-width true
                                   :error      (not amount-unit-valid?)}
                      ($ InputLabel "Amount unit")
@@ -82,52 +83,48 @@
                                 :on-change #(on-amount-unit-change (keyword amount-unit-type (.. % -target -value)))}
                         (map #($ MenuItem {:value % :key %} (name %))
                              (cond (= amount-unit-type (namespace ::mass/g)) (set (keys mass/conversion-map))
-                                   (= amount-unit-type (namespace ::volume/c)) (set (keys volume/conversion-map))
-                                   (= amount-unit-type (namespace ::ucom/pinch)) ucom/other-units))))))
+                                   (= amount-unit-type (namespace ::volume/c)) (set (keys volume/conversion-map))))))))
             ($ DialogActions
                ($ Button {:on-click on-close} "Cancel")
-               ($ Button {:on-click #(on-save {::rs/ingredient-type ingredient-type
-                                               ::rs/amount          (js/parseFloat amount)
-                                               ::rs/amount-unit     amount-unit})
-                          :disabled (not (and ingredient-type-valid?
+               ($ Button {:on-click #(on-save {::fs/recipe-id   recipe-id
+                                               ::fs/amount      (js/parseFloat amount)
+                                               ::fs/amount-unit amount-unit})
+                          :disabled (not (and recipe-id-valid?
                                               amount-valid?
                                               amount-unit-valid?))}
                   "Save")))))
 
-(defui recipe-entry [{:keys [recipe groceries on-save on-delete]}]
-       (let [recipe-id (::rs/id recipe)
+(defui flavor-entry [{:keys [flavor recipes on-save on-delete]}]
+       (let [flavor-id (::fs/id flavor)
+             base-recipes (->> recipes
+                               (filter #(not= (::rs/type %) ::rs/mixin))
+                               (sort-by ::rs/name))
              [edit-instructions-open set-edit-instructions-open!] (uix/use-state false)
-             [recipe-name recipe-name-valid? on-recipe-name-change] (utils/use-validation (or (::rs/name recipe) "")
-                                                                                          #(s/valid? ::rs/name %))
-             [recipe-type recipe-type-valid? on-recipe-type-change] (utils/use-validation (or (::rs/type recipe)
-                                                                                              (first rs/recipe-types))
-                                                                                          #(s/valid? ::rs/type %))
-             [amount amount-valid? on-amount-change] (utils/use-validation (or (::rs/amount recipe) 0)
+             [flavor-name flavor-name-valid? on-flavor-name-change] (utils/use-validation (or (::fs/name flavor) "")
+                                                                                          #(s/valid? ::fs/name %))
+             [amount amount-valid? on-amount-change] (utils/use-validation (or (::fs/amount flavor) 0)
                                                                            #(and (re-matches #"^\d+\.?\d*$" (str %))
-                                                                                 (s/valid? ::rs/amount (js/parseFloat %))))
-             [amount-unit amount-unit-valid? on-amount-unit-change] (utils/use-validation (or (::rs/amount-unit recipe)
+                                                                                 (s/valid? ::fs/amount (js/parseFloat %))))
+             [amount-unit amount-unit-valid? on-amount-unit-change] (utils/use-validation (or (::fs/amount-unit flavor)
                                                                                               (first (keys volume/conversion-map)))
-                                                                                          #(s/valid? ::rs/amount-unit %))
+                                                                                          #(s/valid? ::fs/amount-unit %))
+             [recipe-id recipe-id-valid? on-recipe-id-change] (utils/use-validation (or (::fs/recipe-id flavor)
+                                                                                        (::rs/id (first base-recipes)))
+                                                                                    #(s/valid? ::fs/recipe-id %))
              [amount-unit-type set-amount-unit-type!] (uix/use-state (namespace amount-unit))
-             [source set-source!] (uix/use-state (::rs/source recipe))
-             [ingredients set-ingredients!] (uix/use-state (::rs/ingredients recipe))
-             [instructions set-instructions!] (uix/use-state (::rs/instructions recipe))
-             recipe-valid? (and recipe-name-valid?
-                                recipe-type-valid?
+             [instructions set-instructions!] (uix/use-state (::fs/instructions flavor))
+             [mixins set-mixins!] (uix/use-state (::fs/mixins flavor))
+             flavor-valid? (and flavor-name-valid?
                                 amount-valid?
-                                amount-unit-valid?)
-             unsaved-changes? (or (and (not= recipe-name (::rs/name recipe))
-                                       (not (and (str/blank? recipe-name)
-                                                 (str/blank? (::rs/name recipe)))))
-                                  (not= recipe-type (::rs/type recipe))
-                                  (not= (js/parseFloat amount) (::rs/amount recipe))
-                                  (not= amount-unit (::rs/amount-unit recipe))
-                                  (and (not= source (::rs/source recipe))
-                                       (not (and (str/blank? source)
-                                                 (str/blank? (::rs/source recipe)))))
-                                  (not= ingredients (::rs/ingredients recipe))
-                                  (not= instructions (::rs/instructions recipe)))]
-
+                                amount-unit-valid?
+                                recipe-id-valid?)
+             unsaved-changes? (or (and (not= flavor-name (::fs/name flavor))
+                                       (not (and (str/blank? flavor-name)
+                                                 (str/blank? (::fs/name flavor)))))
+                                  (not= (js/parseFloat amount) (::fs/amount flavor))
+                                  (not= amount-unit (::fs/amount-unit flavor))
+                                  (not= mixins (::fs/ingredients flavor))
+                                  (not= instructions (::fs/instructions flavor)))]
          (uix/use-effect
            (fn []
              (when (not= amount-unit-type (namespace amount-unit))
@@ -135,22 +132,22 @@
                                             (= amount-unit-type (namespace ::volume/c)) (first (keys volume/conversion-map))))))
            [amount-unit amount-unit-type on-amount-unit-change])
 
-         ($ Accordion (if (nil? recipe) {:expanded true} {})
+         ($ Accordion (if (nil? flavor) {:expanded true} {})
             ($ AccordionSummary {:expandIcon ($ ExpandMoreIcon)}
-               ($ Typography (if recipe-id recipe-name "New Recipe")))
+               ($ Typography (if flavor-id flavor-name "New Flavor")))
             ($ AccordionDetails
                ($ Stack {:direction "column"
                          :spacing   1.25}
                   ($ TextField {:label     "Name"
-                                :error     (not recipe-name-valid?)
-                                :value     recipe-name
-                                :on-change on-recipe-name-change})
+                                :error     (not flavor-name-valid?)
+                                :value     flavor-name
+                                :on-change on-flavor-name-change})
                   ($ FormControl {:full-width true
-                                  :error      (not recipe-type-valid?)}
-                     ($ InputLabel "Recipe type")
-                     ($ Select {:value     recipe-type
-                                :on-change #(on-recipe-type-change (keyword (namespace ::rs/type) (.. % -target -value)))}
-                        (map #($ MenuItem {:value % :key %} (name %)) (sort rs/recipe-types))))
+                                  :error      (not recipe-id-valid?)}
+                     ($ InputLabel "Base Recipe")
+                     ($ Select {:value     recipe-id
+                                :on-change #(on-recipe-id-change (uuid (.. % -target -value)))}
+                        (map #($ MenuItem {:value (str (::rs/id %)) :key (str (::rs/id %))} (::rs/name %)) base-recipes)))
                   ($ TextField {:label     "Amount"
                                 :error     (not amount-valid?)
                                 :value     amount
@@ -169,27 +166,26 @@
                         (map #($ MenuItem {:value % :key %} (name %))
                              (cond (= amount-unit-type (namespace ::mass/g)) (set (keys mass/conversion-map))
                                    (= amount-unit-type (namespace ::volume/c)) (set (keys volume/conversion-map))))))
-                  ($ TextField {:label     "Source"
-                                :value     (or source "")
-                                :on-change #(set-source! (.. % -target -value))})
+                  ($ Typography "Mixins")
+                  ($ entity-list {:entity-name     "Mixins"
+                                  :entities        mixins
+                                  :column-headers  ["Type"
+                                                    "Amount"]
+                                  :cell-text       (for [mixin mixins]
+                                                     [(::rs/name (first (filter #(= (::rs/id %)
+                                                                                    (::fs/recipe-id mixin)) recipes)))
+                                                      (str (::fs/amount mixin)
+                                                           " "
+                                                           (name (::fs/amount-unit mixin)))])
+                                  :config-metadata {:recipes recipes}
+                                  :entity-config   mixin-config
+                                  :on-change       set-mixins!})
                   (when edit-instructions-open
                     ($ instructions-dialog {:instructions instructions
                                             :validate-fn  #(s/valid? ::rs/instructions %)
                                             :on-close     #(set-edit-instructions-open! false)
                                             :on-save      #(do (set-instructions! %)
                                                                (set-edit-instructions-open! false))}))
-                  ($ entity-list {:entity-name     "Ingredient"
-                                  :entities        ingredients
-                                  :column-headers  ["Type"
-                                                    "Amount"]
-                                  :cell-text       (for [ingredient ingredients]
-                                                     [(name (::rs/ingredient-type ingredient))
-                                                      (str (::rs/amount ingredient)
-                                                           " "
-                                                           (name (::rs/amount-unit ingredient)))])
-                                  :config-metadata {:groceries groceries}
-                                  :entity-config   ingredient-config
-                                  :on-change       set-ingredients!})
                   ($ Typography
                      "Instructions")
                   ($ Paper
@@ -202,41 +198,37 @@
                              :on-click #(set-edit-instructions-open! true)}
                      "Edit Instructions")
                   ($ Button {:variant  "contained"
-                             :disabled (or (not recipe-valid?)
+                             :disabled (or (not flavor-valid?)
                                            (not unsaved-changes?))
-                             :on-click #(on-save (conj {::rs/name         recipe-name
-                                                        ::rs/type         recipe-type
-                                                        ::rs/amount       (js/parseFloat amount)
-                                                        ::rs/amount-unit  amount-unit
-                                                        ::rs/ingredients  (or ingredients [])
-                                                        ::rs/instructions (or instructions [])}
-                                                       (when (some? recipe-id) [::rs/id recipe-id])
-                                                       (when-not (str/blank? source) [::rs/source source])))}
+                             :on-click #(on-save (conj {::fs/name         flavor-name
+                                                        ::fs/amount       (js/parseFloat amount)
+                                                        ::fs/amount-unit  amount-unit
+                                                        ::fs/mixins       (or mixins [])
+                                                        ::fs/instructions (or instructions [])
+                                                        ::fs/recipe-id    recipe-id}
+                                                       (when (some? flavor-id) [::fs/id flavor-id])))}
                      "Save")
                   ($ Button {:variant  "contained"
                              :disabled (not unsaved-changes?)
-                             :on-click #(do (on-recipe-name-change (or (::rs/name recipe) ""))
-                                            (on-recipe-type-change (or (::rs/type recipe)
-                                                                       (first rs/recipe-types)))
-                                            (on-amount-change (or (::rs/amount recipe) 0))
-                                            (if-let [original-amount-unit (::rs/amount-unit recipe)]
+                             :on-click #(do (on-flavor-name-change (or (::fs/name flavor) ""))
+                                            (on-amount-change (or (::fs/amount flavor) 0))
+                                            (if-let [original-amount-unit (::fs/amount-unit flavor)]
                                               (do (set-amount-unit-type! (namespace original-amount-unit))
                                                   (on-amount-unit-change original-amount-unit))
                                               (set-amount-unit-type! (namespace ::volume/c)))
-                                            (set-source! (::rs/source recipe))
-                                            (set-ingredients! (::rs/ingredients recipe))
-                                            (set-instructions! (::rs/instructions recipe)))}
+                                            (set-mixins! (::fs/mixins flavor))
+                                            (set-instructions! (::fs/instructions flavor)))}
                      "Reset")
-                  (when recipe
+                  (when flavor
                     ($ Button {:variant  "contained"
                                :color    "error"
-                               :on-click #(on-delete recipe-id)}
+                               :on-click #(on-delete flavor-id)}
                        "Delete")))))))
 
-(defui recipe-list [{:keys [recipes groceries on-change active?]}]
+(defui flavor-list [{:keys [flavors recipes on-change active?]}]
        (let [[error-text set-error-text!] (uix/use-state "")
              [error-title set-error-title!] (uix/use-state "")
-             [new-recipe-key set-new-recipe-key!] (uix/use-state (str (random-uuid)))
+             [new-flavor-key set-new-flavor-key!] (uix/use-state (str (random-uuid)))
              error-handler (partial utils/error-handler
                                     set-error-title!
                                     set-error-text!)]
@@ -245,23 +237,23 @@
                              :title    error-title
                              :message  error-text
                              :on-close #(set-error-title! "")})
-            (for [recipe (sort-by ::rs/name (conj recipes nil))]
-              ($ recipe-entry {:recipe    recipe
-                               :groceries groceries
-                               :on-save   #((if recipe
+            (for [flavor (sort-by ::fs/name (conj flavors nil))]
+              ($ flavor-entry {:flavor    flavor
+                               :recipes   recipes
+                               :on-save   #((if flavor
                                               ajax/PATCH
-                                              ajax/PUT) (str utils/api-url "recipes")
+                                              ajax/PUT) (str utils/api-url "flavors")
                                             {:params          %
                                              :format          :transit
                                              :response-format :transit
                                              :handler         (fn []
-                                                                (set-new-recipe-key! (str (random-uuid)))
+                                                                (set-new-flavor-key! (str (random-uuid)))
                                                                 (on-change))
                                              :error-handler   error-handler})
-                               :on-delete #(ajax/DELETE (str utils/api-url "recipes")
+                               :on-delete #(ajax/DELETE (str utils/api-url "flavors")
                                                         {:params          {:id %}
                                                          :format          :transit
                                                          :response-format :transit
                                                          :handler         on-change
                                                          :error-handler   error-handler})
-                               :key       (or (::rs/id recipe) new-recipe-key)})))))
+                               :key       (or (::fs/id flavor) new-flavor-key)})))))
