@@ -44,13 +44,17 @@
            (fn []
              (ajax/GET (str api-url "groceries")
                        {:response-format :transit
-                        :handler         set-groceries!}))
+                        :handler         set-groceries!
+                        :error-handler   (fn [_]
+                                           (set-groceries! []))}))
            [refresh-groceries?])
          (uix/use-effect
            (fn []
              (ajax/GET (str api-url "recipes")
                        {:response-format :transit
-                        :handler         set-recipes!}))
+                        :handler         set-recipes!
+                        :error-handler   (fn [_]
+                                           (set-recipes! []))}))
            [refresh-recipes?])
          ($ Box
             ($ AppBar
@@ -59,7 +63,9 @@
                      ($ MenuIcon))
                   ($ Typography {:variant "h6"}
                      "Pigeon Scoops Manager")
-                  ($ authenticator {:signed-in? signed-in? :on-change set-signed-in!})))
+                  ($ authenticator {:signed-in? signed-in? :on-change #(do (set-signed-in! %)
+                                                                           (set-refresh-groceries! (not refresh-groceries?))
+                                                                           (set-refresh-recipes! (not refresh-recipes?)))})))
             ($ Drawer {:anchor   "left"
                        :open     menu-open?
                        :on-close #(set-menu-open! (not menu-open?))}

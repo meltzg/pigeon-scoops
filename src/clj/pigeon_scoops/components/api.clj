@@ -30,6 +30,13 @@
             [ring.middleware.params :refer [wrap-params]]
             [ring.util.response :as resp]))
 
+(defn auth-middleware [handler-fn]
+  (fn [request]
+    (let [session (:session request)]
+      (if (seq session)
+        (handler-fn request)
+        (resp/status 401)))))
+
 (defn get-groceries-handler [grocery-manager params]
   (fn [& _]
     (resp/response (apply (partial gm/get-groceries! grocery-manager)
@@ -172,22 +179,22 @@
     (GET "/api/v1/signIn" {session :session} (check-sign-in-handler session))
     (POST "/api/v1/signIn" {} (sign-in-handler auth-manager))
     (POST "/api/v1/signOut" {} (sign-out-handler))
-    (GET "/api/v1/groceries" {params :params} (get-groceries-handler grocery-manager params))
-    (PUT "/api/v1/groceries" {} (add-grocery-item-handler grocery-manager false))
-    (PATCH "/api/v1/groceries" {} (add-grocery-item-handler grocery-manager true))
-    (DELETE "/api/v1/groceries" {} (delete-grocery-item-handler grocery-manager))
-    (GET "/api/v1/recipes" {params :params} (get-recipes-handler recipe-manager params))
-    (PUT "/api/v1/recipes" {} (add-recipe-handler recipe-manager false))
-    (PATCH "/api/v1/recipes" {} (add-recipe-handler recipe-manager true))
-    (DELETE "/api/v1/recipes" {} (delete-recipe-handler recipe-manager))
-    (GET "/api/v1/flavors" {params :params} (get-flavors-handler flavor-manager params))
-    (PUT "/api/v1/flavors" {} (add-flavor-handler flavor-manager false))
-    (PATCH "/api/v1/flavors" {} (add-flavor-handler flavor-manager true))
-    (DELETE "/api/v1/flavors" {} (delete-flavor-handler flavor-manager))
-    (GET "/api/v1/orders" {params :params} (get-orders-handler flavor-manager params))
-    (PUT "/api/v1/orders" {} (add-order-handler flavor-manager false))
-    (PATCH "/api/v1/orders" {} (add-order-handler flavor-manager true))
-    (DELETE "/api/v1/orders" {} (delete-order-handler flavor-manager))
+    (GET "/api/v1/groceries" {params :params} (auth-middleware (get-groceries-handler grocery-manager params)))
+    (PUT "/api/v1/groceries" {} (auth-middleware (add-grocery-item-handler grocery-manager false)))
+    (PATCH "/api/v1/groceries" {} (auth-middleware (add-grocery-item-handler grocery-manager true)))
+    (DELETE "/api/v1/groceries" {} (auth-middleware (delete-grocery-item-handler grocery-manager)))
+    (GET "/api/v1/recipes" {params :params} (auth-middleware (get-recipes-handler recipe-manager params)))
+    (PUT "/api/v1/recipes" {} (auth-middleware (add-recipe-handler recipe-manager false)))
+    (PATCH "/api/v1/recipes" {} (auth-middleware (add-recipe-handler recipe-manager true)))
+    (DELETE "/api/v1/recipes" {} (auth-middleware (delete-recipe-handler recipe-manager)))
+    (GET "/api/v1/flavors" {params :params} (auth-middleware (get-flavors-handler flavor-manager params)))
+    (PUT "/api/v1/flavors" {} (auth-middleware (add-flavor-handler flavor-manager false)))
+    (PATCH "/api/v1/flavors" {} (auth-middleware (add-flavor-handler flavor-manager true)))
+    (DELETE "/api/v1/flavors" {} (auth-middleware (delete-flavor-handler flavor-manager)))
+    (GET "/api/v1/orders" {params :params} (auth-middleware (get-orders-handler flavor-manager params)))
+    (PUT "/api/v1/orders" {} (auth-middleware (add-order-handler flavor-manager false)))
+    (PATCH "/api/v1/orders" {} (auth-middleware (add-order-handler flavor-manager true)))
+    (DELETE "/api/v1/orders" {} (auth-middleware (delete-order-handler flavor-manager)))
     (route/resources "/")
     (route/not-found "Not Found")))
 
