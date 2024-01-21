@@ -2,6 +2,7 @@
   (:require [ajax.core :as ajax]
             [pigeon-scoops.apps.groceries :refer [grocery-list]]
             [pigeon-scoops.apps.recipes :refer [recipe-list]]
+            [pigeon-scoops.apps.auth :refer [authenticator]]
             [pigeon-scoops.utils :refer [api-url]]
             [uix.core :as uix :refer [$ defui]]
             [uix.dom]
@@ -33,7 +34,12 @@
              [groceries set-groceries!] (uix/use-state nil)
              [refresh-groceries? set-refresh-groceries!] (uix/use-state true)
              [recipes set-recipes!] (uix/use-state nil)
-             [refresh-recipes? set-refresh-recipes!] (uix/use-state true)]
+             [refresh-recipes? set-refresh-recipes!] (uix/use-state true)
+             [signed-in? set-signed-in!] (uix/use-state false)]
+         (uix/use-effect
+           (fn []
+             (ajax/GET (str api-url "signIn")
+                       {:handler (partial set-signed-in! true)})))
          (uix/use-effect
            (fn []
              (ajax/GET (str api-url "groceries")
@@ -52,7 +58,8 @@
                   ($ IconButton {:on-click #(set-menu-open! (not menu-open?))}
                      ($ MenuIcon))
                   ($ Typography {:variant "h6"}
-                     "Pigeon Scoops Manager")))
+                     "Pigeon Scoops Manager")
+                  ($ authenticator {:signed-in? signed-in? :on-change set-signed-in!})))
             ($ Drawer {:anchor   "left"
                        :open     menu-open?
                        :on-close #(set-menu-open! (not menu-open?))}

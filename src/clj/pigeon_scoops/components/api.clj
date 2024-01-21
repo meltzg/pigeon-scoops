@@ -147,7 +147,7 @@
     (om/delete-order! order-manager (:id body-params))
     (resp/status 204)))
 
-(defn check-sign-up-handler [session]
+(defn check-sign-in-handler [session]
   (if (seq session)
     (resp/status 200)
     (resp/status 401)))
@@ -158,13 +158,13 @@
           [account valid?] (am/sign-in! auth-manager email password)]
       (if (and account valid?)
         (-> (resp/status 200)
-            (resp/header :session account))
+            (assoc :session account))
         (-> (resp/status 401))))))
 
 (defn app-routes [auth-manager grocery-manager recipe-manager flavor-manager order-manager]
   (routes
     (GET "/" {} (resp/resource-response "index.html" {:root "public"}))
-    (GET "/api/v1/signUp" {session :session} (check-sign-up-handler session))
+    (GET "/api/v1/signIn" {session :session} (check-sign-in-handler session))
     (POST "/api/v1/signIn" {} (sign-in-handler auth-manager))
     (GET "/api/v1/groceries" {params :params} (get-groceries-handler grocery-manager params))
     (PUT "/api/v1/groceries" {} (add-grocery-item-handler grocery-manager false))

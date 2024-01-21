@@ -41,7 +41,7 @@
                                        (where [:= :email email])
                                        sql/format)
                                    {:builder-fn rs/as-unqualified-kebab-maps})]
-    [(select-keys account [:email :created-at]) (when account (:valid (bh/verify password (:password account))))]))
+    [(select-keys (into {} account) [:email :created-at]) (when account (:valid (bh/verify password (:password account))))]))
 
 (defrecord AuthManager [database]
   component/Lifecycle
