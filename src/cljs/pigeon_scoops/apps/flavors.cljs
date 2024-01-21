@@ -123,7 +123,7 @@
                                                  (str/blank? (::fs/name flavor)))))
                                   (not= (js/parseFloat amount) (::fs/amount flavor))
                                   (not= amount-unit (::fs/amount-unit flavor))
-                                  (not= mixins (::fs/ingredients flavor))
+                                  (not= mixins (::fs/mixins flavor))
                                   (not= instructions (::fs/instructions flavor)))]
          (uix/use-effect
            (fn []
