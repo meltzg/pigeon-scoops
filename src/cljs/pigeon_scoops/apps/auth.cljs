@@ -16,12 +16,6 @@
                                      Stack
                                      TextField]]))
 
-(defn handle-refresh [])
-
-(defn handle-sign-out [])
-
-(defn handle-sign-in [])
-
 (defui authenticator [{:keys [signed-in? on-change]}]
        (let [[error-text set-error-text!] (uix/use-state "")
              [error-title set-error-title!] (uix/use-state "")
@@ -48,6 +42,7 @@
                                    :error     (not email-valid?)
                                    :on-change on-email-change})
                      ($ TextField {:label     "Password"
+                                   :type      "password"
                                    :value     password
                                    :error     (not password-valid?)
                                    :on-change on-password-change})))
@@ -58,7 +53,9 @@
                                                    {:params        {:email email :password password}
                                                     :format        :transit
                                                     :handler       (fn []
-                                                                     (prn "FUCK"))
+                                                                     (on-change true)
+                                                                     (set-sign-in-open! false)
+                                                                     (set-anchor-el! nil))
                                                     :error-handler error-handler})}
                      "Submit")))
             ($ IconButton {:size     "large"
@@ -70,10 +67,16 @@
                      :keep-mounted true
                      :open         (some? anchor-el)
                      :on-close     #(set-anchor-el! nil)}
-               ($ MenuItem {:on-click (partial handle-refresh on-change)}
+               ($ MenuItem {:on-click #(ajax/GET (str utils/api-url "signIn")
+                                                 {:handler       (comp (partial on-change true)
+                                                                       (partial set-anchor-el! nil))
+                                                  :error-handler error-handler})}
                   "Refresh Status")
                (if signed-in?
-                 ($ MenuItem {:on-click (partial handle-sign-out on-change)}
+                 ($ MenuItem {:on-click #(ajax/POST (str utils/api-url "signOut")
+                                                    {:handler       (comp (partial on-change false)
+                                                                          (partial set-anchor-el! nil))
+                                                     :error-handler error-handler})}
                     "Sign Out")
                  ($ MenuItem {:on-click (partial set-sign-in-open! true)}
                     "Sign In"))))))

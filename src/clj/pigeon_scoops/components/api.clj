@@ -161,11 +161,17 @@
             (assoc :session account))
         (-> (resp/status 401))))))
 
+(defn sign-out-handler []
+  (fn [_]
+    (-> (resp/status 200)
+        (assoc :session nil))))
+
 (defn app-routes [auth-manager grocery-manager recipe-manager flavor-manager order-manager]
   (routes
     (GET "/" {} (resp/resource-response "index.html" {:root "public"}))
     (GET "/api/v1/signIn" {session :session} (check-sign-in-handler session))
     (POST "/api/v1/signIn" {} (sign-in-handler auth-manager))
+    (POST "/api/v1/signOut" {} (sign-out-handler))
     (GET "/api/v1/groceries" {params :params} (get-groceries-handler grocery-manager params))
     (PUT "/api/v1/groceries" {} (add-grocery-item-handler grocery-manager false))
     (PATCH "/api/v1/groceries" {} (add-grocery-item-handler grocery-manager true))
