@@ -1,9 +1,11 @@
 (ns pigeon-scoops.core
   (:require [ajax.core :as ajax]
+            [pigeon-scoops.spec.flavors :as fs]
             [pigeon-scoops.apps.groceries :refer [grocery-list]]
             [pigeon-scoops.apps.recipes :refer [recipe-list]]
-            [pigeon-scoops.apps.flavors :refer [flavor-list]]
+            [pigeon-scoops.apps.flavors :refer [flavor-entry]]
             [pigeon-scoops.apps.auth :refer [authenticator]]
+            [pigeon-scoops.components.entry-list :refer [entry-list]]
             [pigeon-scoops.utils :refer [api-url]]
             [uix.core :as uix :refer [$ defui]]
             [uix.dom]
@@ -100,10 +102,15 @@
                                :groceries groceries
                                :on-change #(set-refresh-recipes! (not refresh-recipes?))
                                :active?   (= active-app :recipes)})
-               ($ flavor-list {:flavors   flavors
-                               :recipes   recipes
-                               :on-change #(set-refresh-flavors! (not refresh-flavors?))
-                               :active?   (= active-app :flavors)})))))
+               ($ entry-list {:entries         flavors
+                              :entry-form      flavor-entry
+                              :id-key          ::fs/id
+                              :name-key        ::fs/name
+                              :sort-key        ::fs/name
+                              :endpoint        "flavors"
+                              :config-metadata {:recipes recipes}
+                              :on-change       #(set-refresh-flavors! (not refresh-flavors?))
+                              :active?         (= active-app :flavors)})))))
 
 (defonce root
          (uix.dom/create-root (js/document.getElementById "root")))
