@@ -111,19 +111,16 @@
          flavor-statement (if update?
                             (-> (hsql/update :flavors)
                                 (hsql/set flavor-values)
-                                (where [:= :id flavor-id])
-                                sql/format)
+                                (where [:= :id flavor-id]))
                             (-> (insert-into :flavors)
-                                (values [flavor-values])
-                                sql/format))
+                                (values [flavor-values])))
          mixin-statement (-> (insert-into :mixins)
                              (values (map #(conj {:flavor-id        flavor-id
                                                   :amount-unit-type (namespace (::fs/amount-unit %))}
                                                  (update-keys
                                                    (update % ::fs/amount-unit name)
                                                    (comp keyword name)))
-                                          (::fs/mixins new-flavor)))
-                             sql/format)]
+                                          (::fs/mixins new-flavor))))]
      (or (s/explain-data ::fs/entry new-flavor)
          (when-not (or (and update? (not existing))
                        (and (not update?) existing))
@@ -134,10 +131,10 @@
                                 (where [:= :flavor-id flavor-id])
                                 sql/format))
              (jdbc/execute! conn
-                            flavor-statement)
+                            (sql/format flavor-statement))
              (when-not (empty? (::fs/mixins new-flavor))
                (jdbc/execute! conn
-                              mixin-statement))
+                              (sql/format mixin-statement)))
              new-flavor))))))
 
 (defn materialize-recipes! [flavor-manager flavor]

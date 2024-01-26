@@ -34,7 +34,7 @@
 
 (defui content []
        (let [[menu-open? set-menu-open!] (uix/use-state false)
-             [active-app set-active-app!] (uix/use-state :recipes)
+             [active-app set-active-app!] (uix/use-state :flavors)
              [groceries set-groceries!] (uix/use-state nil)
              [refresh-groceries? set-refresh-groceries!] (uix/use-state true)
              [recipes set-recipes!] (uix/use-state nil)
@@ -102,7 +102,8 @@
                                :groceries groceries
                                :on-change #(set-refresh-recipes! (not refresh-recipes?))
                                :active?   (= active-app :recipes)})
-               ($ entry-list {:entries         flavors
+               ($ entry-list {:title           "Flavor"
+                              :entries         flavors
                               :entry-form      flavor-entry
                               :id-key          ::fs/id
                               :name-key        ::fs/name

@@ -13,23 +13,20 @@
                                      Stack
                                      Typography]]))
 
-(defui entry-accordion [{:keys [entry entry-form id-key name-key config-metadata on-save on-delete]}]
+(defui entry-accordion [{:keys [title entry entry-form id-key name-key config-metadata on-save on-delete]}]
        (let [[changed-entry set-changed-entry!] (uix/use-state entry)
-             [valid? set-valid!] (uix/use-state false)
-             [reset-trigger? set-reset-trigger!] (uix/use-state false)]
+             [valid? set-valid!] (uix/use-state false)]
 
          ($ Accordion (if (nil? entry) {:expanded true} {})
             ($ AccordionSummary {:expandIcon ($ ExpandMoreIcon)}
-               ($ Typography (if entry (name-key changed-entry) "New Entry")))
+               ($ Typography (if entry (name-key changed-entry) (str "New " (or title "Entry")))))
             ($ AccordionDetails
                ($ Stack {:direction "column"
                          :spacing   1.25}
                   ($ entry-form {:entry              changed-entry
                                  :config-metadata    config-metadata
                                  :set-valid!         set-valid!
-                                 :set-changed-entry! set-changed-entry!
-                                 :reset-trigger?     reset-trigger?
-                                 :set-reset-trigger! set-reset-trigger!})
+                                 :set-changed-entry! set-changed-entry!})
                   ($ Button {:variant  "contained"
                              :disabled (or (not valid?)
                                            (= entry changed-entry))
@@ -37,8 +34,7 @@
                      "Save")
                   ($ Button {:variant  "contained"
                              :disabled (= entry changed-entry)
-                             :on-click (comp (partial set-reset-trigger! true)
-                                             (partial set-changed-entry! entry))}
+                             :on-click (partial set-changed-entry! entry)}
                      "Reset")
                   (when entry
                     ($ Button {:variant  "contained"
@@ -46,7 +42,7 @@
                                :on-click #(on-delete (id-key entry))}
                        "Delete")))))))
 
-(defui entry-list [{:keys [entries entry-form id-key name-key sort-key endpoint config-metadata on-change active?]}]
+(defui entry-list [{:keys [title entries entry-form id-key name-key sort-key endpoint config-metadata on-change active?]}]
        (let [[error-text set-error-text!] (uix/use-state "")
              [error-title set-error-title!] (uix/use-state "")
              [new-entry-key set-new-entry-key!] (uix/use-state (str (random-uuid)))
@@ -59,7 +55,8 @@
                              :message  error-text
                              :on-close #(set-error-title! "")})
             (for [entry (sort-by sort-key (conj entries nil))]
-              ($ entry-accordion {:entry           entry
+              ($ entry-accordion {:title           title
+                                  :entry           entry
                                   :entry-form      entry-form
                                   :id-key          id-key
                                   :name-key        name-key

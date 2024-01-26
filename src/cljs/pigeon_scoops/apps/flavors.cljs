@@ -91,100 +91,65 @@
                                               amount-unit-valid?))}
                   "Save")))))
 
-(defui flavor-entry [{:keys [entry config-metadata set-valid! set-changed-entry! reset-trigger? set-reset-trigger!]}]
+(defui flavor-entry [{:keys [entry config-metadata set-valid! set-changed-entry!]}]
        (let [flavor-id (::fs/id entry)
+             set-complete-entry! (fn [partial-entry]
+                                   (set-changed-entry! (merge (conj {::fs/name         ""
+                                                                     ::fs/amount       0
+                                                                     ::fs/amount-unit  ::volume/c
+                                                                     ::fs/mixins       []
+                                                                     ::fs/instructions []
+                                                                     ::fs/recipe-id    nil}
+                                                                    (when (some? flavor-id) [::fs/id flavor-id]))
+                                                              partial-entry)))
              base-recipes (->> (:recipes config-metadata)
                                (filter #(not= (::rs/type %) ::rs/mixin))
                                (sort-by ::rs/name))
+             name-valid? #(s/valid? ::fs/name (::fs/name entry))
+             amount-valid? #(and (re-matches #"^\d+\.?\d*$" (str (::fs/amount entry)))
+                                 (s/valid? ::fs/amount (js/parseFloat (::fs/amount entry))))
+             amount-unit-valid? #(s/valid? ::fs/amount-unit (::fs/amount-unit entry))
+             recipe-id-valid? #(s/valid? ::fs/recipe-id (::fs/recipe-id entry))
              [edit-instructions-open set-edit-instructions-open!] (uix/use-state false)
-             [flavor-name flavor-name-valid? on-flavor-name-change] (utils/use-validation (or (::fs/name entry) "")
-                                                                                          #(s/valid? ::fs/name %))
-             [amount amount-valid? on-amount-change] (utils/use-validation (or (::fs/amount entry) 0)
-                                                                           #(and (re-matches #"^\d+\.?\d*$" (str %))
-                                                                                 (s/valid? ::fs/amount (js/parseFloat %))))
-             [amount-unit amount-unit-valid? on-amount-unit-change] (utils/use-validation (or (::fs/amount-unit entry)
-                                                                                              (first (keys volume/conversion-map)))
-                                                                                          #(s/valid? ::fs/amount-unit %))
-             [recipe-id recipe-id-valid? on-recipe-id-change] (utils/use-validation (or (::fs/recipe-id entry)
-                                                                                        (::rs/id (first base-recipes)))
-                                                                                    #(s/valid? ::fs/recipe-id %))
-             [amount-unit-type set-amount-unit-type!] (uix/use-state (namespace amount-unit))
-             [instructions set-instructions!] (uix/use-state (::fs/instructions entry))
-             [mixins set-mixins!] (uix/use-state (::fs/mixins entry))]
+             [amount-unit-type set-amount-unit-type!] (uix/use-state (namespace (or (::fs/amount-unit entry)
+                                                                                    ::volume/c)))]
          (uix/use-effect
            (fn []
-             (when (not= amount-unit-type (namespace amount-unit))
-               (on-amount-unit-change (cond (= amount-unit-type (namespace ::mass/g)) (first (keys mass/conversion-map))
-                                            (= amount-unit-type (namespace ::volume/c)) (first (keys volume/conversion-map))))))
-           [amount-unit amount-unit-type on-amount-unit-change])
+             (when (or (not (::fs/amount-unit entry)) (not= amount-unit-type (namespace (::fs/amount-unit entry))))
+               (set-complete-entry!
+                 (assoc entry ::fs/amount-unit
+                              (cond (= amount-unit-type (namespace ::mass/g)) (first (keys mass/conversion-map))
+                                    (= amount-unit-type (namespace ::volume/c)) (first (keys volume/conversion-map)))))))
+           [entry amount-unit-type set-complete-entry!])
          (uix/use-effect
            (fn []
-             (set-valid! (and flavor-name-valid?
-                              amount-valid?
-                              amount-unit-valid?
-                              recipe-id-valid?)))
-           [flavor-name-valid?
-            amount-valid?
-            amount-unit-valid?
-            recipe-id-valid?
-            set-valid!])
+             (when (nil? (::fs/recipe-id entry))
+               (set-complete-entry! (assoc entry ::fs/recipe-id (::rs/id (first base-recipes))))))
+           [entry base-recipes set-complete-entry!])
          (uix/use-effect
            (fn []
-             (when reset-trigger?
-               (do
-                 (on-flavor-name-change (or (::fs/name entry) ""))
-                 (on-amount-change (or (::fs/amount entry) 0))
-                 (on-recipe-id-change (or (::fs/recipe-id entry)
-                                          (::rs/id (first base-recipes))))
-                 (if-let [original-amount-unit (::fs/amount-unit entry)]
-                   (do (set-amount-unit-type! (namespace original-amount-unit))
-                       (on-amount-unit-change original-amount-unit))
-                   (set-amount-unit-type! (namespace ::volume/c)))
-                 (set-mixins! (::fs/mixins entry))
-                 (set-instructions! (::fs/instructions entry))
-                 (set-reset-trigger! false))))
-           [entry
-            reset-trigger?
-            set-reset-trigger!
-            base-recipes
-            on-recipe-id-change
-            on-flavor-name-change
-            on-amount-change
-            on-amount-unit-change])
-         (uix/use-effect
-           (fn []
-             (set-changed-entry! (conj {::fs/name         flavor-name
-                                        ::fs/amount       (js/parseFloat amount)
-                                        ::fs/amount-unit  amount-unit
-                                        ::fs/mixins       (or mixins [])
-                                        ::fs/instructions (or instructions [])
-                                        ::fs/recipe-id    recipe-id}
-                                       (when (some? flavor-id) [::fs/id flavor-id]))))
-           [flavor-id
-            recipe-id
-            flavor-name
-            amount
-            amount-unit
-            mixins
-            instructions
-            set-changed-entry!])
+             (set-valid! (and (name-valid?)
+                              (recipe-id-valid?)
+                              (amount-valid?)
+                              (amount-unit-valid?)
+                              (recipe-id-valid?)))))
 
          ($ Stack {:direction "column"
                    :spacing   1.25}
             ($ TextField {:label     "Name"
-                          :error     (not flavor-name-valid?)
-                          :value     flavor-name
-                          :on-change on-flavor-name-change})
+                          :error     (not (name-valid?))
+                          :value     (or (::fs/name entry) "")
+                          :on-change #(set-complete-entry! (assoc entry ::fs/name (.. % -target -value)))})
             ($ FormControl {:full-width true
-                            :error      (not recipe-id-valid?)}
+                            :error      (not (recipe-id-valid?))}
                ($ InputLabel "Base Recipe")
-               ($ Select {:value     recipe-id
-                          :on-change #(on-recipe-id-change (uuid (.. % -target -value)))}
+               ($ Select {:value     (str (or (::fs/recipe-id entry)))
+                          :on-change #(set-complete-entry! (assoc entry ::fs/recipe-id (uuid (.. % -target -value))))}
                   (map #($ MenuItem {:value (str (::rs/id %)) :key (str (::rs/id %))} (::rs/name %)) base-recipes)))
             ($ TextField {:label     "Amount"
-                          :error     (not amount-valid?)
-                          :value     amount
-                          :on-change on-amount-change})
+                          :error     (not (amount-valid?))
+                          :value     (or (::fs/amount entry) 0)
+                          :on-change #(set-complete-entry! (assoc entry ::fs/amount (js/parseFloat (.. % -target -value))))})
             ($ FormControl {:full-width true}
                ($ InputLabel "Amount type")
                ($ Select {:value     amount-unit-type
@@ -192,19 +157,20 @@
                   (map #($ MenuItem {:value % :key %} (last (str/split % #"\.")))
                        (map namespace [::volume/c ::mass/g]))))
             ($ FormControl {:full-width true
-                            :error      (not amount-unit-valid?)}
+                            :error      (not (amount-unit-valid?))}
                ($ InputLabel "Amount unit")
-               ($ Select {:value     amount-unit
-                          :on-change #(on-amount-unit-change (keyword amount-unit-type (.. % -target -value)))}
+               ($ Select {:value     (or (::fs/amount-unit entry)
+                                         (first (keys volume/conversion-map)))
+                          :on-change #(set-complete-entry! (assoc entry ::fs/amount-unit (keyword amount-unit-type (.. % -target -value))))}
                   (map #($ MenuItem {:value % :key %} (name %))
                        (cond (= amount-unit-type (namespace ::mass/g)) (set (keys mass/conversion-map))
                              (= amount-unit-type (namespace ::volume/c)) (set (keys volume/conversion-map))))))
             ($ Typography "Mixins")
             ($ entity-list {:entity-name     "Mixins"
-                            :entities        mixins
+                            :entities        (::fs/mixins entry)
                             :column-headers  ["Type"
                                               "Amount"]
-                            :cell-text       (for [mixin mixins]
+                            :cell-text       (for [mixin (::fs/mixins entry)]
                                                [(::rs/name (first (filter #(= (::rs/id %)
                                                                               (::fs/recipe-id mixin))
                                                                           (:recipes config-metadata))))
@@ -213,21 +179,21 @@
                                                      (name (::fs/amount-unit mixin)))])
                             :config-metadata config-metadata
                             :entity-config   mixin-config
-                            :on-change       set-mixins!})
+                            :on-change       #(set-complete-entry! (assoc entry ::fs/mixins %))})
             (when edit-instructions-open
-              ($ instructions-dialog {:instructions instructions
+              ($ instructions-dialog {:instructions (::fs/instructions entry)
                                       :validate-fn  #(s/valid? ::rs/instructions %)
                                       :on-close     #(set-edit-instructions-open! false)
-                                      :on-save      #(do (set-instructions! %)
+                                      :on-save      #(do (set-complete-entry! (assoc entry ::fs/instructions %))
                                                          (set-edit-instructions-open! false))}))
             ($ Typography
                "Instructions")
             ($ Paper
                ($ List
                   (map-indexed (fn [idx, text]
-                                 ($ ListItem {:key text}
+                                 ($ ListItem {:key (str text idx)}
                                     ($ ListItemText {:primary (str (inc idx) ") " text)})))
-                               instructions)))
+                               (::fs/instructions entry))))
             ($ Button {:variant  "contained"
                        :on-click #(set-edit-instructions-open! true)}
                "Edit Instructions"))))
