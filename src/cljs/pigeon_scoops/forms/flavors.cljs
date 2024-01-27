@@ -1,4 +1,4 @@
-(ns pigeon-scoops.apps.flavors
+(ns pigeon-scoops.forms.flavors
   (:require [clojure.string :as str]
             [cljs.spec.alpha :as s]
             [uix.core :as uix :refer [$ defui]]

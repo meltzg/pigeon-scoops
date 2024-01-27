@@ -1,4 +1,4 @@
-(ns pigeon-scoops.apps.groceries
+(ns pigeon-scoops.forms.groceries
   (:require [clojure.string :as str]
             [cljs.spec.alpha :as s]
             [pigeon-scoops.components.entity-list :refer [entity-list]]

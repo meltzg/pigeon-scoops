@@ -1,4 +1,4 @@
-(ns pigeon-scoops.apps.auth
+(ns pigeon-scoops.auth
   (:require [ajax.core :as ajax]
             [clojure.string :as str]
             [pigeon-scoops.utils :as utils]
