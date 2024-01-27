@@ -42,7 +42,7 @@
                   (when entry
                     ($ Button {:variant  "contained"
                                :color    "error"
-                               :on-click #(do (prn (type (id-key entry))) (on-delete (id-key entry)))}
+                               :on-click #(on-delete (id-key entry))}
                        "Delete")))))))
 
 (defui entry-list [{:keys [title entries entry-form id-key name-key sort-key endpoint config-metadata on-change active?]}]

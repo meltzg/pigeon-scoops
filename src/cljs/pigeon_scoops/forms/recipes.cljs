@@ -1,8 +1,6 @@
 (ns pigeon-scoops.forms.recipes
-  (:require [clojure.string :as str]
-            [cljs.spec.alpha :as s]
+  (:require [cljs.spec.alpha :as s]
             [uix.core :as uix :refer [$ defui]]
-            [pigeon-scoops.utils :as utils]
             [pigeon-scoops.components.amount-config :refer [amount-config]]
             [pigeon-scoops.components.entity-list :refer [entity-list]]
             [pigeon-scoops.components.instructions-dialog :refer [instructions-dialog]]
@@ -30,63 +28,45 @@
 
 (defui ingredient-config [{:keys [entity config-metadata on-save on-close]}]
        (let [{:keys [groceries]} config-metadata
-             [ingredient-type ingredient-type-valid? on-ingredient-type-change] (utils/use-validation (or (::rs/ingredient-type entity)
-                                                                                                          (::gs/type (first groceries)))
-                                                                                                      #(s/valid? ::rs/ingredient-type %))
-             [amount amount-valid? on-amount-change] (utils/use-validation (or (::rs/amount entity) 0)
-                                                                           #(and (re-matches #"^\d+\.?\d*$" (str %))
-                                                                                 (s/valid? ::rs/amount (js/parseFloat %))))
-             [amount-unit-type set-amount-unit-type!] (uix/use-state (namespace (or (::rs/amount-unit entity) ::volume/c)))
-             [amount-unit amount-unit-valid? on-amount-unit-change] (utils/use-validation (or (::rs/amount-unit entity)
-                                                                                              (first (keys volume/conversion-map)))
-                                                                                          #(s/valid? ::rs/amount-unit %))]
-
+             [entity set-entity!] (uix/use-state entity)
+             set-complete-entity! (fn [partial-entity]
+                                    (set-entity! (merge {::rs/ingredient-type nil
+                                                         ::rs/amount          0
+                                                         ::rs/amount-unit     nil}
+                                                        partial-entity)))
+             [amount-config-valid? set-amount-config-valid!] (uix/use-state false)
+             ingredient-type-valid? #(and (::rs/ingredient-type entity)
+                                          (s/valid? ::rs/ingredient-type (::rs/ingredient-type entity)))]
          (uix/use-effect
            (fn []
-             (when (not= amount-unit-type (namespace amount-unit))
-               (on-amount-unit-change (cond (= amount-unit-type (namespace ::mass/g)) (first (keys mass/conversion-map))
-                                            (= amount-unit-type (namespace ::volume/c)) (first (keys volume/conversion-map))
-                                            (= amount-unit-type (namespace ::ucom/pinch)) (first ucom/other-units)))))
-           [amount-unit amount-unit-type on-amount-unit-change])
+             (set-complete-entity! (assoc entity ::rs/ingredient-type (or (::rs/ingredient-type entity)
+                                                                          (::gs/type (first groceries)))))))
 
          ($ Dialog {:open true :on-close on-close}
             ($ DialogTitle "Edit Ingredient")
             ($ DialogContent
                ($ Stack {:direction "column" :spacing 2}
                   ($ FormControl {:full-width true
-                                  :error      (not ingredient-type-valid?)}
+                                  :error      (not (ingredient-type-valid?))}
                      ($ InputLabel "Type")
-                     ($ Select {:value     ingredient-type
-                                :on-change #(on-ingredient-type-change (keyword (namespace ::gs/type) (.. % -target -value)))}
+                     ($ Select {:value     (or (::rs/ingredient-type entity)
+                                               (::gs/type (first groceries)))
+                                :on-change #(set-complete-entity!
+                                              (assoc entity ::rs/ingredient-type
+                                                            (keyword (namespace ::gs/type) (.. % -target -value))))}
                         (map #($ MenuItem {:value % :key %} (name %))
                              (sort (map ::gs/type groceries)))))
-                  ($ TextField {:label     "Amount"
-                                :error     (not amount-valid?)
-                                :value     amount
-                                :on-change on-amount-change})
-                  ($ FormControl {:full-width true}
-                     ($ InputLabel "Amount type")
-                     ($ Select {:value     amount-unit-type
-                                :on-change #(set-amount-unit-type! (.. % -target -value))}
-                        (map #($ MenuItem {:value % :key %} (last (str/split % #"\.")))
-                             (map namespace [::volume/c ::mass/g ::ucom/pinch]))))
-                  ($ FormControl {:full-width true
-                                  :error      (not amount-unit-valid?)}
-                     ($ InputLabel "Amount unit")
-                     ($ Select {:value     amount-unit
-                                :on-change #(on-amount-unit-change (keyword amount-unit-type (.. % -target -value)))}
-                        (map #($ MenuItem {:value % :key %} (name %))
-                             (cond (= amount-unit-type (namespace ::mass/g)) (set (keys mass/conversion-map))
-                                   (= amount-unit-type (namespace ::volume/c)) (set (keys volume/conversion-map))
-                                   (= amount-unit-type (namespace ::ucom/pinch)) ucom/other-units))))))
+                  ($ amount-config {:entry               entity
+                                    :on-change           set-complete-entity!
+                                    :set-valid!          set-amount-config-valid!
+                                    :entry-namespace     (namespace ::rs/id)
+                                    :default-amount-unit ::volume/c
+                                    :accepted-unit-types [::volume/c ::mass/g, ::ucom/pinch]})))
             ($ DialogActions
                ($ Button {:on-click on-close} "Cancel")
-               ($ Button {:on-click #(on-save {::rs/ingredient-type ingredient-type
-                                               ::rs/amount          (js/parseFloat amount)
-                                               ::rs/amount-unit     amount-unit})
-                          :disabled (not (and ingredient-type-valid?
-                                              amount-valid?
-                                              amount-unit-valid?))}
+               ($ Button {:on-click #(on-save entity)
+                          :disabled (not (and (ingredient-type-valid?)
+                                              amount-config-valid?))}
                   "Save")))))
 
 (defui recipe-entry [{:keys [entry config-metadata set-valid! set-changed-entry!]}]

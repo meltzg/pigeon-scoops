@@ -32,15 +32,19 @@
            [default-amount-unit kw entry amount-unit-type on-change])
          (uix/use-effect
            (fn []
-             (set-valid! (and amount-valid?
-                              amount-unit-valid?)))
+             (set-valid! (and (amount-valid?)
+                              (amount-unit-valid?))))
            [set-valid! amount-valid? amount-unit-valid?])
 
          ($ Stack {:direction "column" :spacing 1.25}
             ($ TextField {:label     "Amount"
                           :error     (not (amount-valid?))
                           :value     (or ((kw "amount") entry) 0)
-                          :on-change #(on-change (assoc entry (kw "amount") (js/parseFloat (.. % -target -value))))})
+                          :on-change #(on-change (assoc entry (kw "amount")
+                                                              (let [parsed (js/parseFloat (.. % -target -value))]
+                                                                (if (js/isNaN parsed)
+                                                                  0
+                                                                  parsed))))})
             ($ FormControl {:full-width true}
                ($ InputLabel "Amount type")
                ($ Select {:value     amount-unit-type

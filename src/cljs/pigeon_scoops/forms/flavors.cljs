@@ -33,60 +33,43 @@
              mixin-recipes (->> recipes
                                 (filter #(= (::rs/type %) ::rs/mixin))
                                 (sort-by ::rs/name))
-             [amount amount-valid? on-amount-change] (utils/use-validation (or (::fs/amount entity) 0)
-                                                                           #(and (re-matches #"^\d+\.?\d*$" (str %))
-                                                                                 (s/valid? ::fs/amount (js/parseFloat %))))
-             [amount-unit amount-unit-valid? on-amount-unit-change] (utils/use-validation (or (::fs/amount-unit entity)
-                                                                                              (first (keys volume/conversion-map)))
-                                                                                          #(s/valid? ::fs/amount-unit %))
-             [recipe-id recipe-id-valid? on-recipe-id-change] (utils/use-validation (or (::fs/recipe-id entity)
-                                                                                        (::rs/id (first mixin-recipes)))
-                                                                                    #(s/valid? ::fs/recipe-id %))
-             [amount-unit-type set-amount-unit-type!] (uix/use-state (namespace amount-unit))]
+             [entity set-entity!] (uix/use-state entity)
+             set-complete-entity! (fn [partial-entity]
+                                    (set-entity! (merge {::fs/recipe-id   nil
+                                                         ::fs/amount      0
+                                                         ::fs/amount-unit nil}
+                                                        partial-entity)))
+             [amount-config-valid? set-amount-config-valid!] (uix/use-state false)
+             recipe-id-valid? #(and (::fs/recipe-id entity)
+                                    (s/valid? ::fs/recipe-id (::fs/recipe-id entity)))]
          (uix/use-effect
            (fn []
-             (when (not= amount-unit-type (namespace amount-unit))
-               (on-amount-unit-change (cond (= amount-unit-type (namespace ::mass/g)) (first (keys mass/conversion-map))
-                                            (= amount-unit-type (namespace ::volume/c)) (first (keys volume/conversion-map))
-                                            (= amount-unit-type (namespace ::ucom/pinch)) (first ucom/other-units)))))
-           [amount-unit amount-unit-type on-amount-unit-change])
+             (set-complete-entity! (assoc entity ::fs/recipe-id (or (::fs/recipe-id entity)
+                                                                    (::rs/id (first mixin-recipes)))))))
 
          ($ Dialog {:open true :on-close on-close}
             ($ DialogTitle "Edit Mixin")
             ($ DialogContent
                ($ Stack {:direction "column" :spacing 2}
                   ($ FormControl {:full-width true
-                                  :error      (not recipe-id-valid?)}
+                                  :error      (not (recipe-id-valid?))}
                      ($ InputLabel "Mixin Recipe")
-                     ($ Select {:value     recipe-id
-                                :on-change #(on-recipe-id-change (uuid (.. % -target -value)))}
+                     ($ Select {:value     (or (::fs/recipe-id entity)
+                                               (::rs/id (first mixin-recipes)))
+                                :on-change #(set-complete-entity!
+                                              (assoc entity ::fs/recipe-id (uuid (.. % -target -value))))}
                         (map #($ MenuItem {:value (str (::rs/id %)) :key (str (::rs/id %))} (::rs/name %)) mixin-recipes)))
-                  ($ TextField {:label     "Amount"
-                                :error     (not amount-valid?)
-                                :value     amount
-                                :on-change on-amount-change})
-                  ($ FormControl {:full-width true}
-                     ($ InputLabel "Amount type")
-                     ($ Select {:value     amount-unit-type
-                                :on-change #(set-amount-unit-type! (.. % -target -value))}
-                        (map #($ MenuItem {:value % :key %} (last (str/split % #"\.")))
-                             (map namespace [::volume/c ::mass/g]))))
-                  ($ FormControl {:full-width true
-                                  :error      (not amount-unit-valid?)}
-                     ($ InputLabel "Amount unit")
-                     ($ Select {:value     amount-unit
-                                :on-change #(on-amount-unit-change (keyword amount-unit-type (.. % -target -value)))}
-                        (map #($ MenuItem {:value % :key %} (name %))
-                             (cond (= amount-unit-type (namespace ::mass/g)) (set (keys mass/conversion-map))
-                                   (= amount-unit-type (namespace ::volume/c)) (set (keys volume/conversion-map))))))))
+                  ($ amount-config {:entry               entity
+                                    :on-change           set-complete-entity!
+                                    :set-valid!          set-amount-config-valid!
+                                    :entry-namespace     (namespace ::fs/id)
+                                    :default-amount-unit ::volume/c
+                                    :accepted-unit-types [::volume/c ::mass/g]})))
             ($ DialogActions
                ($ Button {:on-click on-close} "Cancel")
-               ($ Button {:on-click #(on-save {::fs/recipe-id   recipe-id
-                                               ::fs/amount      (js/parseFloat amount)
-                                               ::fs/amount-unit amount-unit})
-                          :disabled (not (and recipe-id-valid?
-                                              amount-valid?
-                                              amount-unit-valid?))}
+               ($ Button {:on-click #(on-save entity)
+                          :disabled (not (and (recipe-id-valid?)
+                                              amount-config-valid?))}
                   "Save")))))
 
 (defui flavor-entry [{:keys [entry config-metadata set-valid! set-changed-entry!]}]
