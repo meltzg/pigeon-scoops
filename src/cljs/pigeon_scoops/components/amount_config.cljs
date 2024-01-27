@@ -18,23 +18,30 @@
                                  (s/valid? (kw "amount") (js/parseFloat ((kw "amount") entry))))
              amount-unit-valid? #(s/valid? (kw "amount-unit") ((kw "amount-unit") entry))
              [amount-unit-type set-amount-unit-type!] (uix/use-state (namespace (or ((kw "amount-unit") entry)
-                                                                                    default-amount-unit)))]
+                                                                                    default-amount-unit)))
+             default-unit (cond (= amount-unit-type (namespace ::mass/g)) (first (keys mass/conversion-map))
+                                (= amount-unit-type (namespace ::volume/c)) (first (keys volume/conversion-map))
+                                (= amount-unit-type (namespace ::ucom/pinch)) (first ucom/other-units))]
          (uix/use-effect
            (fn []
+             (prn "reset? " (:reset entry))
              (cond (true? (:reset entry)) (set-amount-unit-type! (namespace (or ((kw "amount-unit") entry)
                                                                                 default-amount-unit)))
                    (or (not ((kw "amount-unit") entry)) (not= amount-unit-type (namespace ((kw "amount-unit") entry))))
                    (on-change
                      (assoc entry (kw "amount-unit")
-                                  (cond (= amount-unit-type (namespace ::mass/g)) (first (keys mass/conversion-map))
-                                        (= amount-unit-type (namespace ::volume/c)) (first (keys volume/conversion-map))
-                                        (= amount-unit-type (namespace ::ucom/pinch)) (first ucom/other-units))))))
-           [default-amount-unit kw entry amount-unit-type on-change])
+                                  default-unit))))
+           [default-amount-unit default-unit kw entry amount-unit-type on-change])
          (uix/use-effect
            (fn []
              (set-valid! (and (amount-valid?)
                               (amount-unit-valid?))))
            [set-valid! amount-valid? amount-unit-valid?])
+         (uix/use-effect
+           (fn []
+             (when (nil? ((kw "amount-unit") entry))
+               (on-change (assoc entry (kw "amount-unit") default-unit))))
+           [entry default-unit kw on-change])
 
          ($ Stack {:direction "column" :spacing 1.25}
             ($ TextField {:label     "Amount"

@@ -14,6 +14,7 @@
 
 (defui entry-accordion [{:keys [title entry entry-form id-key name-key config-metadata on-save on-delete]}]
        (let [[changed-entry set-changed-entry!] (uix/use-state entry)
+             set-changed-entry-clear-reset! #(set-changed-entry! (dissoc % :reset))
              [valid? set-valid!] (uix/use-state false)]
 
          ($ Accordion (if (nil? entry) {:expanded true} {})
@@ -28,7 +29,7 @@
                   ($ entry-form {:entry              changed-entry
                                  :config-metadata    config-metadata
                                  :set-valid!         set-valid!
-                                 :set-changed-entry! set-changed-entry!
+                                 :set-changed-entry! set-changed-entry-clear-reset!
                                  :new?               (nil? entry)})
                   ($ Button {:variant  "contained"
                              :disabled (or (not valid?)
