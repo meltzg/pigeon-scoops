@@ -34,7 +34,7 @@
                      "Save")
                   ($ Button {:variant  "contained"
                              :disabled (= entry changed-entry)
-                             :on-click (partial set-changed-entry! entry)}
+                             :on-click (partial set-changed-entry! (assoc entry :reset true))}
                      "Reset")
                   (when entry
                     ($ Button {:variant  "contained"
@@ -64,7 +64,7 @@
                                   :on-save         #((if entry
                                                        ajax/PATCH
                                                        ajax/PUT) (str utils/api-url endpoint)
-                                                     {:params          %
+                                                     {:params          (dissoc % :reset)
                                                       :format          :transit
                                                       :response-format :transit
                                                       :handler         (fn []

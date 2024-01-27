@@ -1,8 +1,9 @@
 (ns pigeon-scoops.core
   (:require [ajax.core :as ajax]
             [pigeon-scoops.spec.flavors :as fs]
+            [pigeon-scoops.spec.recipes :as rs]
             [pigeon-scoops.apps.groceries :refer [grocery-list]]
-            [pigeon-scoops.apps.recipes :refer [recipe-list]]
+            [pigeon-scoops.apps.recipes :refer [recipe-entry]]
             [pigeon-scoops.apps.flavors :refer [flavor-entry]]
             [pigeon-scoops.apps.auth :refer [authenticator]]
             [pigeon-scoops.components.entry-list :refer [entry-list]]
@@ -98,10 +99,16 @@
                ($ grocery-list {:groceries groceries
                                 :on-change #(set-refresh-groceries! (not refresh-groceries?))
                                 :active?   (= active-app :groceries)})
-               ($ recipe-list {:recipes   recipes
-                               :groceries groceries
-                               :on-change #(set-refresh-recipes! (not refresh-recipes?))
-                               :active?   (= active-app :recipes)})
+               ($ entry-list {:title           "Recipe"
+                              :entries         recipes
+                              :entry-form      recipe-entry
+                              :id-key          ::rs/id
+                              :name-key        ::rs/name
+                              :sort-key        ::rs/name
+                              :endpoint        "recipes"
+                              :config-metadata {:groceries groceries}
+                              :on-change       #(set-refresh-recipes! (not refresh-recipes?))
+                              :active?         (= active-app :recipes)})
                ($ entry-list {:title           "Flavor"
                               :entries         flavors
                               :entry-form      flavor-entry

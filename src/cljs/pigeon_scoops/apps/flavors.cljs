@@ -5,6 +5,7 @@
             [uix.core :as uix :refer [$ defui]]
             [pigeon-scoops.utils :as utils]
             [pigeon-scoops.components.alert-dialog :refer [alert-dialog]]
+            [pigeon-scoops.components.amount-config :refer [amount-config]]
             [pigeon-scoops.components.entity-list :refer [entity-list]]
             [pigeon-scoops.components.instructions-dialog :refer [instructions-dialog]]
             [pigeon-scoops.spec.flavors :as fs]
@@ -96,7 +97,7 @@
              set-complete-entry! (fn [partial-entry]
                                    (set-changed-entry! (merge (conj {::fs/name         ""
                                                                      ::fs/amount       0
-                                                                     ::fs/amount-unit  ::volume/c
+                                                                     ::fs/amount-unit  nil
                                                                      ::fs/mixins       []
                                                                      ::fs/instructions []
                                                                      ::fs/recipe-id    nil}
@@ -108,31 +109,21 @@
              name-valid? #(s/valid? ::fs/name (::fs/name entry))
              amount-valid? #(and (re-matches #"^\d+\.?\d*$" (str (::fs/amount entry)))
                                  (s/valid? ::fs/amount (js/parseFloat (::fs/amount entry))))
-             amount-unit-valid? #(s/valid? ::fs/amount-unit (::fs/amount-unit entry))
+             [amount-config-valid? set-amount-config-valid!] (uix/use-state false)
              recipe-id-valid? #(s/valid? ::fs/recipe-id (::fs/recipe-id entry))
-             [edit-instructions-open set-edit-instructions-open!] (uix/use-state false)
-             [amount-unit-type set-amount-unit-type!] (uix/use-state (namespace (or (::fs/amount-unit entry)
-                                                                                    ::volume/c)))]
-         (uix/use-effect
-           (fn []
-             (when (or (not (::fs/amount-unit entry)) (not= amount-unit-type (namespace (::fs/amount-unit entry))))
-               (set-complete-entry!
-                 (assoc entry ::fs/amount-unit
-                              (cond (= amount-unit-type (namespace ::mass/g)) (first (keys mass/conversion-map))
-                                    (= amount-unit-type (namespace ::volume/c)) (first (keys volume/conversion-map)))))))
-           [entry amount-unit-type set-complete-entry!])
-         (uix/use-effect
-           (fn []
-             (when (nil? (::fs/recipe-id entry))
-               (set-complete-entry! (assoc entry ::fs/recipe-id (::rs/id (first base-recipes))))))
-           [entry base-recipes set-complete-entry!])
+             [edit-instructions-open set-edit-instructions-open!] (uix/use-state false)]
          (uix/use-effect
            (fn []
              (set-valid! (and (name-valid?)
                               (recipe-id-valid?)
                               (amount-valid?)
-                              (amount-unit-valid?)
+                              amount-config-valid?
                               (recipe-id-valid?)))))
+         (uix/use-effect
+           (fn []
+             (when (nil? (::fs/recipe-id entry))
+               (set-complete-entry! (assoc entry ::fs/recipe-id (::rs/id (first base-recipes))))))
+           [entry base-recipes set-complete-entry!])
 
          ($ Stack {:direction "column"
                    :spacing   1.25}
@@ -146,25 +137,12 @@
                ($ Select {:value     (str (or (::fs/recipe-id entry)))
                           :on-change #(set-complete-entry! (assoc entry ::fs/recipe-id (uuid (.. % -target -value))))}
                   (map #($ MenuItem {:value (str (::rs/id %)) :key (str (::rs/id %))} (::rs/name %)) base-recipes)))
-            ($ TextField {:label     "Amount"
-                          :error     (not (amount-valid?))
-                          :value     (or (::fs/amount entry) 0)
-                          :on-change #(set-complete-entry! (assoc entry ::fs/amount (js/parseFloat (.. % -target -value))))})
-            ($ FormControl {:full-width true}
-               ($ InputLabel "Amount type")
-               ($ Select {:value     amount-unit-type
-                          :on-change #(set-amount-unit-type! (.. % -target -value))}
-                  (map #($ MenuItem {:value % :key %} (last (str/split % #"\.")))
-                       (map namespace [::volume/c ::mass/g]))))
-            ($ FormControl {:full-width true
-                            :error      (not (amount-unit-valid?))}
-               ($ InputLabel "Amount unit")
-               ($ Select {:value     (or (::fs/amount-unit entry)
-                                         (first (keys volume/conversion-map)))
-                          :on-change #(set-complete-entry! (assoc entry ::fs/amount-unit (keyword amount-unit-type (.. % -target -value))))}
-                  (map #($ MenuItem {:value % :key %} (name %))
-                       (cond (= amount-unit-type (namespace ::mass/g)) (set (keys mass/conversion-map))
-                             (= amount-unit-type (namespace ::volume/c)) (set (keys volume/conversion-map))))))
+            ($ amount-config {:entry               entry
+                              :on-change           set-complete-entry!
+                              :set-valid!          set-amount-config-valid!
+                              :entry-namespace     (namespace ::fs/id)
+                              :default-amount-unit ::volume/c
+                              :accepted-unit-types [::volume/c ::mass/g]})
             ($ Typography "Mixins")
             ($ entity-list {:entity-name     "Mixins"
                             :entities        (::fs/mixins entry)
