@@ -4,7 +4,6 @@
             [uix.core :as uix :refer [$ defui]]
             [pigeon-scoops.utils :as utils]
             [pigeon-scoops.components.alert-dialog :refer [alert-dialog]]
-            [pigeon-scoops.components.entity-list :refer [entity-list]]
             ["@mui/icons-material/ExpandMore$default" :as ExpandMoreIcon]
             ["@mui/material" :refer [Accordion
                                      AccordionDetails

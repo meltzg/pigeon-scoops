@@ -1,10 +1,8 @@
 (ns pigeon-scoops.apps.flavors
-  (:require [ajax.core :as ajax]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [cljs.spec.alpha :as s]
             [uix.core :as uix :refer [$ defui]]
             [pigeon-scoops.utils :as utils]
-            [pigeon-scoops.components.alert-dialog :refer [alert-dialog]]
             [pigeon-scoops.components.amount-config :refer [amount-config]]
             [pigeon-scoops.components.entity-list :refer [entity-list]]
             [pigeon-scoops.components.instructions-dialog :refer [instructions-dialog]]
@@ -13,7 +11,6 @@
             [pigeon-scoops.units.common :as ucom]
             [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.units.volume :as volume]
-            ["@mui/icons-material/ExpandMore$default" :as ExpandMoreIcon]
             ["@mui/material" :refer [Button
                                      Dialog
                                      DialogActions
@@ -134,7 +131,7 @@
             ($ FormControl {:full-width true
                             :error      (not (recipe-id-valid?))}
                ($ InputLabel "Base Recipe")
-               ($ Select {:value     (str (or (::fs/recipe-id entry)))
+               ($ Select {:value     (str (::fs/recipe-id entry))
                           :on-change #(set-complete-entry! (assoc entry ::fs/recipe-id (uuid (.. % -target -value))))}
                   (map #($ MenuItem {:value (str (::rs/id %)) :key (str (::rs/id %))} (::rs/name %)) base-recipes)))
             ($ amount-config {:entry               entry

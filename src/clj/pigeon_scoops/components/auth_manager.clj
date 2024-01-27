@@ -5,7 +5,6 @@
             [honey.sql.helpers :as hsql :refer [select
                                                 from
                                                 where
-                                                delete-from
                                                 insert-into
                                                 values]]
             [next.jdbc :as jdbc]
