@@ -1,14 +1,11 @@
 (ns pigeon-scoops.forms.flavors
-  (:require [clojure.string :as str]
-            [cljs.spec.alpha :as s]
+  (:require [cljs.spec.alpha :as s]
             [uix.core :as uix :refer [$ defui]]
-            [pigeon-scoops.utils :as utils]
             [pigeon-scoops.components.amount-config :refer [amount-config]]
             [pigeon-scoops.components.entity-list :refer [entity-list]]
             [pigeon-scoops.components.instructions-dialog :refer [instructions-dialog]]
             [pigeon-scoops.spec.flavors :as fs]
             [pigeon-scoops.spec.recipes :as rs]
-            [pigeon-scoops.units.common :as ucom]
             [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.units.volume :as volume]
             ["@mui/material" :refer [Button
@@ -87,8 +84,6 @@
                                (filter #(not= (::rs/type %) ::rs/mixin))
                                (sort-by ::rs/name))
              name-valid? #(s/valid? ::fs/name (::fs/name entry))
-             amount-valid? #(and (re-matches #"^\d+\.?\d*$" (str (::fs/amount entry)))
-                                 (s/valid? ::fs/amount (js/parseFloat (::fs/amount entry))))
              [amount-config-valid? set-amount-config-valid!] (uix/use-state false)
              recipe-id-valid? #(s/valid? ::fs/recipe-id (::fs/recipe-id entry))
              [edit-instructions-open set-edit-instructions-open!] (uix/use-state false)]
@@ -96,7 +91,6 @@
            (fn []
              (set-valid! (and (name-valid?)
                               (recipe-id-valid?)
-                              (amount-valid?)
                               amount-config-valid?
                               (recipe-id-valid?)))))
          (uix/use-effect

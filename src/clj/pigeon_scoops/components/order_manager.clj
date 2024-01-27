@@ -91,7 +91,7 @@
          order-statement (if update?
                            (-> (hsql/update :orders)
                                (hsql/set order-values)
-                               (where [:= :order-id order-id])
+                               (where [:= :id order-id])
                                sql/format)
                            (-> (insert-into :orders)
                                (values [order-values])

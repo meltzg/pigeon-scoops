@@ -1,11 +1,13 @@
 (ns pigeon-scoops.core
   (:require [ajax.core :as ajax]
+            [pigeon-scoops.spec.orders :as os]
             [pigeon-scoops.spec.flavors :as fs]
             [pigeon-scoops.spec.recipes :as rs]
             [pigeon-scoops.spec.groceries :as gs]
             [pigeon-scoops.forms.groceries :refer [grocery-entry]]
             [pigeon-scoops.forms.recipes :refer [recipe-entry]]
             [pigeon-scoops.forms.flavors :refer [flavor-entry]]
+            [pigeon-scoops.forms.orders :refer [order-entry]]
             [pigeon-scoops.auth :refer [authenticator]]
             [pigeon-scoops.components.entry-list :refer [entry-list]]
             [pigeon-scoops.utils :refer [api-url]]
@@ -15,6 +17,7 @@
             ["@mui/icons-material/Icecream$default" :as IcecreamIcon]
             ["@mui/icons-material/LocalGroceryStore$default" :as LocalGroceryStoreIcon]
             ["@mui/icons-material/MenuBook$default" :as MenuBookIcon]
+            ["@mui/icons-material/Receipt$default" :as ReceiptIcon]
             ["@mui/material" :refer [AppBar
                                      Box
                                      Drawer
@@ -43,6 +46,8 @@
              [refresh-recipes? set-refresh-recipes!] (uix/use-state true)
              [flavors set-flavors!] (uix/use-state nil)
              [refresh-flavors? set-refresh-flavors!] (uix/use-state true)
+             [orders set-orders!] (uix/use-state nil)
+             [refresh-orders? set-refresh-orders!] (uix/use-state true)
              [signed-in? set-signed-in!] (uix/use-state false)]
          (uix/use-effect
            (fn []
@@ -72,6 +77,15 @@
                         :error-handler   (fn [_]
                                            (set-flavors! []))}))
            [refresh-flavors?])
+         (uix/use-effect
+           (fn []
+             (ajax/GET (str api-url "orders")
+                       {:response-format :transit
+                        :handler         set-orders!
+                        :error-handler   (fn [_]
+                                           (set-orders! []))}))
+           [refresh-orders?])
+
          ($ Box
             ($ AppBar
                ($ Toolbar
@@ -88,7 +102,8 @@
                ($ List
                   (for [[app-name app-icon app-key] [["Groceries" LocalGroceryStoreIcon :groceries]
                                                      ["Recipes" MenuBookIcon :recipes]
-                                                     ["Flavors" IcecreamIcon :flavors]]]
+                                                     ["Flavors" IcecreamIcon :flavors]
+                                                     ["Orders" ReceiptIcon :orders]]]
                     ($ app-menu-item {:key             app-key
                                       :app-key         app-key
                                       :text            app-name
@@ -125,7 +140,17 @@
                               :endpoint        "flavors"
                               :config-metadata {:recipes recipes}
                               :on-change       #(set-refresh-flavors! (not refresh-flavors?))
-                              :active?         (= active-app :flavors)})))))
+                              :active?         (= active-app :flavors)})
+               ($ entry-list {:title           "Order"
+                              :entries         orders
+                              :entry-form      order-entry
+                              :id-key          ::os/id
+                              :name-key        ::os/note
+                              :sort-key        ::os/note
+                              :endpoint        "orders"
+                              :config-metadata {:flavors flavors}
+                              :on-change       #(set-refresh-orders! (not refresh-orders?))
+                              :active?         (= active-app :orders)})))))
 
 (defonce root
          (uix.dom/create-root (js/document.getElementById "root")))

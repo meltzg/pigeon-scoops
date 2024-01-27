@@ -24,7 +24,6 @@
                                 (= amount-unit-type (namespace ::ucom/pinch)) (first ucom/other-units))]
          (uix/use-effect
            (fn []
-             (prn "reset? " (:reset entry))
              (cond (true? (:reset entry)) (set-amount-unit-type! (namespace (or ((kw "amount-unit") entry)
                                                                                 default-amount-unit)))
                    (or (not ((kw "amount-unit") entry)) (not= amount-unit-type (namespace ((kw "amount-unit") entry))))
