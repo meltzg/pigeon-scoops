@@ -2,7 +2,8 @@
   (:require [ajax.core :as ajax]
             [pigeon-scoops.spec.flavors :as fs]
             [pigeon-scoops.spec.recipes :as rs]
-            [pigeon-scoops.apps.groceries :refer [grocery-list]]
+            [pigeon-scoops.spec.groceries :as gs]
+            [pigeon-scoops.apps.groceries :refer [grocery-entry]]
             [pigeon-scoops.apps.recipes :refer [recipe-entry]]
             [pigeon-scoops.apps.flavors :refer [flavor-entry]]
             [pigeon-scoops.apps.auth :refer [authenticator]]
@@ -96,9 +97,15 @@
                                                             (set-menu-open! (not menu-open?)))}))))
             ($ Box {:component "div"}
                ($ Toolbar)
-               ($ grocery-list {:groceries groceries
-                                :on-change #(set-refresh-groceries! (not refresh-groceries?))
-                                :active?   (= active-app :groceries)})
+               ($ entry-list {:title      "Grocery Item"
+                              :entries    groceries
+                              :entry-form grocery-entry
+                              :id-key     ::gs/type
+                              :name-key   ::gs/type
+                              :sort-key   ::gs/type
+                              :endpoint   "groceries"
+                              :on-change  #(set-refresh-groceries! (not refresh-groceries?))
+                              :active?    (= active-app :groceries)})
                ($ entry-list {:title           "Recipe"
                               :entries         recipes
                               :entry-form      recipe-entry

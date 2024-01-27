@@ -63,8 +63,7 @@
 
 (defn delete-grocery-item-handler [grocery-manager]
   (fn [{:keys [body-params]}]
-    (gm/delete-grocery-item! grocery-manager
-                             (keyword (namespace ::gs/type) (:type body-params)))
+    (gm/delete-grocery-item! grocery-manager (:id body-params))
     (resp/status 204)))
 
 (defn get-recipes-handler [recipe-manager params]

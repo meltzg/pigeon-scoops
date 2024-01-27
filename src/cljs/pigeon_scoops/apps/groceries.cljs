@@ -1,8 +1,6 @@
 (ns pigeon-scoops.apps.groceries
-  (:require [ajax.core :as ajax]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [cljs.spec.alpha :as s]
-            [pigeon-scoops.components.alert-dialog :refer [alert-dialog]]
             [pigeon-scoops.components.entity-list :refer [entity-list]]
             [pigeon-scoops.spec.groceries :as gs]
             [pigeon-scoops.units.common :as ucom]
@@ -10,11 +8,7 @@
             [pigeon-scoops.units.volume :as volume]
             [pigeon-scoops.utils :as utils]
             [uix.core :as uix :refer [$ defui]]
-            ["@mui/icons-material/ExpandMore$default" :as ExpandMoreIcon]
-            ["@mui/material" :refer [Accordion
-                                     AccordionDetails
-                                     AccordionSummary
-                                     Button
+            ["@mui/material" :refer [Button
                                      Dialog
                                      DialogActions
                                      DialogContent
@@ -24,8 +18,7 @@
                                      MenuItem
                                      Select
                                      Stack
-                                     TextField
-                                     Typography]]))
+                                     TextField]]))
 
 (defui unit-config [{:keys [entity on-save on-close]}]
        (let [[source source-valid? on-source-change] (utils/use-validation (or (::gs/source entity) "")
@@ -107,100 +100,48 @@
                                                   (and common-valid? common-type-valid?))))}
                   "Save")))))
 
-(defui grocery-entry [{:keys [item on-save on-delete]}]
-       (let [original-type (when item (name (::gs/type item)))
-             [grocery-type grocery-type-valid? on-grocery-type-change]
-             (utils/use-validation (or original-type "")
-                                   #(re-matches #"^[a-zA-Z0-9-]+$" %))
-             [description set-description!] (uix/use-state (::gs/description item))
-             [units set-units!] (uix/use-state (::gs/units item))
-             grocery-valid? grocery-type-valid?
-             unsaved-changes? (or (not= grocery-type original-type)
-                                  (and (not= description (::gs/description item))
-                                       (not (and (str/blank? description)
-                                                 (str/blank? (::gs/description item)))))
-                                  (not= units (::gs/units item)))]
-         ($ Accordion (if (nil? item) {:expanded true} {})
-            ($ AccordionSummary {:expandIcon ($ ExpandMoreIcon)}
-               ($ Typography (or original-type "New Grocery Item")))
-            ($ AccordionDetails
-               ($ Stack {:direction "column"
-                         :spacing   1}
-                  ($ TextField {:label     "Type"
-                                :error     (not grocery-type-valid?)
-                                :disabled  (some? item)
-                                :value     grocery-type
-                                :on-change on-grocery-type-change})
-                  ($ TextField {:label     "Description"
-                                :multiline true
-                                :max-rows  4
-                                :value     (or description "")
-                                :on-change #(set-description! (.. % -target -value))})
-                  ($ entity-list {:entity-name    "Unit"
-                                  :entities       units
-                                  :column-headers ["Source"
-                                                   "Mass"
-                                                   "Volume"
-                                                   "Common Unit"
-                                                   "Cost"]
-                                  :cell-text      (for [unit units]
-                                                    [(::gs/source unit)
-                                                     (str (::gs/unit-mass unit) (when (::gs/unit-mass-type unit)
-                                                                                  (name (::gs/unit-mass-type unit))))
-                                                     (str (::gs/unit-volume unit) (when (::gs/unit-volume-type unit)
-                                                                                    (name (::gs/unit-volume-type unit))))
-                                                     (str (::gs/unit-common unit) " " (when (::gs/unit-common-type unit)
-                                                                                        (name (::gs/unit-common-type unit))))
-                                                     (str "$" (::gs/unit-cost unit))])
-                                  :entity-config  unit-config
-                                  :on-change      set-units!})
-                  ($ Button {:variant  "contained"
-                             :disabled (or (not grocery-valid?)
-                                           (not unsaved-changes?))
-                             :on-click #(on-save (conj {::gs/type  (keyword (namespace ::gs/type) grocery-type)
-                                                        ::gs/units (or units [])}
-                                                       (when-not (str/blank? description) [::gs/description description])))}
-                     "Save")
-                  ($ Button {:variant  "contained"
-                             :disabled (not unsaved-changes?)
-                             :on-click #(do (set-description! (::gs/description item))
-                                            (set-units! (::gs/units item))
-                                            (when-not original-type (on-grocery-type-change "")))}
-                     "Reset")
-                  (when original-type
-                    ($ Button {:variant  "contained"
-                               :color    "error"
-                               :on-click #(on-delete (name grocery-type))}
-                       "Delete")))))))
+(defui grocery-entry [{:keys [entry config-metadata set-valid! set-changed-entry! new?]}]
+       (let [set-complete-entry! (fn [partial-entry]
+                                   (set-changed-entry! (merge (conj {::gs/type  nil
+                                                                     ::gs/units []}
+                                                                    (when-not (str/blank? (::gs/description entry))
+                                                                      [::gs/description (::gs/description entry)]))
+                                                              partial-entry)))
+             grocery-type-valid? #(and (some? (::gs/type entry))
+                                       (re-matches #"^[a-zA-Z0-9-]+$" (name (::gs/type entry))))]
+         (uix/use-effect
+           (fn []
+             (set-valid! (grocery-type-valid?))))
 
-(defui grocery-list [{:keys [groceries on-change active?]}]
-       (let [[error-text set-error-text!] (uix/use-state "")
-             [error-title set-error-title!] (uix/use-state "")
-             [new-item-key set-new-item-key!] (uix/use-state (str (random-uuid)))
-             error-handler (partial utils/error-handler
-                                    set-error-title!
-                                    set-error-text!)]
-         ($ Stack {:direction "column" :display (if active? "block" "none")}
-            ($ alert-dialog {:open?    (not (str/blank? error-title))
-                             :title    error-title
-                             :message  error-text
-                             :on-close #(set-error-title! "")})
-            (for [item (sort-by ::gs/type (conj groceries nil))]
-              ($ grocery-entry {:item      item
-                                :on-save   #((if item
-                                               ajax/PATCH
-                                               ajax/PUT) (str utils/api-url "groceries")
-                                             {:params          %
-                                              :format          :transit
-                                              :response-format :transit
-                                              :handler         (fn []
-                                                                 (set-new-item-key! (str (random-uuid)))
-                                                                 (on-change))
-                                              :error-handler   error-handler})
-                                :on-delete #(ajax/DELETE (str utils/api-url "groceries")
-                                                         {:params          {:type %}
-                                                          :format          :transit
-                                                          :response-format :transit
-                                                          :handler         on-change
-                                                          :error-handler   error-handler})
-                                :key       (or (::gs/type item) new-item-key)})))))
+         ($ Stack {:direction "column"
+                   :spacing   1}
+            ($ TextField {:label     "Type"
+                          :error     (not (grocery-type-valid?))
+                          :disabled  (not new?)
+                          :value     (if (::gs/type entry) (name (::gs/type entry)) "")
+                          :on-change #(set-complete-entry!
+                                        (assoc entry ::gs/type
+                                                     (keyword (namespace ::gs/type) (.. % -target -value))))})
+            ($ TextField {:label     "Description"
+                          :multiline true
+                          :max-rows  4
+                          :value     (or (::gs/description entry) "")
+                          :on-change #(set-complete-entry! (assoc entry ::gs/description (.. % -target -value)))})
+            ($ entity-list {:entity-name    "Unit"
+                            :entities       (::gs/units entry)
+                            :column-headers ["Source"
+                                             "Mass"
+                                             "Volume"
+                                             "Common Unit"
+                                             "Cost"]
+                            :cell-text      (for [unit (::gs/units entry)]
+                                              [(::gs/source unit)
+                                               (str (::gs/unit-mass unit) (when (::gs/unit-mass-type unit)
+                                                                            (name (::gs/unit-mass-type unit))))
+                                               (str (::gs/unit-volume unit) (when (::gs/unit-volume-type unit)
+                                                                              (name (::gs/unit-volume-type unit))))
+                                               (str (::gs/unit-common unit) " " (when (::gs/unit-common-type unit)
+                                                                                  (name (::gs/unit-common-type unit))))
+                                               (str "$" (::gs/unit-cost unit))])
+                            :entity-config  unit-config
+                            :on-change      #(set-complete-entry! (assoc entry ::gs/units %))}))))

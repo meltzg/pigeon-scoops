@@ -18,14 +18,18 @@
 
          ($ Accordion (if (nil? entry) {:expanded true} {})
             ($ AccordionSummary {:expandIcon ($ ExpandMoreIcon)}
-               ($ Typography (if entry (name-key changed-entry) (str "New " (or title "Entry")))))
+               ($ Typography (if entry
+                               (cond-> (name-key changed-entry)
+                                       (keyword? (name-key changed-entry)) name)
+                               (str "New " (or title "Entry")))))
             ($ AccordionDetails
                ($ Stack {:direction "column"
                          :spacing   1.25}
                   ($ entry-form {:entry              changed-entry
                                  :config-metadata    config-metadata
                                  :set-valid!         set-valid!
-                                 :set-changed-entry! set-changed-entry!})
+                                 :set-changed-entry! set-changed-entry!
+                                 :new?               (nil? entry)})
                   ($ Button {:variant  "contained"
                              :disabled (or (not valid?)
                                            (= entry changed-entry))
@@ -38,7 +42,7 @@
                   (when entry
                     ($ Button {:variant  "contained"
                                :color    "error"
-                               :on-click #(on-delete (id-key entry))}
+                               :on-click #(do (prn (type (id-key entry))) (on-delete (id-key entry)))}
                        "Delete")))))))
 
 (defui entry-list [{:keys [title entries entry-form id-key name-key sort-key endpoint config-metadata on-change active?]}]
