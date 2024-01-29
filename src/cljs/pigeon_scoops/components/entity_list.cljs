@@ -29,13 +29,14 @@
                                    :on-save         #(do (on-edit %)
                                                          (set-open-entity-dialog! false))}))
                cell-actions
-               (when-not frozen? ($ Tooltip {:title "Edit"}
-                                    ($ IconButton {:on-click #(set-open-entity-dialog! true)}
-                                       ($ EditIcon)))
-                                 ($ Tooltip {:title "Delete"}
-                                    ($ IconButton {:color    "error"
-                                                   :on-click on-delete}
-                                       ($ DeleteIcon))))))))
+               (when-not frozen?
+                 [($ Tooltip {:title "Edit"}
+                     ($ IconButton {:on-click #(set-open-entity-dialog! true)}
+                        ($ EditIcon)))
+                  ($ Tooltip {:title "Delete"}
+                     ($ IconButton {:color    "error"
+                                    :on-click on-delete}
+                        ($ DeleteIcon)))])))))
 
 (defui entity-list [{:keys [entity-name entities column-headers cell-text cell-action config-metadata entity-config frozen? on-change]}]
        (let [[open-entity-dialog? set-open-entity-dialog!] (uix/use-state false)]
