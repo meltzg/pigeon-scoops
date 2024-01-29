@@ -148,7 +148,7 @@
                               :name-key        ::os/note
                               :sort-key        ::os/note
                               :endpoint        "orders"
-                              :config-metadata {:flavors flavors}
+                              :config-metadata {:flavors flavors :groceries groceries}
                               :on-change       #(set-refresh-orders! (not refresh-orders?))
                               :active?         (= active-app :orders)})))))
 

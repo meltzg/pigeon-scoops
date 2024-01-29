@@ -9,7 +9,8 @@
             [pigeon-scoops.units.common :as ucom]
             [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.units.volume :as volume]
-            ["@mui/material" :refer [Button
+            ["@mui/material" :refer [Backdrop
+                                     Button
                                      Dialog
                                      DialogActions
                                      DialogContent
@@ -71,6 +72,9 @@
 
 (defui recipe-entry [{:keys [entry config-metadata set-valid! set-changed-entry!]}]
        (let [recipe-id (::rs/id entry)
+             frozen? (nil? set-changed-entry!)
+             set-valid! (or set-valid! identity)
+             set-changed-entry! (or set-changed-entry! identity)
              set-complete-entry! (fn [partial-entry]
                                    (set-changed-entry! (merge (conj {::rs/name         ""
                                                                      ::rs/type         nil
@@ -99,6 +103,7 @@
          ($ Stack {:direction "column"
                    :spacing   1.25}
             ($ TextField {:label     "Name"
+                          :disabled  frozen?
                           :error     (not (name-valid?))
                           :value     (or (::rs/name entry) "")
                           :on-change #(set-complete-entry! (assoc entry ::rs/name (.. % -target -value)))})
@@ -106,6 +111,7 @@
                             :error      (not (type-valid?))}
                ($ InputLabel "Recipe type")
                ($ Select {:value     (::rs/type entry)
+                          :disabled  frozen?
                           :on-change #(set-complete-entry!
                                         (assoc entry ::rs/type
                                                      (keyword (namespace ::rs/type) (.. % -target -value))))}
@@ -115,8 +121,10 @@
                               :set-valid!          set-amount-config-valid!
                               :entry-namespace     (namespace ::rs/id)
                               :default-amount-unit ::volume/c
-                              :accepted-unit-types [::volume/c ::mass/g]})
+                              :accepted-unit-types [::volume/c ::mass/g]
+                              :frozen?             frozen?})
             ($ TextField {:label     "Source"
+                          :disabled  frozen?
                           :value     (or (::rs/source entry) "")
                           :on-change #(set-complete-entry! (assoc entry ::rs/source (.. % -target -value)))})
             (when edit-instructions-open
@@ -136,6 +144,7 @@
                                                      (name (::rs/amount-unit ingredient)))])
                             :config-metadata {:groceries (:groceries config-metadata)}
                             :entity-config   ingredient-config
+                            :frozen?         frozen?
                             :on-change       #(set-complete-entry! (assoc entry ::rs/ingredients %))})
             ($ Typography
                "Instructions")
@@ -145,6 +154,7 @@
                                  ($ ListItem {:key text}
                                     ($ ListItemText {:primary (str (inc idx) ") " text)})))
                                (::rs/instructions entry))))
-            ($ Button {:variant  "contained"
-                       :on-click #(set-edit-instructions-open! true)}
-               "Edit Instructions"))))
+            (when-not frozen?
+              ($ Button {:variant  "contained"
+                         :on-click #(set-edit-instructions-open! true)}
+                 "Edit Instructions")))))

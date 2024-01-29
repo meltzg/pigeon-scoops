@@ -12,7 +12,7 @@
                                      Stack
                                      TextField]]))
 
-(defui amount-config [{:keys [entry on-change set-valid! entry-namespace default-amount-unit accepted-unit-types]}]
+(defui amount-config [{:keys [entry on-change set-valid! entry-namespace default-amount-unit accepted-unit-types frozen?]}]
        (let [kw (partial keyword entry-namespace)
              amount-valid? #(and (re-matches #"^\d+\.?\d*$" (str ((kw "amount") entry)))
                                  (s/valid? (kw "amount") (js/parseFloat ((kw "amount") entry))))
@@ -44,6 +44,7 @@
 
          ($ Stack {:direction "column" :spacing 1.25}
             ($ TextField {:label     "Amount"
+                          :disabled  frozen?
                           :error     (not (amount-valid?))
                           :value     (or ((kw "amount") entry) 0)
                           :on-change #(on-change (assoc entry (kw "amount")
@@ -54,6 +55,7 @@
             ($ FormControl {:full-width true}
                ($ InputLabel "Amount type")
                ($ Select {:value     amount-unit-type
+                          :disabled  frozen?
                           :on-change #(set-amount-unit-type! (.. % -target -value))}
                   (map #($ MenuItem {:value % :key %} (last (str/split % #"\.")))
                        (map namespace accepted-unit-types))))
@@ -62,6 +64,7 @@
                ($ InputLabel "Amount unit")
                ($ Select {:value     (or ((kw "amount-unit") entry)
                                          (first (keys volume/conversion-map)))
+                          :disabled  frozen?
                           :on-change #(on-change (assoc entry (kw "amount-unit") (keyword amount-unit-type (.. % -target -value))))}
                   (map #($ MenuItem {:value % :key %} (name %))
                        (cond (= amount-unit-type (namespace ::mass/g)) (set (keys mass/conversion-map))

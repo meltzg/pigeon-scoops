@@ -16,7 +16,7 @@
                                      TableRow
                                      Tooltip]]))
 
-(defui entity-row [{:keys [entity cell-text cell-actions config-metadata entity-config on-edit on-delete]}]
+(defui entity-row [{:keys [entity cell-text cell-actions config-metadata entity-config frozen? on-edit on-delete]}]
        (let [[open-entity-dialog? set-open-entity-dialog!] (uix/use-state false)]
          ($ TableRow
             (for [text cell-text]
@@ -29,15 +29,15 @@
                                    :on-save         #(do (on-edit %)
                                                          (set-open-entity-dialog! false))}))
                cell-actions
-               ($ Tooltip {:title "Edit"}
-                  ($ IconButton {:on-click #(set-open-entity-dialog! true)}
-                     ($ EditIcon)))
-               ($ Tooltip {:title "Delete"}
-                  ($ IconButton {:color    "error"
-                                 :on-click on-delete}
-                     ($ DeleteIcon)))))))
+               (when-not frozen? ($ Tooltip {:title "Edit"}
+                                    ($ IconButton {:on-click #(set-open-entity-dialog! true)}
+                                       ($ EditIcon)))
+                                 ($ Tooltip {:title "Delete"}
+                                    ($ IconButton {:color    "error"
+                                                   :on-click on-delete}
+                                       ($ DeleteIcon))))))))
 
-(defui entity-list [{:keys [entity-name entities column-headers cell-text cell-action config-metadata entity-config on-change]}]
+(defui entity-list [{:keys [entity-name entities column-headers cell-text cell-action config-metadata entity-config frozen? on-change]}]
        (let [[open-entity-dialog? set-open-entity-dialog!] (uix/use-state false)]
          ($ Stack {:direction "column" :spacing 1}
             (when open-entity-dialog?
@@ -59,10 +59,12 @@
                                                    :cell-actions    action
                                                    :entity-config   entity-config
                                                    :config-metadata config-metadata
+                                                   :frozen?         frozen?
                                                    :on-edit         #(on-change (assoc (vec entities) idx %))
                                                    :on-delete       #(on-change (vec (utils/drop-nth idx entities)))}))
                                   (map vector entities cell-text (or cell-action (repeat nil)))))))
-            ($ Button {:variant  "contained"
-                       :on-click #(set-open-entity-dialog! true)}
-               ($ AddIcon)
-               (str "Add " entity-name)))))
+            (when-not frozen?
+              ($ Button {:variant  "contained"
+                         :on-click #(set-open-entity-dialog! true)}
+                 ($ AddIcon)
+                 (str "Add " entity-name))))))

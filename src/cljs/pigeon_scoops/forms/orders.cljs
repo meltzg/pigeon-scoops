@@ -6,6 +6,7 @@
             [pigeon-scoops.components.amount-config :refer [amount-config]]
             [pigeon-scoops.components.entity-list :refer [entity-list]]
             [pigeon-scoops.components.alert-dialog :refer [alert-dialog]]
+            [pigeon-scoops.forms.recipes :refer [recipe-entry]]
             [pigeon-scoops.spec.orders :as os]
             [pigeon-scoops.spec.flavors :as fs]
             [pigeon-scoops.spec.recipes :as rs]
@@ -18,6 +19,7 @@
                                      DialogActions
                                      DialogContent
                                      DialogTitle
+                                     Divider
                                      FormControl
                                      IconButton
                                      InputLabel
@@ -69,22 +71,22 @@
                                               amount-config-valid?))}
                   "Save")))))
 
-(defui recipe-viewer [{:keys [flavor-order flavor-data on-close]}]
+(defui recipe-viewer [{:keys [flavor-order flavor-data on-close config-metadata]}]
        (let [[recipes set-recipes!] (uix/use-state nil)
              [error-text set-error-text!] (uix/use-state "")
-             [error-title set-error-title!] (uix/use-state "")
-             error-handler (partial utils/error-handler
-                                    set-error-title!
-                                    set-error-text!)]
+             [error-title set-error-title!] (uix/use-state "")]
          (uix/use-effect
            (fn []
              (ajax/GET (str api-url "flavors/" (str (::os/flavor-id flavor-order)) "/recipes")
                        {:params          {:amount      (::os/amount flavor-order)
                                           :amount-unit (::os/amount-unit flavor-order)}
-                        :format          :transit
                         :response-format :transit
-                        :handler         set-recipes!}))
-           [flavor-order error-handler])
+                        :handler         set-recipes!
+                        :error-handler   (partial utils/error-handler
+                                                  set-error-title!
+                                                  set-error-text!)}))
+           [flavor-order])
+
          ($ Dialog {:open true :on-close on-close :full-screen true}
             ($ DialogTitle (str "Recipes: " (::fs/name flavor-data)))
             ($ DialogContent
@@ -94,9 +96,9 @@
                                    :message  error-text
                                    :on-close #(set-error-title! "")})
                   (for [recipe recipes]
-                    ($ Paper {:key (::rs/id recipe)}
-                       ($ :pre {:style {:font-family "inherit"}}
-                          recipe)))))
+                    [($ Paper {:key (::rs/id recipe)}
+                        ($ recipe-entry {:entry recipe :config-metadata config-metadata}))
+                     ($ Divider)])))
             ($ DialogActions
                ($ Button {:on-click on-close} "Close")))))
 
@@ -116,10 +118,11 @@
          ($ Stack {:direction "column"
                    :spacing   1.25}
             (when-not (nil? displayed-flavor)
-              ($ recipe-viewer {:flavor-order displayed-flavor
-                                :flavor-data  (first (filter #(= (::os/flavor-id displayed-flavor) (::fs/id %))
-                                                             (:flavors config-metadata)))
-                                :on-close     (partial set-displayed-flavor! nil)}))
+              ($ recipe-viewer {:flavor-order    displayed-flavor
+                                :flavor-data     (first (filter #(= (::os/flavor-id displayed-flavor) (::fs/id %))
+                                                                (:flavors config-metadata)))
+                                :config-metadata config-metadata
+                                :on-close        (partial set-displayed-flavor! nil)}))
             ($ TextField {:label     "Note"
                           :error     (not (note-valid?))
                           :value     (or (::os/note entry) "")

@@ -28,7 +28,8 @@
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.nested-params :refer [wrap-nested-params]]
             [ring.middleware.params :refer [wrap-params]]
-            [ring.util.response :as resp]))
+            [ring.util.response :as resp])
+  (:import [java.util UUID]))
 
 (defn auth-middleware [handler-fn]
   (fn [request]
@@ -124,10 +125,14 @@
     (fm/delete-flavor! flavor-manager (:id body-params))
     (resp/status 204)))
 
-(defn get-scaled-flavor-recipes-handler [flavor-manager recipe-manager params]
+(defn get-scaled-flavor-recipes-handler [flavor-manager params]
   (let [{:keys [id amount amount-unit]} params]
-    (fn [request]
-      (resp/response (str id " " amount " " amount-unit)))))
+    (fn [& _]
+      (resp/response (as-> (UUID/fromString id) acc
+                           (fm/get-flavors! flavor-manager acc)
+                           (first acc)
+                           (fm/scale-flavor acc (Integer/parseInt amount) (keyword amount-unit))
+                           (fm/materialize-recipes! flavor-manager acc))))))
 
 (defn get-orders-handler [order-manager params]
   (fn [& _]
@@ -177,7 +182,7 @@
     (-> (resp/status 200)
         (assoc :session nil))))
 
-(defn app-routes [auth-manager grocery-manager recipe-manager flavor-manager order-manager]
+(defn app-routes [{:keys [auth-manager grocery-manager recipe-manager flavor-manager]}]
   (routes
     (GET "/" {} (resp/resource-response "index.html" {:root "public"}))
     (GET "/api/v1/signIn" {session :session} (check-sign-in-handler session))
@@ -195,7 +200,7 @@
     (PUT "/api/v1/flavors" {} (auth-middleware (add-flavor-handler flavor-manager false)))
     (PATCH "/api/v1/flavors" {} (auth-middleware (add-flavor-handler flavor-manager true)))
     (DELETE "/api/v1/flavors" {} (auth-middleware (delete-flavor-handler flavor-manager)))
-    (GET "/api/v1/flavors/:id/recipes" {params :params} (auth-middleware (get-scaled-flavor-recipes-handler flavor-manager recipe-manager params)))
+    (GET "/api/v1/flavors/:id/recipes" {params :params} (auth-middleware (get-scaled-flavor-recipes-handler flavor-manager params)))
     (GET "/api/v1/orders" {params :params} (auth-middleware (get-orders-handler flavor-manager params)))
     (PUT "/api/v1/orders" {} (auth-middleware (add-order-handler flavor-manager false)))
     (PATCH "/api/v1/orders" {} (auth-middleware (add-order-handler flavor-manager true)))
@@ -210,7 +215,7 @@
     (let [{::cm/keys [app-host app-port]} (::cm/app-settings config-manager)]
       (logger/info (str "Starting server on host " app-host " port: " app-port))
       (assoc this :server (run-jetty
-                            (-> (app-routes auth-manager grocery-manager recipe-manager flavor-manager order-manager)
+                            (-> (app-routes this)
                                 log-mw/wrap-with-logger
                                 mw/wrap-format
                                 (wrap-keyword-params {:parse-namespaces? true})
