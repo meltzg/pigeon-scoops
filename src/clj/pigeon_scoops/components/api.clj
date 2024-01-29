@@ -131,7 +131,7 @@
       (resp/response (as-> (UUID/fromString id) acc
                            (fm/get-flavors! flavor-manager acc)
                            (first acc)
-                           (fm/scale-flavor acc (Integer/parseInt amount) (keyword amount-unit))
+                           (fm/scale-flavor acc (Double/parseDouble amount) (keyword amount-unit))
                            (fm/materialize-recipes! flavor-manager acc))))))
 
 (defn get-orders-handler [order-manager params]
