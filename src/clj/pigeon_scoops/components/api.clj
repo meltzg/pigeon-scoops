@@ -124,6 +124,11 @@
     (fm/delete-flavor! flavor-manager (:id body-params))
     (resp/status 204)))
 
+(defn get-scaled-flavor-recipes-handler [flavor-manager recipe-manager params]
+  (let [{:keys [id amount amount-unit]} params]
+    (fn [request]
+      (resp/response (str id " " amount " " amount-unit)))))
+
 (defn get-orders-handler [order-manager params]
   (fn [& _]
     (resp/response (apply (partial om/get-orders! order-manager)
@@ -190,6 +195,7 @@
     (PUT "/api/v1/flavors" {} (auth-middleware (add-flavor-handler flavor-manager false)))
     (PATCH "/api/v1/flavors" {} (auth-middleware (add-flavor-handler flavor-manager true)))
     (DELETE "/api/v1/flavors" {} (auth-middleware (delete-flavor-handler flavor-manager)))
+    (GET "/api/v1/flavors/:id/recipes" {params :params} (auth-middleware (get-scaled-flavor-recipes-handler flavor-manager recipe-manager params)))
     (GET "/api/v1/orders" {params :params} (auth-middleware (get-orders-handler flavor-manager params)))
     (PUT "/api/v1/orders" {} (auth-middleware (add-order-handler flavor-manager false)))
     (PATCH "/api/v1/orders" {} (auth-middleware (add-order-handler flavor-manager true)))

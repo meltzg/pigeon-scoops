@@ -13,9 +13,10 @@
                                      TableCell
                                      TableContainer
                                      TableHead
-                                     TableRow]]))
+                                     TableRow
+                                     Tooltip]]))
 
-(defui entity-row [{:keys [entity cell-text config-metadata entity-config on-edit on-delete]}]
+(defui entity-row [{:keys [entity cell-text cell-actions config-metadata entity-config on-edit on-delete]}]
        (let [[open-entity-dialog? set-open-entity-dialog!] (uix/use-state false)]
          ($ TableRow
             (for [text cell-text]
@@ -27,13 +28,16 @@
                                    :on-close        #(set-open-entity-dialog! false)
                                    :on-save         #(do (on-edit %)
                                                          (set-open-entity-dialog! false))}))
-               ($ IconButton {:on-click #(set-open-entity-dialog! true)}
-                  ($ EditIcon))
-               ($ IconButton {:color    "error"
-                              :on-click on-delete}
-                  ($ DeleteIcon))))))
+               cell-actions
+               ($ Tooltip {:title "Edit"}
+                  ($ IconButton {:on-click #(set-open-entity-dialog! true)}
+                     ($ EditIcon)))
+               ($ Tooltip {:title "Delete"}
+                  ($ IconButton {:color    "error"
+                                 :on-click on-delete}
+                     ($ DeleteIcon)))))))
 
-(defui entity-list [{:keys [entity-name entities column-headers cell-text config-metadata entity-config on-change]}]
+(defui entity-list [{:keys [entity-name entities column-headers cell-text cell-action config-metadata entity-config on-change]}]
        (let [[open-entity-dialog? set-open-entity-dialog!] (uix/use-state false)]
          ($ Stack {:direction "column" :spacing 1}
             (when open-entity-dialog?
@@ -48,15 +52,16 @@
                         (for [header (conj (vec column-headers) "Actions")]
                           ($ TableCell {:key header} header))))
                   ($ TableBody
-                     (map-indexed (fn [idx, [entity text]]
+                     (map-indexed (fn [idx, [entity text action]]
                                     ($ entity-row {:key             (random-uuid)
                                                    :entity          entity
                                                    :cell-text       text
+                                                   :cell-actions    action
                                                    :entity-config   entity-config
                                                    :config-metadata config-metadata
                                                    :on-edit         #(on-change (assoc (vec entities) idx %))
                                                    :on-delete       #(on-change (vec (utils/drop-nth idx entities)))}))
-                                  (map vector entities cell-text)))))
+                                  (map vector entities cell-text (or cell-action (repeat nil)))))))
             ($ Button {:variant  "contained"
                        :on-click #(set-open-entity-dialog! true)}
                ($ AddIcon)
