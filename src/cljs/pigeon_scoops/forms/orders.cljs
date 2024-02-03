@@ -13,6 +13,8 @@
             [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.units.volume :as volume]
             [pigeon-scoops.utils :as utils :refer [api-url]]
+            [goog.string :as gstring]
+            [goog.string.format]
             ["@mui/icons-material/MenuBook$default" :as MenuBookIcon]
             ["@mui/material" :refer [Button
                                      Dialog
@@ -125,8 +127,7 @@
                                    :title    error-title
                                    :message  error-text
                                    :on-close #(set-error-title! "")})
-                  ($ Typography
-                     (with-out-str (cljs.pprint/pprint grocery-data)))))
+                  ($ Typography (str "Estimated Total " (gstring/format "$%.2f" (:total-cost grocery-data))))))
             ($ DialogActions
                ($ Button {:on-click on-close} "Close")))))
 
