@@ -28,7 +28,8 @@
                                      Select
                                      Stack
                                      TextField
-                                     Tooltip]]))
+                                     Tooltip
+                                     Typography]]))
 
 (defui flavor-config [{:keys [entity config-metadata on-save on-close]}]
        (let [{:keys [flavors]} config-metadata
@@ -102,7 +103,34 @@
             ($ DialogActions
                ($ Button {:on-click on-close} "Close")))))
 
-(defui order-entry [{:keys [entry config-metadata set-valid! set-changed-entry!]}]
+(defui grocery-list-viewer [{:keys [order on-close]}]
+       (let [[grocery-data set-grocery-data!] (uix/use-state nil)
+             [error-text set-error-text!] (uix/use-state "")
+             [error-title set-error-title!] (uix/use-state "")]
+         (uix/use-effect
+           (fn []
+             (ajax/GET (str api-url "orders/" (str (::os/id order)) "/groceries")
+                       {:response-format :transit
+                        :handler         set-grocery-data!
+                        :error-handler   (partial utils/error-handler
+                                                  set-error-title!
+                                                  set-error-text!)}))
+           [order])
+
+         ($ Dialog {:open true :on-close on-close :full-screen true}
+            ($ DialogTitle "Groceries")
+            ($ DialogContent
+               ($ Stack {:direction "column" :spacing 1.25}
+                  ($ alert-dialog {:open?    (not (str/blank? error-title))
+                                   :title    error-title
+                                   :message  error-text
+                                   :on-close #(set-error-title! "")})
+                  ($ Typography
+                     (with-out-str (cljs.pprint/pprint grocery-data)))))
+            ($ DialogActions
+               ($ Button {:on-click on-close} "Close")))))
+
+(defui order-entry [{:keys [entry config-metadata set-valid! set-changed-entry! unsaved? new?]}]
        (let [order-id (::os/id entry)
              set-complete-entry! (fn [partial-entry]
                                    (set-changed-entry! (merge (conj {::os/note    ""
@@ -110,7 +138,8 @@
                                                                     (when (some? order-id) [::os/id order-id]))
                                                               partial-entry)))
              note-valid? #(s/valid? ::os/note (::os/note entry))
-             [displayed-flavor set-displayed-flavor!] (uix/use-state nil)]
+             [displayed-flavor set-displayed-flavor!] (uix/use-state nil)
+             [show-grocery-list? set-show-grocery-list!] (uix/use-state false)]
          (uix/use-effect
            (fn []
              (set-valid! (note-valid?))))
@@ -123,6 +152,9 @@
                                                                 (:flavors config-metadata)))
                                 :config-metadata config-metadata
                                 :on-close        (partial set-displayed-flavor! nil)}))
+            (when show-grocery-list?
+              ($ grocery-list-viewer {:order    entry
+                                      :on-close (partial set-show-grocery-list! false)}))
             ($ TextField {:label     "Note"
                           :error     (not (note-valid?))
                           :value     (or (::os/note entry) "")
@@ -143,4 +175,7 @@
                                                       ($ MenuBookIcon)))])
                             :config-metadata config-metadata
                             :entity-config   flavor-config
-                            :on-change       #(set-complete-entry! (assoc entry ::os/flavors %))}))))
+                            :on-change       #(set-complete-entry! (assoc entry ::os/flavors %))})
+            (when-not new?
+              ($ Button {:variant "contained" :disabled unsaved? :on-click (partial set-show-grocery-list! true)}
+                 "View Grocery List")))))
