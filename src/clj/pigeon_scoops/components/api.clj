@@ -38,7 +38,7 @@
         (handler-fn request)
         (resp/status 401)))))
 
-(defn get-groceries-handler [grocery-manager params]
+(defn get-groceries-handler [{:keys [grocery-manager]} params]
   (fn [& _]
     (resp/response (apply (partial gm/get-groceries! grocery-manager)
                           (map #(keyword (namespace ::gs/type) %)
@@ -46,7 +46,7 @@
                                  (:types params)
                                  [(:types params)]))))))
 
-(defn add-grocery-item-handler [grocery-manager update?]
+(defn add-grocery-item-handler [{:keys [grocery-manager]} update?]
   (fn [{:keys [body-params]}]
     (let [updated-groceries (gm/add-grocery-item! grocery-manager body-params update?)]
       (cond (nil? updated-groceries)
@@ -62,12 +62,12 @@
             :else
             (resp/response updated-groceries)))))
 
-(defn delete-grocery-item-handler [grocery-manager]
+(defn delete-grocery-item-handler [{:keys [grocery-manager]}]
   (fn [{:keys [body-params]}]
     (gm/delete-grocery-item! grocery-manager (:id body-params))
     (resp/status 204)))
 
-(defn get-recipes-handler [recipe-manager params]
+(defn get-recipes-handler [{:keys [recipe-manager]} params]
   (fn [& _]
     (resp/response (apply (partial rm/get-recipes! recipe-manager)
                           (map parse-uuid
@@ -75,7 +75,7 @@
                                  (:ids params)
                                  [(:ids params)]))))))
 
-(defn add-recipe-handler [recipe-manager update?]
+(defn add-recipe-handler [{:keys [recipe-manager]} update?]
   (fn [{:keys [body-params]}]
     (let [updated-recipe (rm/add-recipe! recipe-manager body-params update?)]
       (cond (nil? updated-recipe)
@@ -91,12 +91,12 @@
             :else
             (resp/response updated-recipe)))))
 
-(defn delete-recipe-handler [recipe-manager]
+(defn delete-recipe-handler [{:keys [recipe-manager]}]
   (fn [{:keys [body-params]}]
     (rm/delete-recipe! recipe-manager (:id body-params))
     (resp/status 204)))
 
-(defn get-flavors-handler [flavor-manager params]
+(defn get-flavors-handler [{:keys [flavor-manager]} params]
   (fn [& _]
     (resp/response (apply (partial fm/get-flavors! flavor-manager)
                           (map parse-uuid
@@ -104,7 +104,7 @@
                                  (:ids params)
                                  [(:ids params)]))))))
 
-(defn add-flavor-handler [flavor-manager update?]
+(defn add-flavor-handler [{:keys [flavor-manager]} update?]
   (fn [{:keys [body-params]}]
     (let [updated-flavor (fm/add-flavor! flavor-manager body-params update?)]
       (cond (nil? updated-flavor)
@@ -120,21 +120,20 @@
             :else
             (resp/response updated-flavor)))))
 
-(defn delete-flavor-handler [flavor-manager]
+(defn delete-flavor-handler [{:keys [flavor-manager]}]
   (fn [{:keys [body-params]}]
     (fm/delete-flavor! flavor-manager (:id body-params))
     (resp/status 204)))
 
-(defn get-scaled-flavor-recipes-handler [flavor-manager params]
-  (let [{:keys [id amount amount-unit]} params]
-    (fn [& _]
-      (resp/response (as-> (UUID/fromString id) acc
-                           (fm/get-flavors! flavor-manager acc)
-                           (first acc)
-                           (fm/scale-flavor acc (Double/parseDouble amount) (keyword amount-unit))
-                           (fm/materialize-recipes! flavor-manager acc))))))
+(defn get-scaled-flavor-recipes-handler [{:keys [flavor-manager]} {:keys [id amount amount-unit]}]
+  (fn [& _]
+    (resp/response (as-> (UUID/fromString id) acc
+                         (fm/get-flavors! flavor-manager acc)
+                         (first acc)
+                         (fm/scale-flavor acc (Double/parseDouble amount) (keyword amount-unit))
+                         (fm/materialize-recipes! flavor-manager acc)))))
 
-(defn get-orders-handler [order-manager params]
+(defn get-orders-handler [{:keys [order-manager]} params]
   (fn [& _]
     (resp/response (apply (partial om/get-orders! order-manager)
                           (map parse-uuid
@@ -142,7 +141,7 @@
                                  (:ids params)
                                  [(:ids params)]))))))
 
-(defn add-order-handler [order-manager update?]
+(defn add-order-handler [{:keys [order-manager]} update?]
   (fn [{:keys [body-params]}]
     (let [updated-order (om/add-order! order-manager body-params update?)]
       (cond (nil? updated-order)
@@ -158,17 +157,34 @@
             :else
             (resp/response updated-order)))))
 
-(defn delete-order-handler [order-manager]
+(defn delete-order-handler [{:keys [order-manager]}]
   (fn [{:keys [body-params]}]
     (om/delete-order! order-manager (:id body-params))
     (resp/status 204)))
+
+(defn get-order-groceries-handler [{:keys [order-manager flavor-manager grocery-manager]} {:keys [id]}]
+  (fn [& _]
+    (let [recipe-ingredients (->> (UUID/fromString id)
+                                  (om/get-orders! order-manager)
+                                  first
+                                  ::os/flavors
+                                  (map #(assoc % ::os/recipes (as-> % acc
+                                                                    (::os/flavor-id acc)
+                                                                    (fm/get-flavors! flavor-manager acc)
+                                                                    (first acc)
+                                                                    (fm/scale-flavor acc (::os/amount %) (::os/amount-unit %))
+                                                                    (fm/materialize-recipes! flavor-manager acc))))
+                                  (mapcat ::os/recipes)
+                                  (rm/merge-recipe-ingredients))
+          groceries (apply (partial gm/get-groceries! grocery-manager) (map ::rs/ingredient-type recipe-ingredients))]
+      (resp/response (rm/to-grocery-purchase-list recipe-ingredients groceries)))))
 
 (defn check-sign-in-handler [session]
   (if (seq session)
     (resp/status 200)
     (resp/status 401)))
 
-(defn sign-in-handler [auth-manager]
+(defn sign-in-handler [{:keys [auth-manager]}]
   (fn [{:keys [body-params]}]
     (let [{:keys [email password]} body-params
           [account valid?] (am/sign-in! auth-manager email password)]
@@ -182,29 +198,30 @@
     (-> (resp/status 200)
         (assoc :session nil))))
 
-(defn app-routes [{:keys [auth-manager grocery-manager recipe-manager flavor-manager]}]
+(defn app-routes [api]
   (routes
     (GET "/" {} (resp/resource-response "index.html" {:root "public"}))
     (GET "/api/v1/signIn" {session :session} (check-sign-in-handler session))
-    (POST "/api/v1/signIn" {} (sign-in-handler auth-manager))
+    (POST "/api/v1/signIn" {} (sign-in-handler api))
     (POST "/api/v1/signOut" {} (sign-out-handler))
-    (GET "/api/v1/groceries" {params :params} (auth-middleware (get-groceries-handler grocery-manager params)))
-    (PUT "/api/v1/groceries" {} (auth-middleware (add-grocery-item-handler grocery-manager false)))
-    (PATCH "/api/v1/groceries" {} (auth-middleware (add-grocery-item-handler grocery-manager true)))
-    (DELETE "/api/v1/groceries" {} (auth-middleware (delete-grocery-item-handler grocery-manager)))
-    (GET "/api/v1/recipes" {params :params} (auth-middleware (get-recipes-handler recipe-manager params)))
-    (PUT "/api/v1/recipes" {} (auth-middleware (add-recipe-handler recipe-manager false)))
-    (PATCH "/api/v1/recipes" {} (auth-middleware (add-recipe-handler recipe-manager true)))
-    (DELETE "/api/v1/recipes" {} (auth-middleware (delete-recipe-handler recipe-manager)))
-    (GET "/api/v1/flavors" {params :params} (auth-middleware (get-flavors-handler flavor-manager params)))
-    (PUT "/api/v1/flavors" {} (auth-middleware (add-flavor-handler flavor-manager false)))
-    (PATCH "/api/v1/flavors" {} (auth-middleware (add-flavor-handler flavor-manager true)))
-    (DELETE "/api/v1/flavors" {} (auth-middleware (delete-flavor-handler flavor-manager)))
-    (GET "/api/v1/flavors/:id/recipes" {params :params} (auth-middleware (get-scaled-flavor-recipes-handler flavor-manager params)))
-    (GET "/api/v1/orders" {params :params} (auth-middleware (get-orders-handler flavor-manager params)))
-    (PUT "/api/v1/orders" {} (auth-middleware (add-order-handler flavor-manager false)))
-    (PATCH "/api/v1/orders" {} (auth-middleware (add-order-handler flavor-manager true)))
-    (DELETE "/api/v1/orders" {} (auth-middleware (delete-order-handler flavor-manager)))
+    (GET "/api/v1/groceries" {params :params} (auth-middleware (get-groceries-handler api params)))
+    (PUT "/api/v1/groceries" {} (auth-middleware (add-grocery-item-handler api false)))
+    (PATCH "/api/v1/groceries" {} (auth-middleware (add-grocery-item-handler api true)))
+    (DELETE "/api/v1/groceries" {} (auth-middleware (delete-grocery-item-handler api)))
+    (GET "/api/v1/recipes" {params :params} (auth-middleware (get-recipes-handler api params)))
+    (PUT "/api/v1/recipes" {} (auth-middleware (add-recipe-handler api false)))
+    (PATCH "/api/v1/recipes" {} (auth-middleware (add-recipe-handler api true)))
+    (DELETE "/api/v1/recipes" {} (auth-middleware (delete-recipe-handler api)))
+    (GET "/api/v1/flavors" {params :params} (auth-middleware (get-flavors-handler api params)))
+    (PUT "/api/v1/flavors" {} (auth-middleware (add-flavor-handler api false)))
+    (PATCH "/api/v1/flavors" {} (auth-middleware (add-flavor-handler api true)))
+    (DELETE "/api/v1/flavors" {} (auth-middleware (delete-flavor-handler api)))
+    (GET "/api/v1/flavors/:id/recipes" {params :params} (auth-middleware (get-scaled-flavor-recipes-handler api params)))
+    (GET "/api/v1/orders" {params :params} (auth-middleware (get-orders-handler api params)))
+    (PUT "/api/v1/orders" {} (auth-middleware (add-order-handler api false)))
+    (PATCH "/api/v1/orders" {} (auth-middleware (add-order-handler api true)))
+    (DELETE "/api/v1/orders" {} (auth-middleware (delete-order-handler api)))
+    (GET "/api/v1/orders/:id/groceries" {params :params} (auth-middleware (get-order-groceries-handler api params)))
     (route/resources "/")
     (route/not-found "Not Found")))
 
