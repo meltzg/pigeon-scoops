@@ -7,6 +7,8 @@
             [pigeon-scoops.components.db :as db]
             [pigeon-scoops.components.grocery-manager :as gm]
             [pigeon-scoops.units.common :as units]
+            [pigeon-scoops.units.volume :as volume]
+            [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.spec.recipes :as rs]
             [pigeon-scoops.spec.groceries :as gs]
             [honey.sql :as sql]
@@ -168,8 +170,61 @@
         (assoc ::rs/amount amount
                ::rs/amount-unit amount-unit))))
 
-(defn merge-recipe-ingredients [recipes-to-merge]
+(defn can-merge-recipe-ingredients? [recipe-ingredients]
+  (and (= 1 (count (set (map ::rs/ingredient-type recipe-ingredients))))
+       (every? #(some #{(namespace (::rs/amount-unit %))} (map namespace [::volume/l ::mass/g])) recipe-ingredients)))
+
+(defn apply-grocery-unit [recipe-ingredient grocery-unit]
+  (let [to-apply (cond (= (namespace (::rs/amount-unit recipe-ingredient))
+                          (namespace ::mass/g))
+                       (::gs/unit-mass-type grocery-unit)
+                       (= (namespace (::rs/amount-unit recipe-ingredient))
+                          (namespace ::volume/l))
+                       (::gs/unit-volume-type grocery-unit)
+                       :else
+                       nil)]
+    (if to-apply
+      (-> recipe-ingredient
+          (assoc ::rs/amount-unit to-apply)
+          (update ::rs/amount units/convert (::rs/amount-unit recipe-ingredient) to-apply))
+      recipe-ingredient)))
+
+(defn change-unit-type [to-type recipe-ingredient conversion-unit]
+  (if (= to-type (namespace (::rs/amount-unit recipe-ingredient)))
+    recipe-ingredient
+    (-> recipe-ingredient
+        (apply-grocery-unit conversion-unit)
+        (update ::rs/amount-unit (cond (= to-type (namespace ::mass/g))
+                                       (fn [_] (::gs/unit-mass-type conversion-unit))
+                                       (= to-type (namespace ::volume/c))
+                                       (fn [_] (::gs/unit-volume-type conversion-unit))
+                                       :else
+                                       identity))
+        (update ::rs/amount (cond (= to-type (namespace ::mass/g))
+                                  #(* % (/ (::gs/unit-mass conversion-unit)
+                                           (::gs/unit-volume conversion-unit)))
+                                  (= to-type (namespace ::volume/c))
+                                  #(* % (/ (::gs/unit-volume conversion-unit)
+                                           (::gs/unit-mass conversion-unit)))
+                                  :else
+                                  identity)))))
+
+(defn merge-recipe-ingredients [recipes-to-merge groceries]
   (->> (mapcat ::rs/ingredients recipes-to-merge)
+       (group-by ::rs/ingredient-type)
+       vals
+       (map (fn [recipe-ingredients]
+              (if (or (= (count recipe-ingredients) 1)
+                      (not (can-merge-recipe-ingredients? recipe-ingredients)))
+                recipe-ingredients
+                (let [to-type (namespace (::rs/amount-unit (first recipe-ingredients)))
+                      ingredient-type (::rs/ingredient-type (first recipe-ingredients))
+                      conversion-unit (first (filter #(and (some? (::gs/unit-volume %))
+                                                           (some? (::gs/unit-mass %)))
+                                                     (::gs/units (first (filter #(= (::gs/type %) ingredient-type)
+                                                                                groceries)))))]
+                  (map #(change-unit-type to-type % conversion-unit) recipe-ingredients)))))
+       (apply concat)
        (group-by #(list (::rs/ingredient-type %) (namespace (::rs/amount-unit %))))
        vals
        (map #(reduce (fn [acc ingredient]
@@ -178,11 +233,13 @@
                                                                 (::rs/amount-unit acc)))) %))))
 
 (defn to-grocery-purchase-list [recipe-ingredients groceries]
+  (def recipe-ingredients recipe-ingredients)
+  (def groceries groceries)
   (let [grocery-map (into {} (map #(vec [(::gs/type %) %]) groceries))
-        purchase-list (map #(gm/divide-grocery (::rs/amount %)
-                                               (::rs/amount-unit %)
-                                               ((::rs/ingredient-type %) grocery-map))
-                           recipe-ingredients)]
+        purchase-list (->> recipe-ingredients
+                           (map #(gm/divide-grocery (::rs/amount %)
+                                                    (::rs/amount-unit %)
+                                                    ((::rs/ingredient-type %) grocery-map))))]
     {:purchase-list purchase-list
      :total-cost    (apply + (map #(* (::gs/unit-cost %) (::gs/unit-purchase-quantity %))
                                   (mapcat ::gs/units purchase-list)))}))

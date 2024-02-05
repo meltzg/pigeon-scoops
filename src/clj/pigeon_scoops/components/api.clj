@@ -164,19 +164,23 @@
 
 (defn get-order-groceries-handler [{:keys [order-manager flavor-manager grocery-manager]} {:keys [id]}]
   (fn [& _]
-    (let [recipe-ingredients (->> (UUID/fromString id)
-                                  (om/get-orders! order-manager)
-                                  first
-                                  ::os/flavors
-                                  (map #(assoc % ::os/recipes (as-> % acc
-                                                                    (::os/flavor-id acc)
-                                                                    (fm/get-flavors! flavor-manager acc)
-                                                                    (first acc)
-                                                                    (fm/scale-flavor acc (::os/amount %) (::os/amount-unit %))
-                                                                    (fm/materialize-recipes! flavor-manager acc))))
-                                  (mapcat ::os/recipes)
-                                  (rm/merge-recipe-ingredients))
-          groceries (apply (partial gm/get-groceries! grocery-manager) (map ::rs/ingredient-type recipe-ingredients))]
+    (let [recipes (->> (UUID/fromString id)
+                       (om/get-orders! order-manager)
+                       first
+                       ::os/flavors
+                       (map #(assoc % ::os/recipes (as-> % acc
+                                                         (::os/flavor-id acc)
+                                                         (fm/get-flavors! flavor-manager acc)
+                                                         (first acc)
+                                                         (fm/scale-flavor acc (::os/amount %) (::os/amount-unit %))
+                                                         (fm/materialize-recipes! flavor-manager acc))))
+                       (mapcat ::os/recipes))
+          groceries (apply (partial gm/get-groceries! grocery-manager)
+                           (->> recipes
+                                (mapcat ::rs/ingredients)
+                                (map ::rs/ingredient-type)
+                                set))
+          recipe-ingredients (rm/merge-recipe-ingredients recipes groceries)]
       (resp/response (rm/to-grocery-purchase-list recipe-ingredients groceries)))))
 
 (defn check-sign-in-handler [session]

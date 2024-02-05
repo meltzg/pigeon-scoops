@@ -155,19 +155,20 @@
         nil))))
 
 (defn divide-grocery [amount amount-unit grocery-item]
-  (assoc (->> (loop [grocery-units {}
-                     amount-left amount]
-                (let [grocery-unit (get-grocery-unit-for-amount amount-left amount-unit grocery-item)
-                      unit-key (keyword (namespace ::gs/unit) (str "unit-" (units/to-unit-class amount-unit)))
-                      unit-type-key (keyword (namespace ::gs/unit) (str "unit-" (units/to-unit-class amount-unit) "-type"))]
-                  (if (or (nil? grocery-unit) (<= amount-left 0))
-                    grocery-units
-                    (recur (update grocery-units grocery-unit (fnil inc 0))
-                           (- amount-left (units/convert (unit-key grocery-unit)
-                                                         (unit-type-key grocery-unit)
-                                                         amount-unit))))))
-              (reduce-kv #(assoc %1 (assoc %2 ::gs/unit-purchase-quantity %3) %3) {})
-              keys
-              (assoc grocery-item ::gs/units))
-    ::gs/amount-needed amount
-    ::gs/amount-needed-unit amount-unit))
+  (let [units (->> (loop [grocery-units {}
+                          amount-left amount]
+                     (let [grocery-unit (get-grocery-unit-for-amount amount-left amount-unit grocery-item)
+                           unit-key (keyword (namespace ::gs/unit) (str "unit-" (units/to-unit-class amount-unit)))
+                           unit-type-key (keyword (namespace ::gs/unit) (str "unit-" (units/to-unit-class amount-unit) "-type"))]
+                       (if (or (nil? grocery-unit) (<= amount-left 0))
+                         grocery-units
+                         (recur (update grocery-units grocery-unit (fnil inc 0))
+                                (- amount-left (units/convert (unit-key grocery-unit)
+                                                              (unit-type-key grocery-unit)
+                                                              amount-unit))))))
+                   (reduce-kv #(assoc %1 (assoc %2 ::gs/unit-purchase-quantity %3) %3) {})
+                   keys
+                   (assoc grocery-item ::gs/units))]
+    (assoc units
+      ::gs/amount-needed amount
+      ::gs/amount-needed-unit amount-unit)))

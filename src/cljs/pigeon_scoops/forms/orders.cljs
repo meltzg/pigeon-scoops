@@ -10,6 +10,7 @@
             [pigeon-scoops.spec.orders :as os]
             [pigeon-scoops.spec.flavors :as fs]
             [pigeon-scoops.spec.recipes :as rs]
+            [pigeon-scoops.spec.groceries :as gs]
             [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.units.volume :as volume]
             [pigeon-scoops.utils :as utils :refer [api-url]]
@@ -17,6 +18,7 @@
             [goog.string.format]
             ["@mui/icons-material/MenuBook$default" :as MenuBookIcon]
             ["@mui/material" :refer [Button
+                                     Checkbox
                                      Dialog
                                      DialogActions
                                      DialogContent
@@ -113,7 +115,8 @@
            (fn []
              (ajax/GET (str api-url "orders/" (str (::os/id order)) "/groceries")
                        {:response-format :transit
-                        :handler         set-grocery-data!
+                        :handler         (juxt set-grocery-data!
+                                               cljs.pprint/pprint)
                         :error-handler   (partial utils/error-handler
                                                   set-error-title!
                                                   set-error-text!)}))
@@ -122,12 +125,27 @@
          ($ Dialog {:open true :on-close on-close :full-screen true}
             ($ DialogTitle "Groceries")
             ($ DialogContent
-               ($ Stack {:direction "column" :spacing 1.25}
-                  ($ alert-dialog {:open?    (not (str/blank? error-title))
-                                   :title    error-title
-                                   :message  error-text
-                                   :on-close #(set-error-title! "")})
-                  ($ Typography (str "Estimated Total " (gstring/format "$%.2f" (:total-cost grocery-data))))))
+               ($ alert-dialog {:open?    (not (str/blank? error-title))
+                                :title    error-title
+                                :message  error-text
+                                :on-close #(set-error-title! "")})
+               (when grocery-data
+                 ($ Stack {:direction "column" :spacing 1.25}
+                    ($ Typography (str "Estimated Total " (gstring/format "$%.2f" (:total-cost grocery-data))))
+                    ($ entity-list {:entity-name    "Groceries"
+                                    :entities       (:purchase-list grocery-data)
+                                    :column-headers ["Item"
+                                                     "Amount Needed"
+                                                     "Amount Cost"
+                                                     "Purchase Quantity"
+                                                     "Purchase Cost"]
+                                    :cell-text      (for [item (sort-by ::gs/type (:purchase-list grocery-data))]
+                                                      [(name (::gs/type item))
+                                                       (str (::gs/amount-needed item) " " (name (::gs/amount-needed-unit item)))
+                                                       "2" "3" "4"])
+                                    :cell-action    (repeat (count (:purchase-list grocery-data))
+                                                            ($ Checkbox))
+                                    :frozen?        true}))))
             ($ DialogActions
                ($ Button {:on-click on-close} "Close")))))
 

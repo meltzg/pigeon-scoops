@@ -105,7 +105,6 @@
                                                    (::os/flavors new-order)))
                                       sql/format)]
 
-     (println flavor-amounts-statement)
      (or (s/explain-data ::os/entry new-order)
          (when-not (or (and update? (not existing))
                        (and (not update?) existing))
