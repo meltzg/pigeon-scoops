@@ -240,6 +240,6 @@
                            (map #(gm/divide-grocery (::rs/amount %)
                                                     (::rs/amount-unit %)
                                                     ((::rs/ingredient-type %) grocery-map))))]
-    {:purchase-list purchase-list
-     :total-cost    (apply + (map #(* (::gs/unit-cost %) (::gs/unit-purchase-quantity %))
-                                  (mapcat ::gs/units purchase-list)))}))
+    {:purchase-list       purchase-list
+     :total-purchase-cost (apply + (filter some? (map ::gs/purchase-cost purchase-list)))
+     :total-needed-cost   (apply + (filter some? (map ::gs/amount-needed-cost purchase-list)))}))
