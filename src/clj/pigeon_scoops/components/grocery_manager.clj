@@ -155,11 +155,11 @@
         nil))))
 
 (defn divide-grocery [amount amount-unit grocery-item]
-  (let [units (->> (loop [grocery-units {}
+  (let [unit-key (keyword (namespace ::gs/unit) (str "unit-" (units/to-unit-class amount-unit)))
+        unit-type-key (keyword (namespace ::gs/unit) (str "unit-" (units/to-unit-class amount-unit) "-type"))
+        units (->> (loop [grocery-units {}
                           amount-left amount]
-                     (let [grocery-unit (get-grocery-unit-for-amount amount-left amount-unit grocery-item)
-                           unit-key (keyword (namespace ::gs/unit) (str "unit-" (units/to-unit-class amount-unit)))
-                           unit-type-key (keyword (namespace ::gs/unit) (str "unit-" (units/to-unit-class amount-unit) "-type"))]
+                     (let [grocery-unit (get-grocery-unit-for-amount amount-left amount-unit grocery-item)]
                        (if (or (nil? grocery-unit) (<= amount-left 0))
                          grocery-units
                          (recur (update grocery-units grocery-unit (fnil inc 0))
@@ -168,7 +168,25 @@
                                                               amount-unit))))))
                    (reduce-kv #(assoc %1 (assoc %2 ::gs/unit-purchase-quantity %3) %3) {})
                    keys
-                   (assoc grocery-item ::gs/units))]
+                   (assoc grocery-item ::gs/units))
+        [purchase-amount purchase-unit] (when-let [units (::gs/units units)]
+                                          (->> units
+                                               (map #(select-keys % [unit-key unit-type-key ::gs/unit-purchase-quantity]))
+                                               (map #(update % unit-key * (::gs/unit-purchase-quantity %)))
+                                               (mapcat #(take 2 (vals %)))
+                                               (apply units/add-amounts)))
+        purchase-cost (when-let [units (::gs/units units)]
+                        (->> units
+                             (map #(select-keys % [::gs/unit-purchase-quantity ::gs/unit-cost]))
+                             (map #(apply * (vals %)))
+                             (apply +)))]
     (assoc units
       ::gs/amount-needed amount
-      ::gs/amount-needed-unit amount-unit)))
+      ::gs/amount-needed-unit amount-unit
+      ::gs/amount-needed-cost (when purchase-cost
+                                (* purchase-cost
+                                   (units/scale-factor purchase-amount purchase-unit
+                                                       amount amount-unit)))
+      ::gs/purchase-amount purchase-amount
+      ::gs/purchase-amount-unit purchase-unit
+      ::gs/purchase-cost purchase-cost)))

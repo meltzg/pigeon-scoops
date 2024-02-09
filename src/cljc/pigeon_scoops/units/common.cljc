@@ -42,3 +42,10 @@
     (convert amount amount-unit ::vol/ml)
     :else
     amount))
+
+(defn add-amounts [amount amount-unit & am-uns]
+  (let [amounts (partition 2 (concat [amount amount-unit] am-uns))]
+    (reduce (fn [[acc-amnt acc-unit] [amnt unit]]
+              [(+ acc-amnt (convert amnt unit acc-unit))
+               acc-unit])
+            amounts)))

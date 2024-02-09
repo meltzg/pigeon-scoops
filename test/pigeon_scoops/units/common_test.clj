@@ -79,3 +79,10 @@
       ::units/pinch "common"
       ::vol/c "volume"
       ::mass/g "mass")))
+
+(t/deftest add-amounts-test
+  (t/testing "can add amounts together"
+    (t/are [amounts expected]
+      (= (apply units/add-amounts amounts) expected)
+      [1 ::vol/pt 3 ::vol/c] [2.5 ::vol/pt]
+      [1 ::vol/pt 3 ::vol/c 2 ::vol/qt 4] [6.5 ::vol/pt])))
