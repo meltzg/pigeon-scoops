@@ -131,7 +131,7 @@
                                 :on-close #(set-error-title! "")})
                (when grocery-data
                  ($ Stack {:direction "column" :spacing 1.25}
-                    ($ Typography (str "Estimated Total " (gstring/format "$%.2f" (:total-cost grocery-data))))
+                    ($ Typography (str "Estimated Total " (gstring/format "$%.2f" (:total-purchase-cost grocery-data))))
                     ($ entity-list {:entity-name    "Groceries"
                                     :entities       (:purchase-list grocery-data)
                                     :column-headers ["Item"
@@ -140,9 +140,13 @@
                                                      "Purchase Quantity"
                                                      "Purchase Cost"]
                                     :cell-text      (for [item (sort-by ::gs/type (:purchase-list grocery-data))]
-                                                      [(name (::gs/type item))
-                                                       (str (::gs/amount-needed item) " " (name (::gs/amount-needed-unit item)))
-                                                       "2" "3" "4"])
+                                                      (do (prn item)
+                                                          [(name (::gs/type item))
+                                                           (str (gstring/format "%.4f" (::gs/amount-needed item)) " " (name (::gs/amount-needed-unit item)))
+                                                           (gstring/format "$%.2f" (or (::gs/amount-needed-cost item) 0))
+                                                           (when (::gs/purchase-amount item)
+                                                             (str (gstring/format "%.4f" (::gs/purchase-amount item)) " " (name (::gs/purchase-amount-unit item))))
+                                                           (gstring/format "$%.2f" (or (::gs/purchase-cost item) 0))]))
                                     :cell-action    (repeat (count (:purchase-list grocery-data))
                                                             ($ Checkbox))
                                     :frozen?        true}))))
