@@ -20,7 +20,7 @@
        (let [[open-entity-dialog? set-open-entity-dialog!] (uix/use-state false)]
          ($ TableRow
             (for [text cell-text]
-              ($ TableCell {:key (random-uuid)} text))
+              ($ TableCell {:key (random-uuid) :style {:white-space "pre-wrap"}} text))
             ($ TableCell
                (when open-entity-dialog?
                  ($ entity-config {:entity          entity

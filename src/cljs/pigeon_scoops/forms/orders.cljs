@@ -13,6 +13,7 @@
             [pigeon-scoops.spec.groceries :as gs]
             [pigeon-scoops.units.mass :as mass]
             [pigeon-scoops.units.volume :as volume]
+            [pigeon-scoops.units.common :as units]
             [pigeon-scoops.utils :as utils :refer [api-url]]
             [goog.string :as gstring]
             [goog.string.format]
@@ -107,6 +108,19 @@
             ($ DialogActions
                ($ Button {:on-click on-close} "Close")))))
 
+(defn format-unit [unit]
+  (str (::gs/unit-purchase-quantity unit)
+       ": "
+       (str/join " | " (->> (select-keys unit (mapcat #(vec [(keyword (namespace ::gs/unit) (str "unit-" (units/to-unit-class %)))
+                                                             (keyword (namespace ::gs/unit) (str "unit-" (units/to-unit-class %) "-type"))])
+                                                      [::volume/c ::mass/g ::units/pinch]))
+                            vals
+                            (partition 2)
+                            (filter #(some? (first %)))
+                            (map #(str (first %) " " (name (second %))))))
+       " "
+       (::gs/source unit)))
+
 (defui grocery-list-viewer [{:keys [order on-close]}]
        (let [[grocery-data set-grocery-data!] (uix/use-state nil)
              [error-text set-error-text!] (uix/use-state "")
@@ -138,15 +152,16 @@
                                                      "Amount Needed"
                                                      "Amount Cost"
                                                      "Purchase Quantity"
+                                                     "Purchase Units"
                                                      "Purchase Cost"]
                                     :cell-text      (for [item (sort-by ::gs/type (:purchase-list grocery-data))]
-                                                      (do (prn item)
-                                                          [(name (::gs/type item))
-                                                           (str (gstring/format "%.4f" (::gs/amount-needed item)) " " (name (::gs/amount-needed-unit item)))
-                                                           (gstring/format "$%.2f" (or (::gs/amount-needed-cost item) 0))
-                                                           (when (::gs/purchase-amount item)
-                                                             (str (gstring/format "%.4f" (::gs/purchase-amount item)) " " (name (::gs/purchase-amount-unit item))))
-                                                           (gstring/format "$%.2f" (or (::gs/purchase-cost item) 0))]))
+                                                      [(name (::gs/type item))
+                                                       (str (gstring/format "%.4f" (::gs/amount-needed item)) " " (name (::gs/amount-needed-unit item)))
+                                                       (gstring/format "$%.2f" (or (::gs/amount-needed-cost item) 0))
+                                                       (when (::gs/purchase-amount item)
+                                                         (str (gstring/format "%.4f" (::gs/purchase-amount item)) " " (name (::gs/purchase-amount-unit item))))
+                                                       (str/join "\n" (map format-unit (::gs/units item)))
+                                                       (gstring/format "$%.2f" (or (::gs/purchase-cost item) 0))])
                                     :cell-action    (repeat (count (:purchase-list grocery-data))
                                                             ($ Checkbox))
                                     :frozen?        true}))))
