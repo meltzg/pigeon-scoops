@@ -190,7 +190,8 @@
       recipe-ingredient)))
 
 (defn change-unit-type [to-type recipe-ingredient conversion-unit]
-  (if (= to-type (namespace (::rs/amount-unit recipe-ingredient)))
+  (if (or (= to-type (namespace (::rs/amount-unit recipe-ingredient)))
+          (some nil? (vals (select-keys conversion-unit [::gs/unit-mass ::gs/unit-volume]))))
     recipe-ingredient
     (-> recipe-ingredient
         (apply-grocery-unit conversion-unit)
