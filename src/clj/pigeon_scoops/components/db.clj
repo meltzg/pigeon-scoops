@@ -1,16 +1,42 @@
 (ns pigeon-scoops.components.db
-  (:require [com.stuartsierra.component :as component]
-            [pigeon-scoops.components.config-manager :as cm]
-            [next.jdbc :as jdbc]
+  (:require [clojure.edn :as edn]
+            [clojure.java.io :as io]
             [clojure.string :as str]
-            [next.jdbc.result-set :as res])
-  (:import [java.sql Array]))
+            [com.stuartsierra.component :as component]
+            [honey.sql :as sql]
+            [next.jdbc :as jdbc]
+            [next.jdbc.result-set :as res]
+            [pigeon-scoops.components.config-manager :as cm])
+  (:import (java.sql Array)))
 
 
 (extend-protocol res/ReadableColumn
   Array
   (read-column-by-label [^Array v _] (vec (.getArray v)))
   (read-column-by-index [^Array v _ _] (vec (.getArray v))))
+
+
+(defmacro migrations [] (->> "resources/migrations/"
+                             io/file
+                             file-seq
+                             (map #(.getName %))
+                             (filter #(str/ends-with? % ".edn"))
+                             sort
+                             vec))
+
+(defn- execute-migrations! [conn]
+  (->> (migrations)
+       (map (partial str "migrations/"))
+       (map io/resource)
+       (map slurp)
+       (map edn/read-string)
+       (map #(jdbc/with-transaction
+               [conn conn]
+               (doall (map (comp (partial jdbc/execute! conn)
+                                 sql/format)
+                           %))))
+       doall
+       ))
 
 (defrecord DataBase [config-manager]
   component/Lifecycle
@@ -22,8 +48,10 @@
                                                          ::cm/db_port
                                                          ::cm/db_name
                                                          ::cm/db_user
-                                                         ::cm/db_password) (::cm/app-settings config-manager)))))]
-      (assoc this ::connection (jdbc/get-connection db_spec)
+                                                         ::cm/db_password) (::cm/app-settings config-manager)))))
+          conn (jdbc/get-connection db_spec)]
+      (execute-migrations! conn)
+      (assoc this ::connection conn
                   ::spec db_spec)))
 
   (stop [this]

@@ -17,25 +17,6 @@
             [pigeon-scoops.units.common :as units])
   (:import (java.util UUID)))
 
-(def create-flavor-table-statement {:create-table [:flavors :if-not-exists]
-                                    :with-columns
-                                    [[:id :uuid [:not nil] :primary-key]
-                                     [:name :text [:not nil]]
-                                     [:instructions :text :array]
-                                     [:recipe-id :uuid [:references :recipes :id] [:not nil]]
-                                     [:amount :real [:not nil]]
-                                     [:amount-unit :text [:not nil]]
-                                     [:amount-unit-type :text [:not nil]]]})
-
-(def create-mixin-table {:create-table [:mixins :if-not-exists]
-                         :with-columns
-                         [[:flavor-id :uuid [:references :flavors :id] [:not nil]]
-                          [:recipe-id :uuid [:references :recipes :id] [:not nil]]
-                          [:amount :real [:not nil]]
-                          [:amount-unit :text [:not nil]]
-                          [:amount-unit-type :text [:not nil]]
-                          [:primary :key [:composite :flavor-id :recipe-id]]]})
-
 (defn mixin-from-db [mixin]
   (-> (db/from-db-namespace ::fs/entry mixin)
       (dissoc ::fs/flavor-id ::fs/amount-unit-type)
@@ -154,8 +135,6 @@
   component/Lifecycle
 
   (start [this]
-    (jdbc/execute! (::db/connection database) (sql/format create-flavor-table-statement))
-    (jdbc/execute! (::db/connection database) (sql/format create-mixin-table))
     (assoc this ::flavors {}))
 
   (stop [this]

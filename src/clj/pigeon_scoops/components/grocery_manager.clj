@@ -18,23 +18,6 @@
                                                 values]]
             [next.jdbc :as jdbc]))
 
-(def create-grocery-table-statement {:create-table [:groceries :if-not-exists]
-                                     :with-columns
-                                     [[:type :text [:not nil] :primary-key]
-                                      [:description :text]]})
-
-(def create-grocery-unit-table-statement {:create-table [:grocery-units :if-not-exists]
-                                          :with-columns
-                                          [[:type :text [:references :groceries :type] [:not nil]]
-                                           [:source :text [:not nil]]
-                                           [:unit-cost :real [:not nil]]
-                                           [:unit-mass :real]
-                                           [:unit-mass-type :text]
-                                           [:unit-volume :real]
-                                           [:unit-volume-type :text]
-                                           [:unit-common :real]
-                                           [:unit-common-type :text]]})
-
 (defn unit-from-db [unit]
   (let [initial (dissoc (db/from-db-namespace ::gs/entry unit) ::gs/type)]
     (cond-> initial
@@ -127,8 +110,6 @@
   component/Lifecycle
 
   (start [this]
-    (jdbc/execute! (::db/connection database) (sql/format create-grocery-table-statement))
-    (jdbc/execute! (::db/connection database) (sql/format create-grocery-unit-table-statement))
     (->> "groceries.edn"
          io/resource
          slurp

@@ -11,27 +11,8 @@
                                                 values]]
             [next.jdbc :as jdbc]
             [pigeon-scoops.components.db :as db]
-            [pigeon-scoops.components.flavor-manager :as fm]
-            [pigeon-scoops.components.recipe-manager :as rm]
-            [pigeon-scoops.components.grocery-manager :as gm]
-            [pigeon-scoops.spec.orders :as os]
-            [pigeon-scoops.spec.flavors :as fs]
-            [pigeon-scoops.spec.recipes :as rs])
+            [pigeon-scoops.spec.orders :as os])
   (:import (java.util UUID)))
-
-(def create-order-table-statement {:create-table [:orders :if-not-exists]
-                                   :with-columns
-                                   [[:id :uuid [:not nil] :primary-key]
-                                    [:note :text [:not nil]]]})
-
-(def create-flavor-amounts-table {:create-table [:flavor-amounts :if-not-exists]
-                                  :with-columns
-                                  [[:order-id :uuid [:references :orders :id] [:not nil]]
-                                   [:flavor-id :uuid [:references :flavors :id] [:not nil]]
-                                   [:amount :real [:not nil]]
-                                   [:amount-unit :text [:not nil]]
-                                   [:amount-unit-type :text [:not nil]]
-                                   [:primary :key [:composite :order-id :flavor-id]]]})
 
 (defn order-amount-from-db [order-amount]
   (-> (db/from-db-namespace ::os/entry order-amount)
@@ -121,30 +102,10 @@
                               flavor-amounts-statement))
              new-order))))))
 
-(defn to-grocery-list! [order-manager order]
-  (let [flavor-map (into {} (map #(vec [(::fs/id %) %])
-                                 (apply (partial fm/get-flavors! (:flavor-manager order-manager))
-                                        (map ::os/flavor-id (::os/flavors order)))))
-        to-grocery-list (fn [recipe-ingredients]
-                          (rm/to-grocery-purchase-list recipe-ingredients
-                                                       (apply (partial gm/get-groceries! (:grocery-manager order-manager))
-                                                              (map ::rs/ingredient-type recipe-ingredients))))]
-    (->> order
-         ::os/flavors
-         (map #(fm/scale-flavor (get flavor-map (::os/flavor-id %))
-                                (::os/amount %)
-                                (::os/amount-unit %)))
-         (map (partial fm/materialize-recipes! (:flavor-manager order-manager)))
-         (apply concat)
-         rm/merge-recipe-ingredients
-         to-grocery-list)))
-
 (defrecord OrderManager [database grocery-manager recipe-manager flavor-manager]
   component/Lifecycle
 
   (start [this]
-    (jdbc/execute! (::db/connection database) (sql/format create-order-table-statement))
-    (jdbc/execute! (::db/connection database) (sql/format create-flavor-amounts-table))
     (assoc this ::orders {}))
 
   (stop [this]

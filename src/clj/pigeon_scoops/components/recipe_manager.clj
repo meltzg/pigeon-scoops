@@ -21,26 +21,6 @@
             [next.jdbc :as jdbc])
   (:import (java.util UUID)))
 
-(def create-recipe-table-statement {:create-table [:recipes :if-not-exists]
-                                    :with-columns
-                                    [[:id :uuid [:not nil] :primary-key]
-                                     [:type :text [:not nil]]
-                                     [:name :text [:not nil]]
-                                     [:instructions :text :array]
-                                     [:amount :real [:not nil]]
-                                     [:amount-unit :text [:not nil]]
-                                     [:amount-unit-type :text [:not nil]]
-                                     [:source :text]]})
-
-(def create-ingredient-table {:create-table [:ingredients :if-not-exists]
-                              :with-columns
-                              [[:recipe-id :uuid [:references :recipes :id] [:not nil]]
-                               [:ingredient-type :text [:references :groceries :type] [:not nil]]
-                               [:amount :real [:not nil]]
-                               [:amount-unit :text [:not nil]]
-                               [:amount-unit-type :text [:not nil]]
-                               [:primary :key [:composite :recipe-id :ingredient-type]]]})
-
 (defn ingredient-from-db [ingredient]
   (-> (db/from-db-namespace ::rs/ingredient ingredient)
       (dissoc ::rs/recipe-id ::rs/amount-unit-type)
@@ -144,8 +124,6 @@
   component/Lifecycle
 
   (start [this]
-    (jdbc/execute! (::db/connection database) (sql/format create-recipe-table-statement))
-    (jdbc/execute! (::db/connection database) (sql/format create-ingredient-table))
     (->> "recipes.edn"
          io/resource
          slurp
@@ -234,8 +212,6 @@
                                                                 (::rs/amount-unit acc)))) %))))
 
 (defn to-grocery-purchase-list [recipe-ingredients groceries]
-  (def recipe-ingredients recipe-ingredients)
-  (def groceries groceries)
   (let [grocery-map (into {} (map #(vec [(::gs/type %) %]) groceries))
         purchase-list (->> recipe-ingredients
                            (map #(gm/divide-grocery (::rs/amount %)
