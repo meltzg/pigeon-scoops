@@ -63,7 +63,7 @@
                                                (::fs/id (first flavors)))
                                 :on-change #(set-complete-entity!
                                               (assoc entity ::os/flavor-id (uuid (.. % -target -value))))}
-                        (map #($ MenuItem {:value (str (::fs/id %)) :key (str (::fs/id %))} (::fs/name %)) flavors)))
+                        (map #($ MenuItem {:value (str (::fs/id %)) :key (str (::fs/id %))} (::fs/name %)) (sort ::fs/name flavors))))
                   ($ amount-config {:entry               entity
                                     :on-change           set-complete-entity!
                                     :set-valid!          set-amount-config-valid!
