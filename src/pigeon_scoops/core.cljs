@@ -1,7 +1,7 @@
 (ns pigeon-scoops.core
-  (:require [uix.core :as uix :refer [$ defui]]
+  (:require [pigeon-scoops.auth :refer [authenticator]]
+            [uix.core :as uix :refer [$ defui]]
             [uix.dom]
-            [pigeon-scoops.auth :refer [authenticator]]
             ["@auth0/auth0-react" :refer [Auth0Provider]]
             ["@mui/icons-material/Menu$default" :as MenuIcon]
             ["@mui/icons-material/Icecream$default" :as IcecreamIcon]
@@ -44,7 +44,6 @@
                ($ List
                   (for [[app-name app-icon app-key] [["Groceries" LocalGroceryStoreIcon :groceries]
                                                      ["Recipes" MenuBookIcon :recipes]
-                                                     ["Flavors" IcecreamIcon :flavors]
                                                      ["Orders" ReceiptIcon :orders]]]
                     ($ app-menu-item {:key  app-key
                                       :text app-name
@@ -53,6 +52,7 @@
 (defui app []
        ($ Auth0Provider {:domain               "pigeon-scoops.us.auth0.com"
                          :client-id            "AoU9LnGWQlCbSUvjgXdHf4NZPJh0VHYD"
+                         :cache-location       "localstorage"
                          :authorization-params (clj->js {:redirect_uri (.. js/window -location -origin)})}
           ($ content)))
 
