@@ -29,5 +29,6 @@
                (if isAuthenticated
                  ($ MenuItem {:on-click #(logout (clj->js {:logoutParams {:returnTo (.. js/window -location -origin)}}))}
                     "Sign Out")
-                 ($ MenuItem {:on-click loginWithRedirect}
+                 ($ MenuItem {:on-click #(loginWithRedirect (clj->js {:authorizationParams {:audience "https://api.pigeon-scoops.com"
+                                                                                            :scope "openid profile email offline_access"}}))}
                     "Sign In"))))))

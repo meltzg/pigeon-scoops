@@ -1,6 +1,5 @@
 (ns pigeon-scoops.core
   (:require [pigeon-scoops.auth :refer [authenticator]]
-            [reitit.core :as r]
             [uix.core :as uix :refer [$ defui]]
             [uix.dom]
             [reitit.frontend :as rf]
@@ -24,15 +23,18 @@
                                      Toolbar
                                      Typography]]))
 
+(defui item [props]
+       ($ :div (str (js->clj props :keywordize-keys true))))
+
 (def routes
   [["/" {:name ::root
-         :view ($ :div "root")}]
+         :view item}]
    ["/grocery" {:name ::grocery
-                :view ($ :div "grocery")}]
+                :view item}]
    ["/recipe" {:name ::recipe
-               :view ($ :div "recipe")}]
+               :view item}]
    ["/order" {:name ::order
-              :view ($ :div "order")}]])
+              :view item}]])
 
 (defui app-menu-item [{:keys [text icon page]}]
        ($ ListItem
@@ -72,13 +74,14 @@
             ($ Box {:component "div"}
                ($ Toolbar)
                (when route
-                 (-> route :data :view))))))
+                 ($ (-> route :data :view) (:parameters route)))))))
 
 
 (defui app []
        ($ Auth0Provider {:domain               "pigeon-scoops.us.auth0.com"
                          :client-id            "AoU9LnGWQlCbSUvjgXdHf4NZPJh0VHYD"
                          :cache-location       "localstorage"
+                         :use-refresh-tokens true
                          :authorization-params (clj->js {:redirect_uri (.. js/window -location -origin)})}
           ($ content)))
 
