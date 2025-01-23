@@ -1,5 +1,6 @@
 (ns pigeon-scoops.core
   (:require [pigeon-scoops.auth :refer [authenticator]]
+            [pigeon-scoops.context :as ctx]
             [uix.core :as uix :refer [$ defui]]
             [uix.dom]
             [reitit.frontend :as rf]
@@ -83,7 +84,8 @@
                          :cache-location       "localstorage"
                          :use-refresh-tokens true
                          :authorization-params (clj->js {:redirect_uri (.. js/window -location -origin)})}
-          ($ content)))
+          ($ ctx/with-groceries
+             ($ content))))
 
 (defonce root
          (uix.dom/create-root (js/document.getElementById "root")))
