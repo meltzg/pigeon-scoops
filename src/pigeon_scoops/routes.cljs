@@ -1,6 +1,6 @@
 (ns pigeon-scoops.routes
-  (:require [uix.core :refer [$ defui]]
-            [pigeon-scoops.groceries :refer [grocery-view]]))
+  (:require [pigeon-scoops.groceries :refer [grocery-view]]
+            [uix.core :refer [$ defui]]))
 
 (defui item [props]
        ($ :div (str (js->clj props :keywordize-keys true))))
@@ -11,8 +11,8 @@
    ["/grocery"
     ["" {:name ::groceries
          :view grocery-view}]
-    ["/:grocery-id" {:name ::grocery
-                     :view grocery-view
+    ["/:grocery-id" {:name       ::grocery
+                     :view       grocery-view
                      :parameters {:path {:grocery-id uuid?}}}]]
    ["/recipe" {:name ::recipe
                :view item}]

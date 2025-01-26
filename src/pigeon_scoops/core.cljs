@@ -2,11 +2,11 @@
   (:require [pigeon-scoops.auth :refer [authenticator]]
             [pigeon-scoops.context :as ctx]
             [pigeon-scoops.routes :as r]
-            [uix.core :as uix :refer [$ defui]]
-            [uix.dom]
+            [reitit.coercion.spec :as rss]
             [reitit.frontend :as rf]
             [reitit.frontend.easy :as rfe]
-            [reitit.coercion.spec :as rss]
+            [uix.core :as uix :refer [$ defui]]
+            [uix.dom]
             ["@auth0/auth0-react" :refer [Auth0Provider]]
             ["@mui/icons-material/Menu$default" :as MenuIcon]
             ["@mui/icons-material/Icecream$default" :as IcecreamIcon]
@@ -70,9 +70,9 @@
        ($ Auth0Provider {:domain               "pigeon-scoops.us.auth0.com"
                          :client-id            "AoU9LnGWQlCbSUvjgXdHf4NZPJh0VHYD"
                          :cache-location       "localstorage"
-                         :use-refresh-tokens true
+                         :use-refresh-tokens   true
                          :authorization-params (clj->js {:redirect_uri (.. js/window -location -origin)
-                                                         :scope "openid profile email offline_access"})}
+                                                         :scope        "openid profile email offline_access"})}
           ($ ctx/with-groceries
              ($ content))))
 
