@@ -1,6 +1,7 @@
 (ns pigeon-scoops.core
   (:require [pigeon-scoops.auth :refer [authenticator]]
             [pigeon-scoops.context :as ctx]
+            [pigeon-scoops.routes :as r]
             [uix.core :as uix :refer [$ defui]]
             [uix.dom]
             [reitit.frontend :as rf]
@@ -24,19 +25,6 @@
                                      Toolbar
                                      Typography]]))
 
-(defui item [props]
-       ($ :div (str (js->clj props :keywordize-keys true))))
-
-(def routes
-  [["/" {:name ::root
-         :view item}]
-   ["/grocery" {:name ::grocery
-                :view item}]
-   ["/recipe" {:name ::recipe
-               :view item}]
-   ["/order" {:name ::order
-              :view item}]])
-
 (defui app-menu-item [{:keys [text icon page]}]
        ($ ListItem
           ($ ListItemButton {:href (rfe/href page)}
@@ -45,7 +33,7 @@
              ($ ListItemText {:primary text}))))
 
 (defui content []
-       (let [router (uix/use-memo #(rf/router routes {:data {:coercion rss/coercion}}) [routes])
+       (let [router (uix/use-memo #(rf/router r/routes {:data {:coercion rss/coercion}}) [r/routes])
              [route set-route] (uix/use-state nil)
              [menu-open? set-menu-open!] (uix/use-state false)]
          (uix/use-effect
@@ -65,9 +53,9 @@
                        :open     menu-open?
                        :on-close #(set-menu-open! (not menu-open?))}
                ($ List
-                  (for [[app-name app-icon app-key page] [["Groceries" LocalGroceryStoreIcon :groceries ::grocery]
-                                                          ["Recipes" MenuBookIcon :recipes ::recipe]
-                                                          ["Orders" ReceiptIcon :orders ::order]]]
+                  (for [[app-name app-icon app-key page] [["Groceries" LocalGroceryStoreIcon :groceries ::r/groceries]
+                                                          ["Recipes" MenuBookIcon :recipes ::r/recipe]
+                                                          ["Orders" ReceiptIcon :orders ::r/order]]]
                     ($ app-menu-item {:key  app-key
                                       :text app-name
                                       :icon app-icon
@@ -83,7 +71,8 @@
                          :client-id            "AoU9LnGWQlCbSUvjgXdHf4NZPJh0VHYD"
                          :cache-location       "localstorage"
                          :use-refresh-tokens true
-                         :authorization-params (clj->js {:redirect_uri (.. js/window -location -origin)})}
+                         :authorization-params (clj->js {:redirect_uri (.. js/window -location -origin)
+                                                         :scope "openid profile email offline_access"})}
           ($ ctx/with-groceries
              ($ content))))
 

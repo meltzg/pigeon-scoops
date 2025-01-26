@@ -1,22 +1,20 @@
 (ns pigeon-scoops.context
-  (:require [uix.core :as uix :refer [$ defui]]
-            [pigeon-scoops.hooks :refer [use-token]]))
+  (:require [cognitect.transit :as transit]
+            [pigeon-scoops.api :as api]
+            [pigeon-scoops.hooks :refer [use-token]]
+            [uix.core :as uix :refer [$ defui]]))
 
 (def grocery-context (uix/create-context))
 
 (defui with-groceries [{:keys [children]}]
        (let [{:keys [token]} (use-token)
              [groceries set-groceries!] (uix/use-state nil)
-             [refresh? set-refresh!] (uix/use-state nil)]
+             [refresh? set-refresh!] (uix/use-state nil)
+             reader (transit/reader :json)]
          (uix/use-effect
            (fn []
-             (-> (js/fetch "https://api.pigeon-scoops.com/v1/groceries"
-                           (clj->js {:method  "GET"
-                                     :headers {:Accept        "application/transit+json"
-                                               :Authorization (str "Bearer " token)}}))
-                 (.then (fn [resp]
-                          (prn resp)))))
-           [token refresh?])
+             (api/get-groceries token set-groceries!))
+           [token refresh? reader])
          ($ (.-Provider grocery-context) {:value {:groceries groceries
-                                                  :set-refresh! set-refresh!}}
+                                                  :refresh!  #(set-refresh! (not refresh?))}}
             children)))
