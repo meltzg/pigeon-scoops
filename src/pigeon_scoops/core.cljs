@@ -73,8 +73,9 @@
                          :use-refresh-tokens   true
                          :authorization-params (clj->js {:redirect_uri (.. js/window -location -origin)
                                                          :scope        "openid profile email offline_access"})}
-          ($ ctx/with-groceries
-             ($ content))))
+          ($ ctx/with-constants
+             ($ ctx/with-groceries
+                ($ content)))))
 
 (defonce root
          (uix.dom/create-root (js/document.getElementById "root")))

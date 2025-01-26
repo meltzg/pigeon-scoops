@@ -13,7 +13,7 @@
 
 (defui grocery-list [{:keys [selected-grocery-id]}]
        (let [{:keys [groceries]} (uix/use-context ctx/grocery-context)
-             [filter-text set-filter-text!] (uix/use-state nil)
+             [filter-text set-filter-text!] (uix/use-state "")
              filtered-groceries (filter #(or (str/blank? filter-text)
                                              (str/includes? (str/lower-case (:grocery/name %))
                                                             (str/lower-case filter-text)))
