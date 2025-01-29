@@ -7,7 +7,8 @@
                [token set-token!] (uix/use-state nil)]
            (uix/use-effect
              (fn []
-               (-> (getAccessTokenSilently (clj->js {:authorizationParams {:audience "https://api.pigeon-scoops.com"}}))
+               (-> (getAccessTokenSilently (clj->js {:authorizationParams {:audience "https://api.pigeon-scoops.com"
+                                                                           :scope    "openid profile email offline_access"}}))
                    (.then set-token!)))
              [getAccessTokenSilently])
            {:token token}))

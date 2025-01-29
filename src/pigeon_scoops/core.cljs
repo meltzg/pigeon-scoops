@@ -72,7 +72,8 @@
                          :cache-location       "localstorage"
                          :use-refresh-tokens   true
                          :authorization-params (clj->js {:redirect_uri (.. js/window -location -origin)
-                                                         :scope        "openid profile email offline_access"})}
+                                                         :scope        "openid profile email offline_access"
+                                                         :audience     "https://api.pigeon-scoops.com"})}
           ($ ctx/with-constants
              ($ ctx/with-groceries
                 ($ content)))))
