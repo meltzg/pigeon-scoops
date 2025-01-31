@@ -11,7 +11,7 @@
              [constants set-constants!] (uix/use-state nil)]
          (uix/use-effect
            (fn []
-             (api/get-constants token set-constants!)))
+             (.then (api/get-constants token) set-constants!)))
          ($ (.-Provider constants-context) {:value constants}
             children)))
 
@@ -21,7 +21,7 @@
              [refresh? set-refresh!] (uix/use-state nil)]
          (uix/use-effect
            (fn []
-             (api/get-groceries token set-groceries!))
+             (.then (api/get-groceries token) set-groceries!))
            [token refresh?])
          ($ (.-Provider grocery-context) {:value {:groceries groceries
                                                   :refresh!  #(set-refresh! (not refresh?))}}

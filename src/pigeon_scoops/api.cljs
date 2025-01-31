@@ -4,7 +4,7 @@
 (def base-url "https://api.pigeon-scoops.com/v1")
 ;(def base-url "http://localhost:8080/v1")
 
-(defn get-constants [token on-success]
+(defn get-constants [token]
   (let [reader (transit/reader :json)]
     (-> (js/fetch (str base-url "/constants")
                   (clj->js {:method  "GET"
@@ -13,10 +13,9 @@
         (.then #(.text %))
         (.then (fn [body]
                  (->> body
-                      (transit/read reader)
-                      (on-success)))))))
+                      (transit/read reader)))))))
 
-(defn get-groceries [token on-success]
+(defn get-groceries [token]
   (let [reader (transit/reader :json)]
     (-> (js/fetch (str base-url "/groceries")
                   (clj->js {:method  "GET"
@@ -25,10 +24,9 @@
         (.then #(.text %))
         (.then (fn [body]
                  (->> body
-                      (transit/read reader)
-                      (on-success)))))))
+                      (transit/read reader)))))))
 
-(defn get-grocery [token on-success grocery-id]
+(defn get-grocery [token grocery-id]
   (let [reader (transit/reader :json)]
     (-> (js/fetch (str base-url "/groceries/" grocery-id)
                   (clj->js {:method  "GET"
@@ -37,5 +35,4 @@
         (.then #(.text %))
         (.then (fn [body]
                  (->> body
-                      (transit/read reader)
-                      (on-success)))))))
+                      (transit/read reader)))))))

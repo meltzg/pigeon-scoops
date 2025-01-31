@@ -6,7 +6,8 @@
             [pigeon-scoops.hooks :refer [use-token]]
             [reitit.frontend.easy :as rfe]
             [uix.core :as uix :refer [$ defui]]
-            ["@mui/material" :refer [FormControl
+            ["@mui/material" :refer [Button
+                                     FormControl
                                      InputLabel
                                      Select
                                      Stack
@@ -101,7 +102,9 @@
        (let [{:constants/keys [departments]} (uix/use-context ctx/constants-context)
              [grocery-name set-name!] (uix/use-state (or (:grocery/name grocery) ""))
              [department set-department!] (uix/use-state (or (:grocery/department grocery) ""))
-             department-label-id (str "department-" (:grocery/id grocery))]
+             department-label-id (str "department-" (:grocery/id grocery))
+             unsaved-changes? (or (not= grocery-name (:grocery/name grocery))
+                                  (not= department (:grocery/department grocery)))]
 
          (uix/use-effect
            (fn []
@@ -123,7 +126,9 @@
                   (for [d departments]
                     ($ MenuItem {:value d :key d} (name d)))))
             ($ grocery-unit-table {:grocery-id (:grocery/id grocery)
-                                   :units      (:grocery/units grocery)}))))
+                                   :units      (:grocery/units grocery)})
+            ($ Stack {:direction "row" :spacing 1}
+               ($ Button {:variant "contained" :disabled (not unsaved-changes?)} "Save")))))
 
 (defui grocery-view [{:keys [path]}]
        (let [{:keys [grocery-id]} path
@@ -132,8 +137,10 @@
          (uix/use-effect
            (fn []
              (when grocery-id
-               (api/get-grocery token set-grocery! grocery-id)))
+               (prn "changing grocery")
+               (.then (api/get-grocery token grocery-id) set-grocery!)))
            [grocery-id token])
+
          ($ Stack {:direction "row" :spacing 1}
             ($ grocery-list {:selected-grocery-id grocery-id})
             ($ grocery-control {:grocery grocery}))))
