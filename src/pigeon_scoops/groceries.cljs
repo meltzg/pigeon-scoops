@@ -24,8 +24,37 @@
                                      TableCell
                                      TextField]]))
 
+(def grocery-context (uix/create-context))
+
+(defui with-grocery [{:keys [grocery-id children]}]
+       (let [{:keys [token]} (use-token)
+             [grocery set-grocery!] (uix/use-state nil)
+             [grocery-name set-name!] (uix/use-state (or (:grocery/name grocery) ""))
+             [department set-department!] (uix/use-state (or (:grocery/department grocery) ""))
+             unsaved-changes? (or (not= grocery-name (:grocery/name grocery))
+                                  (not= department (:grocery/department grocery)))
+             reset! (uix/use-memo #(fn [g]
+                                     (set-name! (or (:grocery/name g) ""))
+                                     (set-department! (or (:grocery/department g) "")))
+                                  [])
+             [refresh? set-refresh!] (uix/use-state nil)]
+         (uix/use-effect
+           (fn []
+             (when grocery-id
+               (.then (api/get-grocery token grocery-id) (juxt set-grocery! reset!))))
+           [reset! refresh? token grocery-id])
+         ($ (.-Provider grocery-context) {:value {:grocery          grocery
+                                                  :grocery-name     grocery-name
+                                                  :set-name!        set-name!
+                                                  :department       department
+                                                  :set-department!  set-department!
+                                                  :unsaved-changes? unsaved-changes?
+                                                  :reset!           reset!
+                                                  :refresh!         #(set-refresh! (not refresh?))}}
+            children)))
+
 (defui grocery-list [{:keys [selected-grocery-id]}]
-       (let [{:keys [groceries]} (uix/use-context ctx/grocery-context)
+       (let [{:keys [groceries]} (uix/use-context ctx/groceries-context)
              [filter-text set-filter-text!] (uix/use-state "")
              filtered-groceries (filter #(or (str/blank? filter-text)
                                              (str/includes? (str/lower-case (:grocery/name %))
@@ -100,18 +129,15 @@
 
 (defui grocery-control [{:keys [grocery]}]
        (let [{:constants/keys [departments]} (uix/use-context ctx/constants-context)
-             [grocery-name set-name!] (uix/use-state (or (:grocery/name grocery) ""))
-             [department set-department!] (uix/use-state (or (:grocery/department grocery) ""))
-             department-label-id (str "department-" (:grocery/id grocery))
-             unsaved-changes? (or (not= grocery-name (:grocery/name grocery))
-                                  (not= department (:grocery/department grocery)))]
+             {:keys [grocery grocery-name set-name! department set-department! reset! unsaved-changes?]} (uix/use-context grocery-context)
+             department-label-id (str "department-" (:grocery/id grocery))]
 
          (uix/use-effect
            (fn []
              (when grocery
                (set-name! (:grocery/name grocery))
                (set-department! (:grocery/department grocery))))
-           [grocery])
+           [grocery set-name! set-department!])
 
          ($ Stack {:direction "column" :spacing 1}
             ($ TextField {:label     "Name"
@@ -128,7 +154,11 @@
             ($ grocery-unit-table {:grocery-id (:grocery/id grocery)
                                    :units      (:grocery/units grocery)})
             ($ Stack {:direction "row" :spacing 1}
-               ($ Button {:variant "contained" :disabled (not unsaved-changes?)} "Save")))))
+               ($ Button {:variant "contained" :disabled (not unsaved-changes?)} "Save")
+               ($ Button {:variant  "contained"
+                          :on-click (partial reset! grocery)
+                          :disabled (not unsaved-changes?)}
+                  "Reset")))))
 
 (defui grocery-view [{:keys [path]}]
        (let [{:keys [grocery-id]} path
@@ -137,10 +167,10 @@
          (uix/use-effect
            (fn []
              (when grocery-id
-               (prn "changing grocery")
                (.then (api/get-grocery token grocery-id) set-grocery!)))
            [grocery-id token])
 
-         ($ Stack {:direction "row" :spacing 1}
-            ($ grocery-list {:selected-grocery-id grocery-id})
-            ($ grocery-control {:grocery grocery}))))
+         ($ with-grocery {:grocery-id grocery-id}
+            ($ Stack {:direction "row" :spacing 1}
+               ($ grocery-list {:selected-grocery-id grocery-id})
+               ($ grocery-control {:grocery grocery})))))

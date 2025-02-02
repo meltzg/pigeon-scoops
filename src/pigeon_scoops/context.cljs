@@ -4,14 +4,15 @@
             [uix.core :as uix :refer [$ defui]]))
 
 (def constants-context (uix/create-context))
-(def grocery-context (uix/create-context))
+(def groceries-context (uix/create-context))
 
 (defui with-constants [{:keys [children]}]
        (let [{:keys [token]} (use-token)
              [constants set-constants!] (uix/use-state nil)]
          (uix/use-effect
            (fn []
-             (.then (api/get-constants token) set-constants!)))
+             (.then (api/get-constants token) set-constants!))
+           [token])
          ($ (.-Provider constants-context) {:value constants}
             children)))
 
@@ -23,6 +24,6 @@
            (fn []
              (.then (api/get-groceries token) set-groceries!))
            [token refresh?])
-         ($ (.-Provider grocery-context) {:value {:groceries groceries
-                                                  :refresh!  #(set-refresh! (not refresh?))}}
+         ($ (.-Provider groceries-context) {:value {:groceries groceries
+                                                    :refresh!  #(set-refresh! (not refresh?))}}
             children)))
