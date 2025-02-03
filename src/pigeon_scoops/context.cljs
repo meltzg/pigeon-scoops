@@ -7,12 +7,11 @@
 (def groceries-context (uix/create-context))
 
 (defui with-constants [{:keys [children]}]
-       (let [{:keys [token]} (use-token)
-             [constants set-constants!] (uix/use-state nil)]
+       (let [[constants set-constants!] (uix/use-state nil)]
          (uix/use-effect
            (fn []
-             (.then (api/get-constants token) set-constants!))
-           [token])
+             (.then (api/get-constants) set-constants!))
+           [])
          ($ (.-Provider constants-context) {:value constants}
             children)))
 
@@ -22,7 +21,8 @@
              [refresh? set-refresh!] (uix/use-state nil)]
          (uix/use-effect
            (fn []
-             (.then (api/get-groceries token) set-groceries!))
+             (when token
+               (.then (api/get-groceries token) set-groceries!)))
            [token refresh?])
          ($ (.-Provider groceries-context) {:value {:groceries groceries
                                                     :refresh!  #(set-refresh! (not refresh?))}}

@@ -52,7 +52,7 @@
              [refresh? set-refresh!] (uix/use-state nil)]
          (uix/use-effect
            (fn []
-             (when grocery-id
+             (when (and grocery-id token)
                (.then (api/get-grocery token grocery-id) (juxt set-grocery! reset!))))
            [reset! refresh? token grocery-id])
          ($ (.-Provider grocery-context) {:value {:grocery          grocery
@@ -138,7 +138,7 @@
                 (for [u units]
                   ($ grocery-unit-row {:key (:grocery-unit/id u) :grocery-id grocery-id :unit u}))))))
 
-(defui grocery-control [{:keys [grocery]}]
+(defui grocery-control []
        (let [{:constants/keys [departments]} (uix/use-context ctx/constants-context)
              {:keys [grocery grocery-name set-name! department set-department! units reset! unsaved-changes?]} (uix/use-context grocery-context)
              department-label-id (str "department-" (:grocery/id grocery))]
@@ -172,16 +172,8 @@
                   "Reset")))))
 
 (defui grocery-view [{:keys [path]}]
-       (let [{:keys [grocery-id]} path
-             [grocery set-grocery!] (uix/use-state nil)
-             {:keys [token]} (use-token)]
-         (uix/use-effect
-           (fn []
-             (when grocery-id
-               (.then (api/get-grocery token grocery-id) set-grocery!)))
-           [grocery-id token])
-
+       (let [{:keys [grocery-id]} path]
          ($ with-grocery {:grocery-id grocery-id}
             ($ Stack {:direction "row" :spacing 1}
                ($ grocery-list {:selected-grocery-id grocery-id})
-               ($ grocery-control {:grocery grocery})))))
+               ($ grocery-control)))))

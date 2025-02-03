@@ -4,12 +4,11 @@
 (def base-url "https://api.pigeon-scoops.com/v1")
 ;(def base-url "http://localhost:8080/v1")
 
-(defn get-constants [token]
+(defn get-constants []
   (let [reader (transit/reader :json)]
     (-> (js/fetch (str base-url "/constants")
                   (clj->js {:method  "GET"
-                            :headers {:Accept        "application/transit+json"
-                                      :Authorization (str "Bearer " token)}}))
+                            :headers {:Accept "application/transit+json"}}))
         (.then #(.text %))
         (.then (fn [body]
                  (->> body
