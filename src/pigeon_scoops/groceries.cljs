@@ -107,14 +107,14 @@
                ($ number-field {:value (:grocery-unit/unit-cost unit) :set-value! #(set-unit! (assoc unit :grocery-unit/unit-cost %))}))
             (for [[idx [value-key type-key option-key]]
                   (map-indexed vector [[:grocery-unit/unit-mass :grocery-unit/unit-mass-type :mass]
-                                       [:grocery-unit/volume-mass :grocery-unit/unit-volume-type :volume]
+                                       [:grocery-unit/unit-volume :grocery-unit/unit-volume-type :volume]
                                        [:grocery-unit/unit-common :grocery-unit/unit-common-type :common]])]
 
               ($ TableCell {:key idx}
                  ($ Stack {:direction "row" :spacing 1}
                     ($ number-field {:value (value-key unit) :set-value! #(set-unit! (assoc unit :value-key %))})
                     ($ FormControl
-                       ($ Select {:value     (type-key unit)
+                       ($ Select {:value     (or (type-key unit) "")
                                   :on-change #(set-unit! (assoc unit type-key (keyword (name option-key) (.. % -target -value))))}
                           (for [o (option-key unit-types)]
                             ($ MenuItem {:value o :key o} (name o)))))))))))
