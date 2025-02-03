@@ -151,6 +151,8 @@
            [grocery set-name! set-department!])
 
          ($ Stack {:direction "column" :spacing 1}
+            ($ Button {:on-click #(rfe/push-state :pigeon-scoops.routes/groceries)}
+               "Back to list")
             ($ TextField {:label     "Name"
                           :value     grocery-name
                           :on-change #(set-name! (.. % -target -value))})
@@ -177,3 +179,31 @@
             ($ Stack {:direction "row" :spacing 1}
                ($ grocery-list {:selected-grocery-id grocery-id})
                ($ grocery-control)))))
+
+(defui grocery-row [{:keys [grocery]}]
+       ($ TableRow
+          ($ TableCell {:on-click #(rfe/push-state :pigeon-scoops.routes/grocery {:grocery-id (:grocery/id grocery)})}
+             (:grocery/name grocery))
+          ($ TableCell
+             (name (:grocery/department grocery)))
+          ($ TableCell
+             ($ IconButton {:color "error"
+                            :on-click #(prn "delete" (:grocery/id grocery))}
+                ($ DeleteIcon)))))
+
+
+(defui groceries-table []
+       (let [{:keys [groceries]} (uix/use-context ctx/groceries-context)]
+         ($ TableContainer {:sx (clj->js {:maxHeight "100vh"
+                                          :overflow  "auto"})}
+            ($ Table {:sticky-header true}
+               ($ TableHead
+                  ($ TableRow
+                     ($ TableCell "Name")
+                     ($ TableCell "Department")
+                     ($ TableCell "Actions")))
+               ($ TableBody
+                  (for [g (sort-by :grocery/name groceries)]
+                    ($ grocery-row {:key (:grocery/id g) :grocery g})))))))
+
+

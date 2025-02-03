@@ -1,5 +1,5 @@
 (ns pigeon-scoops.routes
-  (:require [pigeon-scoops.groceries :refer [grocery-view]]
+  (:require [pigeon-scoops.groceries :refer [grocery-view groceries-table]]
             [uix.core :refer [$ defui]]))
 
 (defui item [props]
@@ -10,7 +10,7 @@
          :view item}]
    ["/grocery"
     ["" {:name ::groceries
-         :view grocery-view}]
+         :view groceries-table}]
     ["/:grocery-id" {:name       ::grocery
                      :view       grocery-view
                      :parameters {:path {:grocery-id uuid?}}}]]
