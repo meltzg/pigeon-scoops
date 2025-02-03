@@ -31,11 +31,18 @@
              [grocery set-grocery!] (uix/use-state nil)
              [grocery-name set-name!] (uix/use-state (or (:grocery/name grocery) ""))
              [department set-department!] (uix/use-state (or (:grocery/department grocery) ""))
-             unsaved-changes? (or (not= grocery-name (:grocery/name grocery))
-                                  (not= department (:grocery/department grocery)))
+             [units set-units!] (uix/use-state (:grocery/units grocery))
+             unsaved-changes? (not-every? true? (map #(= ((first %) grocery) (second %)) {:grocery/name       grocery-name
+                                                                                          :grocery/department department
+                                                                                          :grocery/units      units}))
+             set-unit! #(set-units! (map (fn [u]
+                                           (if (= (:grocery-unit/id u)
+                                                  (:grocery-unit/id %)) % u))
+                                         units))
              reset! (uix/use-memo #(fn [g]
                                      (set-name! (or (:grocery/name g) ""))
-                                     (set-department! (or (:grocery/department g) "")))
+                                     (set-department! (or (:grocery/department g) ""))
+                                     (set-units! (:grocery/units g)))
                                   [])
              [refresh? set-refresh!] (uix/use-state nil)]
          (uix/use-effect
@@ -48,6 +55,8 @@
                                                   :set-name!        set-name!
                                                   :department       department
                                                   :set-department!  set-department!
+                                                  :units            units
+                                                  :set-unit!        set-unit!
                                                   :unsaved-changes? unsaved-changes?
                                                   :reset!           reset!
                                                   :refresh!         #(set-refresh! (not refresh?))}}
@@ -81,32 +90,32 @@
                                           :constants/unit-types
                                           (group-by namespace))
                                      keyword)
-
-             [source set-source!] (uix/use-state (:grocery-unit/source unit))
-             [cost set-cost!] (uix/use-state (:grocery-unit/unit-cost unit))
-             [unit-mass set-unit-mass!] (uix/use-state (or (:grocery-unit/unit-mass unit) 0))
-             [unit-mass-type set-unit-mass-type!] (uix/use-state (or (:grocery-unit/unit-mass-type unit) ""))
-             [unit-volume set-unit-volume!] (uix/use-state (or (:grocery-unit/unit-volume unit) 0))
-             [unit-volume-type set-unit-volume-type!] (uix/use-state (or (:grocery-unit/unit-volume-type unit) ""))
-             [unit-common set-unit-common!] (uix/use-state (or (:grocery-unit/unit-common unit) 0))
-             [unit-common-type set-unit-common-type!] (uix/use-state (or (:grocery-unit/unit-common-type unit) ""))]
+             {:keys [set-unit!]} (uix/use-context grocery-context)]
+         ;[source set-source!] (uix/use-state (:grocery-unit/source unit))
+         ;[cost set-cost!] (uix/use-state (:grocery-unit/unit-cost unit))
+         ;[unit-mass set-unit-mass!] (uix/use-state (or (:grocery-unit/unit-mass unit) 0))
+         ;[unit-mass-type set-unit-mass-type!] (uix/use-state (or (:grocery-unit/unit-mass-type unit) ""))
+         ;[unit-volume set-unit-volume!] (uix/use-state (or (:grocery-unit/unit-volume unit) 0))
+         ;[unit-volume-type set-unit-volume-type!] (uix/use-state (or (:grocery-unit/unit-volume-type unit) ""))
+         ;[unit-common set-unit-common!] (uix/use-state (or (:grocery-unit/unit-common unit) 0))
+         ;[unit-common-type set-unit-common-type!] (uix/use-state (or (:grocery-unit/unit-common-type unit) ""))]
          ($ TableRow
             ($ TableCell
-               ($ TextField {:value     source
-                             :on-change #(set-source! (.. % -target -value))}))
+               ($ TextField {:value     (:grocery-unit/source unit)
+                             :on-change #(set-unit! (assoc unit :grocery-unit/source (.. % -target -value)))}))
             ($ TableCell
-               ($ number-field {:value cost :set-value! set-cost!}))
-            (for [[idx [val set-val! val-unit set-val-unit! option-key]]
-                  (map-indexed vector [[unit-mass set-unit-mass! unit-mass-type set-unit-mass-type! :mass]
-                                       [unit-volume set-unit-volume! unit-volume-type set-unit-volume-type! :volume]
-                                       [unit-common set-unit-common! unit-common-type set-unit-common-type! :common]])]
+               ($ number-field {:value (:grocery-unit/unit-cost unit) :set-value! #(set-unit! (assoc unit :grocery-unit/unit-cost %))}))
+            (for [[idx [value-key type-key option-key]]
+                  (map-indexed vector [[:grocery-unit/unit-mass :grocery-unit/unit-mass-type :mass]
+                                       [:grocery-unit/volume-mass :grocery-unit/unit-volume-type :volume]
+                                       [:grocery-unit/unit-common :grocery-unit/unit-common-type :common]])]
 
               ($ TableCell {:key idx}
                  ($ Stack {:direction "row" :spacing 1}
-                    ($ number-field {:value val :set-value! set-val!})
+                    ($ number-field {:value (value-key unit) :set-value! #(set-unit! (assoc unit :value-key %))})
                     ($ FormControl
-                       ($ Select {:value     val-unit
-                                  :on-change #(set-val-unit! (keyword (name option-key) (.. % -target -value)))}
+                       ($ Select {:value     (type-key unit)
+                                  :on-change #(set-unit! (assoc unit type-key (keyword (name option-key) (.. % -target -value))))}
                           (for [o (option-key unit-types)]
                             ($ MenuItem {:value o :key o} (name o)))))))))))
 
@@ -129,7 +138,7 @@
 
 (defui grocery-control [{:keys [grocery]}]
        (let [{:constants/keys [departments]} (uix/use-context ctx/constants-context)
-             {:keys [grocery grocery-name set-name! department set-department! reset! unsaved-changes?]} (uix/use-context grocery-context)
+             {:keys [grocery grocery-name set-name! department set-department! units reset! unsaved-changes?]} (uix/use-context grocery-context)
              department-label-id (str "department-" (:grocery/id grocery))]
 
          (uix/use-effect
@@ -152,7 +161,7 @@
                   (for [d departments]
                     ($ MenuItem {:value d :key d} (name d)))))
             ($ grocery-unit-table {:grocery-id (:grocery/id grocery)
-                                   :units      (:grocery/units grocery)})
+                                   :units      units})
             ($ Stack {:direction "row" :spacing 1}
                ($ Button {:variant "contained" :disabled (not unsaved-changes?)} "Save")
                ($ Button {:variant  "contained"
