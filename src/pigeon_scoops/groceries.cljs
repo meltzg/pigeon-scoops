@@ -6,11 +6,13 @@
             [pigeon-scoops.hooks :refer [use-token]]
             [reitit.frontend.easy :as rfe]
             [uix.core :as uix :refer [$ defui]]
+            ["@mui/icons-material/Delete$default" :as DeleteIcon]
             ["@mui/material" :refer [Button
                                      FormControl
                                      InputLabel
                                      Select
                                      Stack
+                                     IconButton
                                      List
                                      ListItemButton
                                      ListItemText
@@ -39,6 +41,9 @@
                                            (if (= (:grocery-unit/id u)
                                                   (:grocery-unit/id %)) % u))
                                          units))
+             remove-unit! (fn [unit-id]
+                            (set-units! (remove #(= unit-id (:grocery-unit/id %))
+                                                units)))
              reset! (uix/use-memo #(fn [g]
                                      (set-name! (or (:grocery/name g) ""))
                                      (set-department! (or (:grocery/department g) ""))
@@ -57,6 +62,7 @@
                                                   :set-department!  set-department!
                                                   :units            units
                                                   :set-unit!        set-unit!
+                                                  :remove-unit!     remove-unit!
                                                   :unsaved-changes? unsaved-changes?
                                                   :reset!           reset!
                                                   :refresh!         #(set-refresh! (not refresh?))}}
@@ -90,15 +96,7 @@
                                           :constants/unit-types
                                           (group-by namespace))
                                      keyword)
-             {:keys [set-unit!]} (uix/use-context grocery-context)]
-         ;[source set-source!] (uix/use-state (:grocery-unit/source unit))
-         ;[cost set-cost!] (uix/use-state (:grocery-unit/unit-cost unit))
-         ;[unit-mass set-unit-mass!] (uix/use-state (or (:grocery-unit/unit-mass unit) 0))
-         ;[unit-mass-type set-unit-mass-type!] (uix/use-state (or (:grocery-unit/unit-mass-type unit) ""))
-         ;[unit-volume set-unit-volume!] (uix/use-state (or (:grocery-unit/unit-volume unit) 0))
-         ;[unit-volume-type set-unit-volume-type!] (uix/use-state (or (:grocery-unit/unit-volume-type unit) ""))
-         ;[unit-common set-unit-common!] (uix/use-state (or (:grocery-unit/unit-common unit) 0))
-         ;[unit-common-type set-unit-common-type!] (uix/use-state (or (:grocery-unit/unit-common-type unit) ""))]
+             {:keys [set-unit! remove-unit!]} (uix/use-context grocery-context)]
          ($ TableRow
             ($ TableCell
                ($ TextField {:value     (:grocery-unit/source unit)
@@ -117,7 +115,11 @@
                        ($ Select {:value     (or (type-key unit) "")
                                   :on-change #(set-unit! (assoc unit type-key (keyword (name option-key) (.. % -target -value))))}
                           (for [o (option-key unit-types)]
-                            ($ MenuItem {:value o :key o} (name o)))))))))))
+                            ($ MenuItem {:value o :key o} (name o))))))))
+            ($ TableCell
+               ($ IconButton {:color    "error"
+                              :on-click (partial remove-unit! (:grocery-unit/id unit))}
+                  ($ DeleteIcon))))))
 
 
 
