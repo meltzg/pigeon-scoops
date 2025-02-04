@@ -110,7 +110,7 @@
 
               ($ TableCell {:key idx}
                  ($ Stack {:direction "row" :spacing 1}
-                    ($ number-field {:value (value-key unit) :set-value! #(set-unit! (assoc unit :value-key %))})
+                    ($ number-field {:value (value-key unit) :set-value! #(set-unit! (assoc unit value-key %))})
                     ($ FormControl
                        ($ Select {:value     (or (type-key unit) "")
                                   :on-change #(set-unit! (assoc unit type-key (keyword (name option-key) (.. % -target -value))))}
