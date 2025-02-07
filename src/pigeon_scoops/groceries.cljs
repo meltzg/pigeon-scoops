@@ -194,7 +194,7 @@
 
 (defui groceries-table []
        (let [{:keys [groceries]} (uix/use-context ctx/groceries-context)]
-         ($ TableContainer {:sx (clj->js {:maxHeight "100vh"
+         ($ TableContainer {:sx (clj->js {:maxHeight "calc(100vh - 75px)"
                                           :overflow  "auto"})}
             ($ Table {:sticky-header true}
                ($ TableHead
