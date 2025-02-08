@@ -124,10 +124,12 @@
              [recipe-ingredient? set-recipe-ingredient!] (uix/use-state (some? (:ingredient/ingredient-recipe-id ingredient)))
              ingredient-label-id (str "ingredient-" (:ingredient/id ingredient))
              amount-unit-label-id (str "amount-unit-" (:ingredient/id ingredient))]
+
          (uix/use-effect
            (fn []
              (set-recipe-ingredient! (some? (:ingredient/ingredient-recipe-id ingredient))))
            [ingredient])
+
          ($ TableRow
             ($ TableCell
                ($ Stack {:direction "row" :spcing 1}
@@ -194,7 +196,6 @@
                      amount-unit set-amount-unit!
                      source set-source!
                      instructions set-instructions!
-                     ingredients
                      reset!
                      unsaved-changes?]} (uix/use-context recipe-context)
              amount-unit-label-id (str "amount-unit-" (:recipe/id recipe))]
@@ -211,6 +212,10 @@
             ($ TextField {:label     "Name"
                           :value     recipe-name
                           :on-change #(set-name! (.. % -target -value))})
+            ($ Stack {:direction "row"}
+               ($ Switch {:checked   public
+                          :on-change #(set-public! (.. % -target -checked))})
+               ($ Typography (if public "Public" "Private")))
             ($ TextField {:label     "Source"
                           :value     source
                           :on-change #(set-source! (.. % -target -value))})
