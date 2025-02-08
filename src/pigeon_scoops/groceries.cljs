@@ -90,7 +90,7 @@
                     ($ ListItemText {:primary (:grocery/name g)})))))))
 
 
-(defui grocery-unit-row [{:keys [grocery-id unit]}]
+(defui grocery-unit-row [{:keys [unit]}]
        (let [unit-types (update-keys (->> ctx/constants-context
                                           (uix/use-context)
                                           :constants/unit-types
@@ -123,24 +123,25 @@
 
 
 
-(defui grocery-unit-table [{:keys [grocery-id units]}]
-       ($ TableContainer {:component Paper}
-          ($ Table
-             ($ TableHead
-                ($ TableRow
-                   ($ TableCell "Source")
-                   ($ TableCell "Cost")
-                   ($ TableCell "Mass")
-                   ($ TableCell "Volume")
-                   ($ TableCell "Common")
-                   ($ TableCell "Actions")))
-             ($ TableBody
-                (for [u units]
-                  ($ grocery-unit-row {:key (:grocery-unit/id u) :grocery-id grocery-id :unit u}))))))
+(defui grocery-unit-table []
+       (let [{:keys [units]} (uix/use-context grocery-context)]
+         ($ TableContainer {:component Paper}
+            ($ Table
+               ($ TableHead
+                  ($ TableRow
+                     ($ TableCell "Source")
+                     ($ TableCell "Cost")
+                     ($ TableCell "Mass")
+                     ($ TableCell "Volume")
+                     ($ TableCell "Common")
+                     ($ TableCell "Actions")))
+               ($ TableBody
+                  (for [u units]
+                    ($ grocery-unit-row {:key (:grocery-unit/id u) :unit u})))))))
 
 (defui grocery-control []
        (let [{:constants/keys [departments]} (uix/use-context ctx/constants-context)
-             {:keys [grocery grocery-name set-name! department set-department! units reset! unsaved-changes?]} (uix/use-context grocery-context)
+             {:keys [grocery grocery-name set-name! department set-department! reset! unsaved-changes?]} (uix/use-context grocery-context)
              department-label-id (str "department-" (:grocery/id grocery))]
 
          (uix/use-effect
@@ -163,8 +164,7 @@
                           :on-change #(set-department! (keyword "department" (.. % -target -value)))}
                   (for [d departments]
                     ($ MenuItem {:value d :key d} (name d)))))
-            ($ grocery-unit-table {:grocery-id (:grocery/id grocery)
-                                   :units      units})
+            ($ grocery-unit-table)
             ($ Stack {:direction "row" :spacing 1}
                ($ Button {:variant "contained" :disabled (not unsaved-changes?)} "Save")
                ($ Button {:variant  "contained"

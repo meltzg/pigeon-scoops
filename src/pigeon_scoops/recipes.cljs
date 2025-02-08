@@ -21,13 +21,15 @@
                                      ListItemText
                                      MenuItem
                                      Paper
+                                     Switch
                                      TableContainer
                                      Table
                                      TableHead
                                      TableBody
                                      TableRow
                                      TableCell
-                                     TextField]]))
+                                     TextField
+                                     Typography]]))
 
 (def recipe-context (uix/create-context))
 
@@ -114,6 +116,75 @@
                      :on-click #(rfe/push-state :pigeon-scoops.routes/recipe {:recipe-id (:recipe/id r)})}
                     ($ ListItemText {:primary (:recipe/name r)})))))))
 
+(defui ingredient-row [{:keys [ingredient]}]
+       (let [{:constants/keys [unit-types]} (uix/use-context ctx/constants-context)
+             {:keys [set-ingredient! remove-ingredient!]} (uix/use-context recipe-context)
+             {:keys [groceries]} (uix/use-context ctx/groceries-context)
+             {:keys [recipes]} (uix/use-context ctx/recipes-context)
+             [recipe-ingredient? set-recipe-ingredient!] (uix/use-state (some? (:ingredient/ingredient-recipe-id ingredient)))
+             ingredient-label-id (str "ingredient-" (:ingredient/id ingredient))
+             amount-unit-label-id (str "amount-unit-" (:ingredient/id ingredient))]
+         (uix/use-effect
+           (fn []
+             (set-recipe-ingredient! (some? (:ingredient/ingredient-recipe-id ingredient))))
+           [ingredient])
+         ($ TableRow
+            ($ TableCell
+               ($ Stack {:direction "row" :spcing 1}
+                  ($ Switch {:checked   recipe-ingredient?
+                             :on-change #(set-recipe-ingredient! (.. % -target -checked))})
+                  ($ Typography (if recipe-ingredient? "Recipe" "Grocery"))))
+            ($ TableCell
+               ($ FormControl
+                  (if recipe-ingredient?
+                    ($ Select {:label-id  ingredient-label-id
+                               :value     (str (:ingredient/ingredient-recipe-id ingredient))
+                               :on-change #(set-ingredient! (assoc ingredient :ingredient/ingredient-recipe-id (uuid (.. % -target -value))))}
+                       (for [recipe (sort-by :recipe/name recipes)]
+                         ($ MenuItem {:value (str (:recipe/id recipe)) :key (:recipe/id recipe)}
+                            (:recipe/name recipe))))
+                    ($ Select {:label-id  ingredient-label-id
+                               :value     (str (:ingredient/ingredient-grocery-id ingredient))
+                               :on-change #(set-ingredient! (assoc ingredient :ingredient/ingredient-grocery-id (uuid (.. % -target -value))))}
+                       (for [grocery (sort-by :grocery/name groceries)]
+                         ($ MenuItem {:value (str (:grocery/id grocery)) :key (:grocery/id grocery)}
+                            (:grocery/name grocery)))))))
+            ($ TableCell
+               ($ Stack {:direction "row" :spacing 1}
+                  ($ number-field {:value      (:ingredient/amount ingredient)
+                                   :set-value! #(set-ingredient! (assoc ingredient :ingredient/amount %))})
+                  ($ FormControl
+                     ($ InputLabel {:id amount-unit-label-id} "Unit")
+                     ($ Select {:label-id  amount-unit-label-id
+                                :value     (:ingredient/amount-unit ingredient)
+                                :label     "Unit"
+                                :on-change #(set-ingredient! (assoc ingredient :ingredient/amount-unit
+                                                                               (->> unit-types
+                                                                                    (filter (fn [ut]
+                                                                                              (= (name ut)
+                                                                                                 (.. % -target -value))))
+                                                                                    (first))))}
+                        (for [ut unit-types]
+                          ($ MenuItem {:value ut :key ut} (name ut)))))))
+            ($ TableCell
+               ($ IconButton {:color    "error"
+                              :on-click (partial remove-ingredient! (:ingredient/id ingredient))}
+                  ($ DeleteIcon))))))
+
+(defui ingredient-table []
+       (let [{:keys [ingredients]} (uix/use-context recipe-context)]
+         ($ TableContainer {:component Paper}
+            ($ Table
+               ($ TableHead
+                  ($ TableRow
+                     ($ TableCell "Type")
+                     ($ TableCell "Ingredient")
+                     ($ TableCell "Amount")
+                     ($ TableCell "Actions")))
+               ($ TableBody
+                  (for [i ingredients]
+                    ($ ingredient-row {:key (:ingredient/id i) :ingredient i})))))))
+
 (defui recipe-control []
        (let [{:constants/keys [unit-types]} (uix/use-context ctx/constants-context)
              {:keys [recipe
@@ -134,7 +205,7 @@
                (reset! recipe)))
            [recipe reset!])
 
-         ($ Stack {:direction "column" :spacing 1 :sx (clj->js {:minWidth "50%"})}
+         ($ Stack {:direction "column" :spacing 1 :sx (clj->js {:width "100%"})}
             ($ Button {:on-click #(rfe/push-state :pigeon-scoops.routes/recipes)}
                "Back to list")
             ($ TextField {:label     "Name"
@@ -157,9 +228,8 @@
                                                                 (first)))}
                      (for [ut unit-types]
                        ($ MenuItem {:value ut :key ut} (name ut))))))
+            ($ ingredient-table)
             ($ numbered-text-area {:lines instructions :set-lines! set-instructions!})
-            ;($ recipe-unit-table {:recipe-id (:recipe/id recipe)
-            ;                      :units     units})
             ($ Stack {:direction "row" :spacing 1}
                ($ Button {:variant "contained" :disabled (not unsaved-changes?)} "Save")
                ($ Button {:variant  "contained"
