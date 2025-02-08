@@ -1,5 +1,5 @@
 (ns pigeon-scoops.routes
-  (:require [pigeon-scoops.groceries :refer [grocery-view groceries-table]]
+  (:require [pigeon-scoops.groceries :refer [groceries-table grocery-view]]
             [pigeon-scoops.recipes :refer [recipe-view recipes-table]]
             [uix.core :refer [$ defui]]))
 

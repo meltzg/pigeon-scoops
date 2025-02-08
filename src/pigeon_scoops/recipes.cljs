@@ -2,6 +2,7 @@
   (:require [clojure.string :as str]
             [pigeon-scoops.api :as api]
             [pigeon-scoops.components.number-field :refer [number-field]]
+            [pigeon-scoops.components.numbered-text-area :refer [numbered-text-area]]
             [pigeon-scoops.context :as ctx]
             [pigeon-scoops.hooks :refer [use-token]]
             [reitit.frontend.easy :as rfe]
@@ -156,13 +157,7 @@
                                                                 (first)))}
                      (for [ut unit-types]
                        ($ MenuItem {:value ut :key ut} (name ut))))))
-            ($ TextField {:multiline true
-                          :value     (str/join "\n" (map-indexed #(str (inc %1) ") " %2) instructions))
-                          :on-change #(set-instructions! (->> (.. % -target -value)
-                                                              (str/split-lines)
-                                                              (map (fn [inst]
-                                                                     (str/replace inst #"^\d+?\)" "")))
-                                                              (map str/trim)))})
+            ($ numbered-text-area {:lines instructions :set-lines! set-instructions!})
             ;($ recipe-unit-table {:recipe-id (:recipe/id recipe)
             ;                      :units     units})
             ($ Stack {:direction "row" :spacing 1}

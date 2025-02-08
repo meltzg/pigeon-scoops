@@ -1,6 +1,6 @@
 (ns pigeon-scoops.auth
-  (:require [uix.core :as uix :refer [$ defui]]
-            [pigeon-scoops.hooks :refer [use-token]]
+  (:require [pigeon-scoops.hooks :refer [use-token]]
+            [uix.core :as uix :refer [$ defui]]
             ["@auth0/auth0-react" :refer [useAuth0]]
             ["@mui/icons-material/AccountCircle$default" :as AccountCircle]
             ["@mui/material" :refer [IconButton
