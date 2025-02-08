@@ -146,9 +146,8 @@
          (uix/use-effect
            (fn []
              (when grocery
-               (set-name! (:grocery/name grocery))
-               (set-department! (:grocery/department grocery))))
-           [grocery set-name! set-department!])
+               (reset! grocery)))
+           [grocery reset!])
 
          ($ Stack {:direction "column" :spacing 1}
             ($ Button {:on-click #(rfe/push-state :pigeon-scoops.routes/groceries)}
@@ -187,7 +186,7 @@
           ($ TableCell
              (name (:grocery/department grocery)))
           ($ TableCell
-             ($ IconButton {:color "error"
+             ($ IconButton {:color    "error"
                             :on-click #(prn "delete" (:grocery/id grocery))}
                 ($ DeleteIcon)))))
 
@@ -205,5 +204,3 @@
                ($ TableBody
                   (for [g (sort-by :grocery/name groceries)]
                     ($ grocery-row {:key (:grocery/id g) :grocery g})))))))
-
-

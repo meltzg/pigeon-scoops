@@ -5,6 +5,7 @@
 
 (def constants-context (uix/create-context))
 (def groceries-context (uix/create-context))
+(def recipes-context (uix/create-context))
 
 (defui with-constants [{:keys [children]}]
        (let [[constants set-constants!] (uix/use-state nil)]
@@ -27,3 +28,17 @@
          ($ (.-Provider groceries-context) {:value {:groceries groceries
                                                     :refresh!  #(set-refresh! (not refresh?))}}
             children)))
+
+(defui with-recipes [{:keys [children]}]
+       (let [{:keys [token]} (use-token)
+             [recipes set-recipes!] (uix/use-state nil)
+             [refresh? set-refresh!] (uix/use-state nil)]
+         (uix/use-effect
+           (fn []
+             (when token
+               (.then (api/get-recipes token) set-recipes!)))
+           [token refresh?])
+         ($ (.-Provider recipes-context) {:value {:recipes  (apply concat (vals recipes))
+                                                  :refresh! #(set-refresh! (not refresh?))}}
+            children)))
+

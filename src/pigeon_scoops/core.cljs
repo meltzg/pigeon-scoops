@@ -54,7 +54,7 @@
                        :on-close #(set-menu-open! (not menu-open?))}
                ($ List
                   (for [[app-name app-icon app-key page] [["Groceries" LocalGroceryStoreIcon :groceries ::r/groceries]
-                                                          ["Recipes" MenuBookIcon :recipes ::r/recipe]
+                                                          ["Recipes" MenuBookIcon :recipes ::r/recipes]
                                                           ["Orders" ReceiptIcon :orders ::r/order]]]
                     ($ app-menu-item {:key  app-key
                                       :text app-name
@@ -76,7 +76,8 @@
                                                          :audience     "https://api.pigeon-scoops.com"})}
           ($ ctx/with-constants
              ($ ctx/with-groceries
-                ($ content)))))
+                ($ ctx/with-recipes
+                   ($ content))))))
 
 (defonce root
          (uix.dom/create-root (js/document.getElementById "root")))

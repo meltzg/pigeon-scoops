@@ -10,9 +10,7 @@
                   (clj->js {:method  "GET"
                             :headers {:Accept "application/transit+json"}}))
         (.then #(.text %))
-        (.then (fn [body]
-                 (->> body
-                      (transit/read reader)))))))
+        (.then (partial transit/read reader)))))
 
 (defn get-groceries [token]
   (let [reader (transit/reader :json)]
@@ -21,9 +19,7 @@
                             :headers {:Accept        "application/transit+json"
                                       :Authorization (str "Bearer " token)}}))
         (.then #(.text %))
-        (.then (fn [body]
-                 (->> body
-                      (transit/read reader)))))))
+        (.then (partial transit/read reader)))))
 
 (defn get-grocery [token grocery-id]
   (let [reader (transit/reader :json)]
@@ -32,6 +28,22 @@
                             :headers {:Accept        "application/transit+json"
                                       :Authorization (str "Bearer " token)}}))
         (.then #(.text %))
-        (.then (fn [body]
-                 (->> body
-                      (transit/read reader)))))))
+        (.then (partial transit/read reader)))))
+
+(defn get-recipes [token]
+  (let [reader (transit/reader :json)]
+    (-> (js/fetch (str base-url "/recipes")
+                  (clj->js {:method  "GET"
+                            :headers {:Accept        "application/transit+json"
+                                      :Authorization (str "Bearer " token)}}))
+        (.then #(.text %))
+        (.then (partial transit/read reader)))))
+
+(defn get-recipe [token recipe-id {:keys [amount amount-unit]}]
+  (let [reader (transit/reader :json)]
+    (-> (js/fetch (str base-url "/recipes/" recipe-id)
+                  (clj->js {:method  "GET"
+                            :headers {:Accept        "application/transit+json"
+                                      :Authorization (str "Bearer " token)}}))
+        (.then #(.text %))
+        (.then (partial transit/read reader)))))
