@@ -8,9 +8,9 @@
     "test": "test"
   },
   "scripts": {
-    "heroku-prebuild": "curl https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein > lein && chmod +x lein && mv lein /usr/local/bin/",
+    "heroku-prebuild": "curl https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein > lein && chmod +x lein",
     "dev": "npx shadow-cljs watch app",
-    "build": "npx shadow-cljs release app"
+    "build": "./lein run -m shadow.cljs.devtools.cli release app"
   },
   "author": "",
   "license": "ISC",
