@@ -40,8 +40,10 @@
         (.then (partial transit/read reader)))))
 
 (defn get-recipe [token recipe-id {:keys [amount amount-unit]}]
-  (let [reader (transit/reader :json)]
-    (-> (js/fetch (str base-url "/recipes/" recipe-id)
+  (let [reader (transit/reader :json)
+        query-params (when amount
+                       (js/URLSearchParams. (clj->js {:amount amount :amount-unit (str (namespace amount-unit) "/" (name amount-unit))})))]
+    (-> (js/fetch (str base-url "/recipes/" recipe-id "?" (or query-params ""))
                   (clj->js {:method  "GET"
                             :headers {:Accept        "application/transit+json"
                                       :Authorization (str "Bearer " token)}}))

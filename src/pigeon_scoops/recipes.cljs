@@ -33,7 +33,7 @@
 
 (def recipe-context (uix/create-context))
 
-(defui with-recipe [{:keys [recipe-id children]}]
+(defui with-recipe [{:keys [recipe-id scaled-amount scaled-amount-unit children]}]
        (let [{:keys [token]} (use-token)
              [recipe set-recipe!] (uix/use-state nil)
              [recipe-name set-name!] (uix/use-state (or (:recipe/name recipe) ""))
@@ -72,13 +72,19 @@
          (uix/use-effect
            (fn []
              (when (and recipe-id token)
-               (.then (api/get-recipe token recipe-id {}) (juxt set-recipe! reset!))))
-           [reset! refresh? token recipe-id])
+               (.then (api/get-recipe token recipe-id (if (some? scaled-amount)
+                                                        {:amount      scaled-amount
+                                                         :amount-unit scaled-amount-unit}
+                                                        {}))
+                      (juxt set-recipe! reset!))))
+           [reset! refresh? token recipe-id scaled-amount scaled-amount-unit])
          ($ (.-Provider recipe-context) {:value {:recipe             recipe
                                                  :recipe-name        recipe-name
                                                  :set-name!          set-name!
                                                  :public             public
                                                  :set-public!        set-public!
+                                                 :scaled-amount      scaled-amount
+                                                 :scaled-amount-unit scaled-amount-unit
                                                  :amount             amount
                                                  :set-amount!        set-amount!
                                                  :amount-unit        amount-unit
@@ -135,7 +141,15 @@
                ($ Stack {:direction "row" :spcing 1}
                   ($ Switch {:checked   recipe-ingredient?
                              :on-change #(set-recipe-ingredient! (.. % -target -checked))})
-                  ($ Typography (if recipe-ingredient? "Recipe" "Grocery"))))
+                  ($ Typography {:on-click #(apply rfe/push-state
+                                                   (if recipe-ingredient?
+                                                     [:pigeon-scoops.routes/recipe
+                                                      {:recipe-id (:ingredient/ingredient-recipe-id ingredient)}
+                                                      {:amount      (:ingredient/amount ingredient)
+                                                       :amount-unit (:ingredient/amount-unit ingredient)}]
+                                                     [:pigeon-scoops.routes/grocery
+                                                      {:grocery-id (:ingredient/ingredient-grocery-id ingredient)}]))}
+                     (if recipe-ingredient? "Recipe" "Grocery"))))
             ($ TableCell
                ($ FormControl
                   (if recipe-ingredient?
@@ -192,6 +206,8 @@
              {:keys [recipe
                      recipe-name set-name!
                      public set-public!
+                     scaled-amount
+                     scaled-amount-unit
                      amount set-amount!
                      amount-unit set-amount-unit!
                      source set-source!
@@ -207,44 +223,57 @@
            [recipe reset!])
 
          ($ Stack {:direction "column" :spacing 1 :sx (clj->js {:width "100%"})}
-            ($ Button {:on-click #(rfe/push-state :pigeon-scoops.routes/recipes)}
-               "Back to list")
-            ($ TextField {:label     "Name"
-                          :value     recipe-name
-                          :on-change #(set-name! (.. % -target -value))})
             ($ Stack {:direction "row"}
-               ($ Switch {:checked   public
-                          :on-change #(set-public! (.. % -target -checked))})
-               ($ Typography (if public "Public" "Private")))
-            ($ TextField {:label     "Source"
-                          :value     source
-                          :on-change #(set-source! (.. % -target -value))})
-            ($ Stack {:direction "row" :spacing 1}
-               ($ number-field {:value amount :set-value! set-amount! :label "Amount"})
-               ($ FormControl
-                  ($ InputLabel {:id amount-unit-label-id} "Unit")
-                  ($ Select {:label-id  amount-unit-label-id
-                             :value     amount-unit
-                             :label     "Unit"
-                             :on-change #(set-amount-unit! (->> unit-types
-                                                                (filter (fn [ut]
-                                                                          (= (name ut)
-                                                                             (.. % -target -value))))
-                                                                (first)))}
-                     (for [ut unit-types]
-                       ($ MenuItem {:value ut :key ut} (name ut))))))
-            ($ ingredient-table)
-            ($ numbered-text-area {:lines instructions :set-lines! set-instructions!})
-            ($ Stack {:direction "row" :spacing 1}
-               ($ Button {:variant "contained" :disabled (not unsaved-changes?)} "Save")
-               ($ Button {:variant  "contained"
-                          :on-click (partial reset! recipe)
-                          :disabled (not unsaved-changes?)}
-                  "Reset")))))
+               ($ Button {:on-click #(rfe/push-state :pigeon-scoops.routes/recipes)}
+                  "Back to list")
+               (when (some? scaled-amount)
+                 ($ Button {:on-click #(rfe/push-state :pigeon-scoops.routes/recipe
+                                                       {:recipe-id (:recipe/id recipe)})}
+                    "Reset scaled amount")))
+            ($ Stack {:direction "column" :spacing 1 :sx (clj->js {:pointerEvents (if (some? scaled-amount)
+                                                                                    "none"
+                                                                                    "auto")
+                                                                   :opacity       (if (some? scaled-amount)
+                                                                                    0.5
+                                                                                    1)
+                                                                   :transition    "opacity 0.3s"})}
+               ($ TextField {:label     "Name"
+                             :value     recipe-name
+                             :on-change #(set-name! (.. % -target -value))})
+               ($ Stack {:direction "row"}
+                  ($ Switch {:checked   public
+                             :on-change #(set-public! (.. % -target -checked))})
+                  ($ Typography (if public "Public" "Private")))
+               ($ TextField {:label     "Source"
+                             :value     source
+                             :on-change #(set-source! (.. % -target -value))})
+               ($ Stack {:direction "row" :spacing 1}
+                  ($ number-field {:value amount :set-value! set-amount! :label "Amount"})
+                  ($ FormControl
+                     ($ InputLabel {:id amount-unit-label-id} "Unit")
+                     ($ Select {:label-id  amount-unit-label-id
+                                :value     amount-unit
+                                :label     "Unit"
+                                :on-change #(set-amount-unit! (->> unit-types
+                                                                   (filter (fn [ut]
+                                                                             (= (name ut)
+                                                                                (.. % -target -value))))
+                                                                   (first)))}
+                        (for [ut unit-types]
+                          ($ MenuItem {:value ut :key ut} (name ut))))))
+               ($ ingredient-table)
+               ($ numbered-text-area {:lines instructions :set-lines! set-instructions!})
+               ($ Stack {:direction "row" :spacing 1}
+                  ($ Button {:variant "contained" :disabled (not unsaved-changes?)} "Save")
+                  ($ Button {:variant  "contained"
+                             :on-click (partial reset! recipe)
+                             :disabled (not unsaved-changes?)}
+                     "Reset"))))))
 
-(defui recipe-view [{:keys [path]}]
-       (let [{:keys [recipe-id]} path]
-         ($ with-recipe {:recipe-id recipe-id}
+(defui recipe-view [{:keys [path query]}]
+       (let [{:keys [recipe-id]} path
+             {:keys [amount amount-unit]} query]
+         ($ with-recipe {:recipe-id recipe-id :scaled-amount amount :scaled-amount-unit amount-unit}
             ($ Stack {:direction "row" :spacing 1}
                ($ recipe-list {:selected-recipe-id recipe-id})
                ($ recipe-control)))))
