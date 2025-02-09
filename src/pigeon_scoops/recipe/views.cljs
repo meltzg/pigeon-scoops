@@ -77,7 +77,7 @@
                                                       {:recipe-id (:ingredient/ingredient-recipe-id ingredient)}
                                                       {:amount      (:ingredient/amount ingredient)
                                                        :amount-unit (:ingredient/amount-unit ingredient)}]
-                                                     [:pigeon-scoops.routes/grocery
+                                                     [:pigeon-scoops.grocery.routes/grocery
                                                       {:grocery-id (:ingredient/ingredient-grocery-id ingredient)}]))}
                      (if recipe-ingredient? "Recipe" "Grocery"))))
             ($ TableCell
@@ -97,8 +97,9 @@
                             (:grocery/name grocery)))))))
             ($ TableCell
                ($ Stack {:direction "row" :spacing 1}
-                  ($ number-field {:value      (:ingredient/amount ingredient)
-                                   :set-value! #(set-ingredient! (assoc ingredient :ingredient/amount %))})
+                  ($ number-field {:value          (:ingredient/amount ingredient)
+                                   :set-value!     #(set-ingredient! (assoc ingredient :ingredient/amount %))
+                                   :hide-controls? true})
                   ($ FormControl
                      ($ InputLabel {:id amount-unit-label-id} "Unit")
                      ($ Select {:label-id  amount-unit-label-id
@@ -175,7 +176,10 @@
                           :value     source
                           :on-change #(set-source! (.. % -target -value))})
             ($ Stack {:direction "row" :spacing 1}
-               ($ number-field {:value amount :set-value! set-amount! :label "Amount"})
+               ($ number-field {:value          amount
+                                :set-value!     set-amount! :label "Amount"
+                                :hide-controls? true})
+
                ($ FormControl
                   ($ InputLabel {:id amount-unit-label-id} "Unit")
                   ($ Select {:label-id  amount-unit-label-id

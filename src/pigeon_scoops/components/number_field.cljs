@@ -31,7 +31,7 @@
                 :xmlns        "http://www.w3.org/2000/svg"}
           ($ :path {:d "M0 5H10"})))
 
-(defui number-field [{:keys [value set-value! label]}]
+(defui number-field [{:keys [value set-value! label hide-controls?]}]
        (let [id (uix/use-id)]
          ($ NumberField.Root {:id              id
                               :value           value
@@ -43,6 +43,8 @@
                ($ NumberField.ScrubAreaCursor {:className "ScrubAreaCursor"}
                   ($ cursor-grow-icon)))
             ($ NumberField.Group {:className "Group"}
-               ($ NumberField.Decrement {:className "Decrement"} ($ minus-icon))
+               (when-not hide-controls?
+                 ($ NumberField.Decrement {:className "Decrement"} ($ minus-icon)))
                ($ NumberField.Input {:className "Input"})
-               ($ NumberField.Increment {:className "Increment"} ($ plus-icon))))))
+               (when-not hide-controls?
+                 ($ NumberField.Increment {:className "Increment"} ($ plus-icon)))))))
