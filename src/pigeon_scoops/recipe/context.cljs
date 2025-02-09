@@ -13,10 +13,16 @@
          (uix/use-effect
            (fn []
              (when token
-               (.then (api/get-recipes token) set-recipes!)))
+               (-> (api/get-recipes token)
+                   (.then vals)
+                   (.then (partial apply concat))
+                   (.then set-recipes!))))
            [token refresh?])
-         ($ (.-Provider recipes-context) {:value {:recipes  (apply concat (vals recipes))
-                                                  :refresh! #(set-refresh! (not refresh?))}}
+         ($ (.-Provider recipes-context) {:value {:recipes     recipes
+                                                  :new-recipe! #(do
+                                                                  (set-recipes! (conj recipes {:recipe/id :new}))
+                                                                  :new)
+                                                  :refresh!    #(set-refresh! (not refresh?))}}
             children)))
 
 (defui with-recipe [{:keys [recipe-id scaled-amount scaled-amount-unit children]}]
@@ -45,11 +51,12 @@
              remove-ingredient! (fn [ingredient-id]
                                   (set-ingredients! (remove #(= ingredient-id (:ingredient/id %))
                                                             ingredients)))
+             new-ingredient! #(set-ingredients! (conj ingredients {:ingredient/id :new}))
              reset! (uix/use-memo #(fn [r]
                                      (set-name! (or (:recipe/name r) ""))
                                      (set-public! (or (:recipe/public r) false))
                                      (set-amount! (:recipe/amount r))
-                                     (set-amount-unit! (:recipe/amount-unit r))
+                                     (set-amount-unit! (or (:recipe/amount-unit r) ""))
                                      (set-source! (or (:recipe/source r) ""))
                                      (set-instructions! (or (:recipe/instructions r) ""))
                                      (set-ingredients! (:recipe/ingredients r)))
@@ -57,12 +64,14 @@
              [refresh? set-refresh!] (uix/use-state nil)]
          (uix/use-effect
            (fn []
-             (when (and recipe-id token)
-               (.then (api/get-recipe token recipe-id (if (some? scaled-amount)
-                                                        {:amount      scaled-amount
-                                                         :amount-unit scaled-amount-unit}
-                                                        {}))
-                      (juxt set-recipe! reset!))))
+             (cond (keyword? recipe-id)
+                   ((juxt set-recipe! reset!) {})
+                   (and recipe-id token)
+                   (.then (api/get-recipe token recipe-id (if (some? scaled-amount)
+                                                            {:amount      scaled-amount
+                                                             :amount-unit scaled-amount-unit}
+                                                            {}))
+                          (juxt set-recipe! reset!))))
            [reset! refresh? token recipe-id scaled-amount scaled-amount-unit])
          ($ (.-Provider recipe-context) {:value {:recipe             recipe
                                                  :recipe-name        recipe-name
@@ -82,6 +91,7 @@
                                                  :ingredients        ingredients
                                                  :set-ingredient!    set-ingredient!
                                                  :remove-ingredient! remove-ingredient!
+                                                 :new-ingredient!    new-ingredient!
                                                  :unsaved-changes?   unsaved-changes?
                                                  :reset!             reset!
                                                  :refresh!           #(set-refresh! (not refresh?))}}

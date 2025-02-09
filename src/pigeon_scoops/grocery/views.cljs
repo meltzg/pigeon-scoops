@@ -165,7 +165,7 @@
 
 
 (defui groceries-table []
-       (let [{:keys [groceries]} (uix/use-context gctx/groceries-context)]
+       (let [{:keys [groceries new-grocery!]} (uix/use-context gctx/groceries-context)]
          ($ TableContainer {:sx (clj->js {:maxHeight "calc(100vh - 75px)"
                                           :overflow  "auto"})}
             ($ Table {:sticky-header true}
@@ -173,7 +173,12 @@
                   ($ TableRow
                      ($ TableCell "Name")
                      ($ TableCell "Department")
-                     ($ TableCell "Actions")))
+                     ($ TableCell
+                        "Actions"
+                        ($ IconButton {:color    "primary"
+                                       :disabled (some keyword? (map :grocery/id groceries))
+                                       :on-click #(rfe/push-state :pigeon-scoops.grocery.routes/grocery {:grocery-id (new-grocery!)})}
+                           ($ AddCircleIcon)))))
                ($ TableBody
                   (for [g (sort-by :grocery/name groceries)]
                     ($ grocery-row {:key (:grocery/id g) :grocery g})))))))

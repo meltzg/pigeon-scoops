@@ -7,6 +7,7 @@
             [pigeon-scoops.recipe.context :as rctx]
             [reitit.frontend.easy :as rfe]
             [uix.core :as uix :refer [$ defui]]
+            ["@mui/icons-material/AddCircle$default" :as AddCircleIcon]
             ["@mui/icons-material/Delete$default" :as DeleteIcon]
             ["@mui/icons-material/CheckCircle$default" :as CheckCircleIcon]
             ["@mui/icons-material/Cancel$default" :as CancelIcon]
@@ -32,17 +33,22 @@
                                      Typography]]))
 
 (defui recipe-list [{:keys [selected-recipe-id]}]
-       (let [{:keys [recipes]} (uix/use-context rctx/recipes-context)
+       (let [{:keys [recipes new-recipe!]} (uix/use-context rctx/recipes-context)
              [filter-text set-filter-text!] (uix/use-state "")
              filtered-recipes (filter #(or (str/blank? filter-text)
                                            (str/includes? (str/lower-case (:recipe/name %))
                                                           (str/lower-case filter-text)))
                                       recipes)]
          ($ Stack {:direction "column"}
-            ($ TextField {:label     "Filter"
-                          :variant   "outlined"
-                          :value     filter-text
-                          :on-change #(set-filter-text! (.. % -target -value))})
+            ($ Stack {:direction "row"}
+               ($ TextField {:label     "Filter"
+                             :variant   "outlined"
+                             :value     filter-text
+                             :on-change #(set-filter-text! (.. % -target -value))})
+               ($ IconButton {:color    "primary"
+                              :disabled (some keyword? (map :recipe/id recipes))
+                              :on-click #(rfe/push-state :pigeon-scoops.recipe.routes/recipe {:recipe-id (new-recipe!)})}
+                  ($ AddCircleIcon)))
             ($ List {:sx (clj->js {:maxHeight "100vh"
                                    :overflow  "auto"})}
                (for [r (sort-by :recipe/name filtered-recipes)]
@@ -50,7 +56,7 @@
                     {:key      (:recipe/id r)
                      :selected (= (:recipe/id r) selected-recipe-id)
                      :on-click #(rfe/push-state :pigeon-scoops.recipe.routes/recipe {:recipe-id (:recipe/id r)})}
-                    ($ ListItemText {:primary (:recipe/name r)})))))))
+                    ($ ListItemText {:primary (or (:recipe/name r) "[New Recipe]")})))))))
 
 (defui ingredient-row [{:keys [ingredient]}]
        (let [{:constants/keys [unit-types]} (uix/use-context ctx/constants-context)
@@ -101,10 +107,7 @@
                                    :set-value!     #(set-ingredient! (assoc ingredient :ingredient/amount %))
                                    :hide-controls? true})
                   ($ FormControl
-                     ($ InputLabel {:id amount-unit-label-id} "Unit")
-                     ($ Select {:label-id  amount-unit-label-id
-                                :value     (:ingredient/amount-unit ingredient)
-                                :label     "Unit"
+                     ($ Select {:value     (or (:ingredient/amount-unit ingredient) "")
                                 :on-change #(set-ingredient! (assoc ingredient :ingredient/amount-unit
                                                                                (->> unit-types
                                                                                     (filter (fn [ut]
@@ -119,7 +122,7 @@
                   ($ DeleteIcon))))))
 
 (defui ingredient-table []
-       (let [{:keys [ingredients]} (uix/use-context rctx/recipe-context)]
+       (let [{:keys [ingredients new-ingredient!]} (uix/use-context rctx/recipe-context)]
          ($ TableContainer {:component Paper}
             ($ Table
                ($ TableHead
@@ -127,7 +130,12 @@
                      ($ TableCell "Type")
                      ($ TableCell "Ingredient")
                      ($ TableCell "Amount")
-                     ($ TableCell "Actions")))
+                     ($ TableCell
+                        "Actions"
+                        ($ IconButton {:color    "primary"
+                                       :disabled (some keyword? (map :ingredient/id ingredients))
+                                       :on-click new-ingredient!}
+                           ($ AddCircleIcon)))))
                ($ TableBody
                   (for [i ingredients]
                     ($ ingredient-row {:key (:ingredient/id i) :ingredient i})))))))
@@ -181,9 +189,7 @@
                                 :hide-controls? true})
 
                ($ FormControl
-                  ($ InputLabel {:id amount-unit-label-id} "Unit")
-                  ($ Select {:label-id  amount-unit-label-id
-                             :value     amount-unit
+                  ($ Select {:value     amount-unit
                              :label     "Unit"
                              :on-change #(set-amount-unit! (->> unit-types
                                                                 (filter (fn [ut]
@@ -219,7 +225,7 @@
                 ($ DeleteIcon)))))
 
 (defui recipes-table []
-       (let [{:keys [recipes]} (uix/use-context rctx/recipes-context)]
+       (let [{:keys [recipes new-recipe!]} (uix/use-context rctx/recipes-context)]
          ($ TableContainer {:sx (clj->js {:maxHeight "calc(100vh - 75px)"
                                           :overflow  "auto"})}
             ($ Table {:sticky-header true}
@@ -228,7 +234,12 @@
                      ($ TableCell "Name")
                      ($ TableCell "Public")
                      ($ TableCell "Amount")
-                     ($ TableCell "Actions")))
+                     ($ TableCell
+                        "Actions"
+                        ($ IconButton {:color    "primary"
+                                       :disabled (some keyword? (map :recipe/id recipes))
+                                       :on-click #(rfe/push-state :pigeon-scoops.recipe.routes/recipe {:recipe-id (new-recipe!)})}
+                           ($ AddCircleIcon)))))
                ($ TableBody
                   (for [r (sort-by :recipe/name recipes)]
                     ($ recipe-row {:key (:recipe/id r) :recipe r})))))))
