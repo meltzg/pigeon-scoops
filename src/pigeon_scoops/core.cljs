@@ -1,9 +1,9 @@
 (ns pigeon-scoops.core
   (:require [pigeon-scoops.auth :refer [authenticator]]
             [pigeon-scoops.context :as ctx]
-            [pigeon-scoops.routes :as r]
             [pigeon-scoops.grocery.context :as gctx]
             [pigeon-scoops.recipe.context :as rctx]
+            [pigeon-scoops.routes :as r]
             [reitit.coercion.spec :as rss]
             [reitit.frontend :as rf]
             [reitit.frontend.easy :as rfe]

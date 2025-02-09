@@ -1,6 +1,6 @@
 (ns pigeon-scoops.grocery.routes
   (:require [cljs.spec.alpha :as s]
-            [pigeon-scoops.grocery.views :refer [grocery-view groceries-table]]))
+            [pigeon-scoops.grocery.views :refer [groceries-table grocery-view]]))
 
 (def routes ["/grocery"
              ["" {:name ::groceries
