@@ -2,6 +2,8 @@
   (:require [pigeon-scoops.auth :refer [authenticator]]
             [pigeon-scoops.context :as ctx]
             [pigeon-scoops.routes :as r]
+            [pigeon-scoops.grocery.context :as gctx]
+            [pigeon-scoops.recipe.context :as rctx]
             [reitit.coercion.spec :as rss]
             [reitit.frontend :as rf]
             [reitit.frontend.easy :as rfe]
@@ -53,8 +55,8 @@
                        :open     menu-open?
                        :on-close #(set-menu-open! (not menu-open?))}
                ($ List
-                  (for [[app-name app-icon app-key page] [["Groceries" LocalGroceryStoreIcon :groceries ::r/groceries]
-                                                          ["Recipes" MenuBookIcon :recipes ::r/recipes]
+                  (for [[app-name app-icon app-key page] [["Groceries" LocalGroceryStoreIcon :groceries :pigeon-scoops.grocery.routes/groceries]
+                                                          ["Recipes" MenuBookIcon :recipes :pigeon-scoops.recipe.routes/recipes]
                                                           ["Orders" ReceiptIcon :orders ::r/order]]]
                     ($ app-menu-item {:key  app-key
                                       :text app-name
@@ -75,8 +77,8 @@
                                                          :scope        "openid profile email offline_access"
                                                          :audience     "https://api.pigeon-scoops.com"})}
           ($ ctx/with-constants
-             ($ ctx/with-groceries
-                ($ ctx/with-recipes
+             ($ gctx/with-groceries
+                ($ rctx/with-recipes
                    ($ content))))))
 
 (defonce root

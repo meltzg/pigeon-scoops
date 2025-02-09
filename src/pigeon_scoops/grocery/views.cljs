@@ -1,9 +1,8 @@
-(ns pigeon-scoops.groceries
+(ns pigeon-scoops.grocery.views
   (:require [clojure.string :as str]
-            [pigeon-scoops.api :as api]
             [pigeon-scoops.components.number-field :refer [number-field]]
             [pigeon-scoops.context :as ctx]
-            [pigeon-scoops.hooks :refer [use-token]]
+            [pigeon-scoops.grocery.context :as gctx]
             [reitit.frontend.easy :as rfe]
             [uix.core :as uix :refer [$ defui]]
             ["@mui/icons-material/Delete$default" :as DeleteIcon]
@@ -28,7 +27,7 @@
                                      TextField]]))
 
 (defui grocery-list [{:keys [selected-grocery-id]}]
-       (let [{:keys [groceries new-grocery!]} (uix/use-context ctx/groceries-context)
+       (let [{:keys [groceries new-grocery!]} (uix/use-context gctx/groceries-context)
              [filter-text set-filter-text!] (uix/use-state "")
              filtered-groceries (filter #(or (str/blank? filter-text)
                                              (str/includes? (str/lower-case (:grocery/name %))
@@ -42,7 +41,7 @@
                              :on-change #(set-filter-text! (.. % -target -value))})
                ($ IconButton {:color    "primary"
                               :disabled (some keyword? (map :grocery/id groceries))
-                              :on-click #(rfe/push-state :pigeon-scoops.routes/grocery {:grocery-id (new-grocery!)})}
+                              :on-click #(rfe/push-state :pigeon-scoops.grocery.routes/grocery {:grocery-id (new-grocery!)})}
                   ($ AddCircleIcon)))
             ($ List {:sx (clj->js {:maxHeight "100vh"
                                    :overflow  "auto"})}
@@ -50,7 +49,7 @@
                  ($ ListItemButton
                     {:key      (:grocery/id g)
                      :selected (= (:grocery/id g) selected-grocery-id)
-                     :on-click #(rfe/push-state :pigeon-scoops.routes/grocery {:grocery-id (:grocery/id g)})}
+                     :on-click #(rfe/push-state :pigeon-scoops.grocery.routes/grocery {:grocery-id (:grocery/id g)})}
                     ($ ListItemText {:primary (or (:grocery/name g) "[New Grocery]")})))))))
 
 
@@ -60,7 +59,7 @@
                                           :constants/unit-types
                                           (group-by namespace))
                                      keyword)
-             {:keys [set-unit! remove-unit!]} (uix/use-context ctx/grocery-context)]
+             {:keys [set-unit! remove-unit!]} (uix/use-context gctx/grocery-context)]
          ($ TableRow
             ($ TableCell
                ($ TextField {:value     (:grocery-unit/source unit)
@@ -88,7 +87,7 @@
 
 
 (defui grocery-unit-table []
-       (let [{:keys [units new-unit!]} (uix/use-context ctx/grocery-context)]
+       (let [{:keys [units new-unit!]} (uix/use-context gctx/grocery-context)]
          ($ TableContainer {:component Paper}
             ($ Table
                ($ TableHead
@@ -111,7 +110,7 @@
 
 (defui grocery-control []
        (let [{:constants/keys [departments]} (uix/use-context ctx/constants-context)
-             {:keys [grocery grocery-name set-name! department set-department! reset! unsaved-changes?]} (uix/use-context ctx/grocery-context)
+             {:keys [grocery grocery-name set-name! department set-department! reset! unsaved-changes?]} (uix/use-context gctx/grocery-context)
              department-label-id (str "department-" (:grocery/id grocery))]
 
          (uix/use-effect
@@ -122,7 +121,7 @@
 
          ($ Stack {:direction "column" :spacing 1}
             ($ Stack {:direction "row"}
-               ($ Button {:on-click #(rfe/push-state :pigeon-scoops.routes/groceries)}
+               ($ Button {:on-click #(rfe/push-state :pigeon-scoops.grocery.routes/groceries)}
                   "Back to list")
                ($ Button {:disabled (not unsaved-changes?)}
                   "Save")
@@ -144,14 +143,14 @@
 
 (defui grocery-view [{:keys [path]}]
        (let [{:keys [grocery-id]} path]
-         ($ ctx/with-grocery {:grocery-id grocery-id}
+         ($ gctx/with-grocery {:grocery-id grocery-id}
             ($ Stack {:direction "row" :spacing 1}
                ($ grocery-list {:selected-grocery-id grocery-id})
                ($ grocery-control)))))
 
 (defui grocery-row [{:keys [grocery]}]
        ($ TableRow
-          ($ TableCell {:on-click #(rfe/push-state :pigeon-scoops.routes/grocery {:grocery-id (:grocery/id grocery)})}
+          ($ TableCell {:on-click #(rfe/push-state :pigeon-scoops.grocery.routes/grocery {:grocery-id (:grocery/id grocery)})}
              (:grocery/name grocery))
           ($ TableCell
              (name (:grocery/department grocery)))
@@ -162,7 +161,7 @@
 
 
 (defui groceries-table []
-       (let [{:keys [groceries]} (uix/use-context ctx/groceries-context)]
+       (let [{:keys [groceries]} (uix/use-context gctx/groceries-context)]
          ($ TableContainer {:sx (clj->js {:maxHeight "calc(100vh - 75px)"
                                           :overflow  "auto"})}
             ($ Table {:sticky-header true}
