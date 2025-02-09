@@ -151,8 +151,14 @@
            [grocery reset!])
 
          ($ Stack {:direction "column" :spacing 1}
-            ($ Button {:on-click #(rfe/push-state :pigeon-scoops.routes/groceries)}
-               "Back to list")
+            ($ Stack {:direction "row"}
+               ($ Button {:on-click #(rfe/push-state :pigeon-scoops.routes/groceries)}
+                  "Back to list")
+               ($ Button {:disabled (not unsaved-changes?)}
+                  "Save")
+               ($ Button {:on-click (partial reset! grocery)
+                          :disabled (not unsaved-changes?)}
+                  "Reset"))
             ($ TextField {:label     "Name"
                           :value     grocery-name
                           :on-change #(set-name! (.. % -target -value))})
@@ -164,13 +170,7 @@
                           :on-change #(set-department! (keyword "department" (.. % -target -value)))}
                   (for [d departments]
                     ($ MenuItem {:value d :key d} (name d)))))
-            ($ grocery-unit-table)
-            ($ Stack {:direction "row" :spacing 1}
-               ($ Button {:variant "contained" :disabled (not unsaved-changes?)} "Save")
-               ($ Button {:variant  "contained"
-                          :on-click (partial reset! grocery)
-                          :disabled (not unsaved-changes?)}
-                  "Reset")))))
+            ($ grocery-unit-table))))
 
 (defui grocery-view [{:keys [path]}]
        (let [{:keys [grocery-id]} path]

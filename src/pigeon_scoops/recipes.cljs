@@ -225,6 +225,11 @@
             ($ Stack {:direction "row"}
                ($ Button {:on-click #(rfe/push-state :pigeon-scoops.routes/recipes)}
                   "Back to list")
+               ($ Button {:disabled (or (some? scaled-amount) (not unsaved-changes?))}
+                  "Save")
+               ($ Button {:on-click (partial reset! recipe)
+                          :disabled (not unsaved-changes?)}
+                  "Reset Changes")
                (when (some? scaled-amount)
                  ($ Button {:on-click #(rfe/push-state :pigeon-scoops.routes/recipe
                                                        {:recipe-id (:recipe/id recipe)})}
@@ -254,14 +259,7 @@
                      (for [ut unit-types]
                        ($ MenuItem {:value ut :key ut} (name ut))))))
             ($ ingredient-table)
-            ($ numbered-text-area {:lines instructions :set-lines! set-instructions!})
-            ($ Stack {:direction "row" :spacing 1}
-               ($ Button {:variant  "contained"
-                          :disabled (or (some? scaled-amount) (not unsaved-changes?))} "Save")
-               ($ Button {:variant  "contained"
-                          :on-click (partial reset! recipe)
-                          :disabled (not unsaved-changes?)}
-                  "Reset")))))
+            ($ numbered-text-area {:lines instructions :set-lines! set-instructions!}))))
 
 (defui recipe-view [{:keys [path query]}]
        (let [{:keys [recipe-id]} path
