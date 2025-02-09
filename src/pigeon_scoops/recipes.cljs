@@ -207,7 +207,6 @@
                      recipe-name set-name!
                      public set-public!
                      scaled-amount
-                     scaled-amount-unit
                      amount set-amount!
                      amount-unit set-amount-unit!
                      source set-source!
@@ -257,7 +256,8 @@
             ($ ingredient-table)
             ($ numbered-text-area {:lines instructions :set-lines! set-instructions!})
             ($ Stack {:direction "row" :spacing 1}
-               ($ Button {:variant "contained" :disabled (not unsaved-changes?)} "Save")
+               ($ Button {:variant  "contained"
+                          :disabled (or (some? scaled-amount) (not unsaved-changes?))} "Save")
                ($ Button {:variant  "contained"
                           :on-click (partial reset! recipe)
                           :disabled (not unsaved-changes?)}
