@@ -7,6 +7,7 @@
             [reitit.frontend.easy :as rfe]
             [uix.core :as uix :refer [$ defui]]
             ["@mui/icons-material/Delete$default" :as DeleteIcon]
+            ["@mui/icons-material/AddCircle$default" :as AddCircleIcon]
             ["@mui/material" :refer [Button
                                      FormControl
                                      InputLabel
@@ -26,60 +27,23 @@
                                      TableCell
                                      TextField]]))
 
-(def grocery-context (uix/create-context))
-
-(defui with-grocery [{:keys [grocery-id children]}]
-       (let [{:keys [token]} (use-token)
-             [grocery set-grocery!] (uix/use-state nil)
-             [grocery-name set-name!] (uix/use-state (or (:grocery/name grocery) ""))
-             [department set-department!] (uix/use-state (or (:grocery/department grocery) ""))
-             [units set-units!] (uix/use-state (:grocery/units grocery))
-             unsaved-changes? (not-every? true? (map #(= ((first %) grocery) (second %)) {:grocery/name       grocery-name
-                                                                                          :grocery/department department
-                                                                                          :grocery/units      units}))
-             set-unit! #(set-units! (map (fn [u]
-                                           (if (= (:grocery-unit/id u)
-                                                  (:grocery-unit/id %)) % u))
-                                         units))
-             remove-unit! (fn [unit-id]
-                            (set-units! (remove #(= unit-id (:grocery-unit/id %))
-                                                units)))
-             reset! (uix/use-memo #(fn [g]
-                                     (set-name! (or (:grocery/name g) ""))
-                                     (set-department! (or (:grocery/department g) ""))
-                                     (set-units! (:grocery/units g)))
-                                  [])
-             [refresh? set-refresh!] (uix/use-state nil)]
-         (uix/use-effect
-           (fn []
-             (when (and grocery-id token)
-               (.then (api/get-grocery token grocery-id) (juxt set-grocery! reset!))))
-           [reset! refresh? token grocery-id])
-         ($ (.-Provider grocery-context) {:value {:grocery          grocery
-                                                  :grocery-name     grocery-name
-                                                  :set-name!        set-name!
-                                                  :department       department
-                                                  :set-department!  set-department!
-                                                  :units            units
-                                                  :set-unit!        set-unit!
-                                                  :remove-unit!     remove-unit!
-                                                  :unsaved-changes? unsaved-changes?
-                                                  :reset!           reset!
-                                                  :refresh!         #(set-refresh! (not refresh?))}}
-            children)))
-
 (defui grocery-list [{:keys [selected-grocery-id]}]
-       (let [{:keys [groceries]} (uix/use-context ctx/groceries-context)
+       (let [{:keys [groceries new-grocery!]} (uix/use-context ctx/groceries-context)
              [filter-text set-filter-text!] (uix/use-state "")
              filtered-groceries (filter #(or (str/blank? filter-text)
                                              (str/includes? (str/lower-case (:grocery/name %))
                                                             (str/lower-case filter-text)))
                                         groceries)]
          ($ Stack {:direction "column"}
-            ($ TextField {:label     "Filter"
-                          :variant   "outlined"
-                          :value     filter-text
-                          :on-change #(set-filter-text! (.. % -target -value))})
+            ($ Stack {:direction "row"}
+               ($ TextField {:label     "Filter"
+                             :variant   "outlined"
+                             :value     filter-text
+                             :on-change #(set-filter-text! (.. % -target -value))})
+               ($ IconButton {:color    "primary"
+                              :disabled (some keyword? (map :grocery/id groceries))
+                              :on-click #(rfe/push-state :pigeon-scoops.routes/grocery {:grocery-id (new-grocery!)})}
+                  ($ AddCircleIcon)))
             ($ List {:sx (clj->js {:maxHeight "100vh"
                                    :overflow  "auto"})}
                (for [g (sort-by :grocery/name filtered-groceries)]
@@ -87,7 +51,7 @@
                     {:key      (:grocery/id g)
                      :selected (= (:grocery/id g) selected-grocery-id)
                      :on-click #(rfe/push-state :pigeon-scoops.routes/grocery {:grocery-id (:grocery/id g)})}
-                    ($ ListItemText {:primary (:grocery/name g)})))))))
+                    ($ ListItemText {:primary (or (:grocery/name g) "[New Grocery]")})))))))
 
 
 (defui grocery-unit-row [{:keys [unit]}]
@@ -96,7 +60,7 @@
                                           :constants/unit-types
                                           (group-by namespace))
                                      keyword)
-             {:keys [set-unit! remove-unit!]} (uix/use-context grocery-context)]
+             {:keys [set-unit! remove-unit!]} (uix/use-context ctx/grocery-context)]
          ($ TableRow
             ($ TableCell
                ($ TextField {:value     (:grocery-unit/source unit)
@@ -124,7 +88,7 @@
 
 
 (defui grocery-unit-table []
-       (let [{:keys [units]} (uix/use-context grocery-context)]
+       (let [{:keys [units new-unit!]} (uix/use-context ctx/grocery-context)]
          ($ TableContainer {:component Paper}
             ($ Table
                ($ TableHead
@@ -134,14 +98,20 @@
                      ($ TableCell "Mass")
                      ($ TableCell "Volume")
                      ($ TableCell "Common")
-                     ($ TableCell "Actions")))
+                     ($ TableCell
+                        "Actions"
+                        ($ IconButton {:color    "primary"
+                                       :disabled (some keyword? (map :grocery-unit/id units))
+                                       :on-click new-unit!}
+                           ($ AddCircleIcon)))))
+
                ($ TableBody
                   (for [u units]
                     ($ grocery-unit-row {:key (:grocery-unit/id u) :unit u})))))))
 
 (defui grocery-control []
        (let [{:constants/keys [departments]} (uix/use-context ctx/constants-context)
-             {:keys [grocery grocery-name set-name! department set-department! reset! unsaved-changes?]} (uix/use-context grocery-context)
+             {:keys [grocery grocery-name set-name! department set-department! reset! unsaved-changes?]} (uix/use-context ctx/grocery-context)
              department-label-id (str "department-" (:grocery/id grocery))]
 
          (uix/use-effect
@@ -174,7 +144,7 @@
 
 (defui grocery-view [{:keys [path]}]
        (let [{:keys [grocery-id]} path]
-         ($ with-grocery {:grocery-id grocery-id}
+         ($ ctx/with-grocery {:grocery-id grocery-id}
             ($ Stack {:direction "row" :spacing 1}
                ($ grocery-list {:selected-grocery-id grocery-id})
                ($ grocery-control)))))

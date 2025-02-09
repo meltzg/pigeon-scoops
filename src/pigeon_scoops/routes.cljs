@@ -1,5 +1,6 @@
 (ns pigeon-scoops.routes
-  (:require [pigeon-scoops.groceries :refer [groceries-table grocery-view]]
+  (:require [cljs.spec.alpha :as s]
+            [pigeon-scoops.groceries :refer [groceries-table grocery-view]]
             [pigeon-scoops.recipes :refer [recipe-view recipes-table]]
             [spec-tools.data-spec :as ds]
             [uix.core :refer [$ defui]]))
@@ -15,7 +16,7 @@
          :view groceries-table}]
     ["/:grocery-id" {:name       ::grocery
                      :view       grocery-view
-                     :parameters {:path {:grocery-id uuid?}}}]]
+                     :parameters {:path {:grocery-id (s/or :uuid uuid? :key keyword?)}}}]]
    ["/recipe"
     ["" {:name ::recipes
          :view recipes-table}]
