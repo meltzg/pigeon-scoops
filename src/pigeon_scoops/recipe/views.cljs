@@ -64,8 +64,7 @@
              {:keys [groceries]} (uix/use-context gctx/groceries-context)
              {:keys [recipes]} (uix/use-context rctx/recipes-context)
              [recipe-ingredient? set-recipe-ingredient!] (uix/use-state (some? (:ingredient/ingredient-recipe-id ingredient)))
-             ingredient-label-id (str "ingredient-" (:ingredient/id ingredient))
-             amount-unit-label-id (str "amount-unit-" (:ingredient/id ingredient))]
+             ingredient-label-id (str "ingredient-" (:ingredient/id ingredient))]
 
          (uix/use-effect
            (fn []
@@ -151,8 +150,7 @@
                      source set-source!
                      instructions set-instructions!
                      reset!
-                     unsaved-changes?]} (uix/use-context rctx/recipe-context)
-             amount-unit-label-id (str "amount-unit-" (:recipe/id recipe))]
+                     unsaved-changes?]} (uix/use-context rctx/recipe-context)]
 
          (uix/use-effect
            (fn []

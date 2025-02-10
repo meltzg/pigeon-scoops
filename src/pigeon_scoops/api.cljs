@@ -49,3 +49,21 @@
                                       :Authorization (str "Bearer " token)}}))
         (.then #(.text %))
         (.then (partial transit/read reader)))))
+
+(defn get-orders [token]
+  (let [reader (transit/reader :json)]
+    (-> (js/fetch (str base-url "/orders")
+                  (clj->js {:method  "GET"
+                            :headers {:Accept        "application/transit+json"
+                                      :Authorization (str "Bearer " token)}}))
+        (.then #(.text %))
+        (.then (partial transit/read reader)))))
+
+(defn get-order [token order-id]
+  (let [reader (transit/reader :json)]
+    (-> (js/fetch (str base-url "/orders/" order-id)
+                  (clj->js {:method  "GET"
+                            :headers {:Accept        "application/transit+json"
+                                      :Authorization (str "Bearer " token)}}))
+        (.then #(.text %))
+        (.then (partial transit/read reader)))))

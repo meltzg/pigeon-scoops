@@ -13,7 +13,8 @@
          (uix/use-effect
            (fn []
              (when token
-               (.then (api/get-groceries token) set-groceries!)))
+               (-> (api/get-groceries token)
+                   (.then set-groceries!))))
            [token refresh?])
          ($ (.-Provider groceries-context) {:value {:groceries    groceries
                                                     :new-grocery! #(do

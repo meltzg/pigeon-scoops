@@ -12,8 +12,6 @@
                  [binaryage/devtools "1.0.7"]
                  [metosin/reitit "0.7.2"]
                  [com.cognitect/transit-cljs "0.8.280"]]
-  :main ^:skip-aot pigeon-scoops.core
-  :target-path "target/%s"
   :source-paths ["src"
                  "dev"]
   :plugins [[lein-ancient "0.7.0"]])

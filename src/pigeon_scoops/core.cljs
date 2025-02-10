@@ -3,6 +3,7 @@
             [pigeon-scoops.context :as ctx]
             [pigeon-scoops.grocery.context :as gctx]
             [pigeon-scoops.recipe.context :as rctx]
+            [pigeon-scoops.user-order.context :as octx]
             [pigeon-scoops.routes :as r]
             [reitit.coercion.spec :as rss]
             [reitit.frontend :as rf]
@@ -57,7 +58,7 @@
                ($ List
                   (for [[app-name app-icon app-key page] [["Groceries" LocalGroceryStoreIcon :groceries :pigeon-scoops.grocery.routes/groceries]
                                                           ["Recipes" MenuBookIcon :recipes :pigeon-scoops.recipe.routes/recipes]
-                                                          ["Orders" ReceiptIcon :orders ::r/order]]]
+                                                          ["Orders" ReceiptIcon :orders :pigeon-scoops.user-order.routes/orders]]]
                     ($ app-menu-item {:key  app-key
                                       :text app-name
                                       :icon app-icon
@@ -79,7 +80,8 @@
           ($ ctx/with-constants
              ($ gctx/with-groceries
                 ($ rctx/with-recipes
-                   ($ content))))))
+                   ($ octx/with-orders
+                      ($ content)))))))
 
 (defonce root
          (uix.dom/create-root (js/document.getElementById "root")))
