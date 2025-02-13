@@ -56,7 +56,7 @@
                    (.then (api/get-order token order-id)
                           (juxt set-order! reset!))))
            [reset! refresh? token order-id])
-         ($ (.-Provider order-context) {:value {:user-order       order
+         ($ (.-Provider order-context) {:value {:order            order
                                                 :note             note
                                                 :set-note!        set-note!
                                                 :status           status

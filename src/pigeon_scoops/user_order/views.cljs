@@ -1,9 +1,7 @@
 (ns pigeon-scoops.user-order.views
-  (:require [clojure.string :as str]
-            [pigeon-scoops.components.number-field :refer [number-field]]
+  (:require [pigeon-scoops.components.number-field :refer [number-field]]
             [pigeon-scoops.context :as ctx]
             [pigeon-scoops.user-order.context :as octx]
-            [pigeon-scoops.recipe.context :as rctx]
             [reitit.frontend.easy :as rfe]
             [uix.core :as uix :refer [$ defui]]
             ["@mui/icons-material/Delete$default" :as DeleteIcon]
@@ -27,7 +25,7 @@
                                      TableCell
                                      TextField]]))
 
-(defui grocery-list [{:keys [selected-order-id]}]
+(defui order-list [{:keys [selected-order-id]}]
        (let [{:keys [orders new-order!]} (uix/use-context octx/orders-context)]
          ($ Stack {:direction "column"}
             ($ IconButton {:color    "primary"
@@ -41,7 +39,7 @@
                  ($ ListItemButton
                     {:key      (:user-order/id o)
                      :selected (= (:user-order/id o) selected-order-id)
-                     :on-click #(rfe/push-state :pigeon-scoops.user-order.routes/order {:order-id (:grocery/id o)})}
+                     :on-click #(rfe/push-state :pigeon-scoops.user-order.routes/order {:order-id (:user-order/id o)})}
                     ($ ListItemText {:primary (or (:user-order/note o) "[New Order]")})))))))
 
 
@@ -59,7 +57,7 @@
                   ($ DeleteIcon))))))
 
 (defui order-item-table []
-       (let [{:keys [units new-unit!]} (uix/use-context gctx/grocery-context)]
+       (let [{:keys [units new-unit!]} (uix/use-context octx/order-context)]
          ($ TableContainer {:component Paper}
             ($ Table
                ($ TableHead
@@ -82,7 +80,7 @@
 
 (defui order-control []
        (let [{:constants/keys [order-statuses]} (uix/use-context ctx/constants-context)
-             {:keys [order note set-note! status set-status! reset! unsaved-changes?]} (uix/use-context octx/orders-context)
+             {:keys [order note set-note! status set-status! reset! unsaved-changes?]} (uix/use-context octx/order-context)
              status-label-id (str "status-" (:user-order/status order))]
 
          (uix/use-effect
