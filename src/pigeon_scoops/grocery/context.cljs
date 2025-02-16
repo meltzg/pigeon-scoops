@@ -52,7 +52,7 @@
                ((juxt set-grocery! set-editable-grocery!) {})
                (and grocery-id token)
                (.then (api/get-grocery token grocery-id) (juxt set-grocery! set-editable-grocery!))))
-           [reset! refresh? token grocery-id])
+           [refresh? token grocery-id])
          ($ (.-Provider grocery-context) {:value {:grocery               grocery
                                                   :editable-grocery      editable-grocery
                                                   :set-editable-grocery! set-editable-grocery!
@@ -60,7 +60,6 @@
                                                   :remove-unit!          remove-unit!
                                                   :new-unit!             new-unit!
                                                   :unsaved-changes?      unsaved-changes?
-                                                  :reset!                reset!
                                                   :refresh!              #(set-refresh! (not refresh?))}}
             children)))
 

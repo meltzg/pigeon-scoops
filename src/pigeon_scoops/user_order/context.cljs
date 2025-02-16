@@ -26,46 +26,38 @@
 (defui with-order [{:keys [order-id children]}]
        (let [{:keys [token]} (use-token)
              [order set-order!] (uix/use-state nil)
-             [note set-note!] (uix/use-state (or (:user-order/note order) ""))
-             [status set-status!] (uix/use-state (or (:user-order/status order) ""))
-             [items set-items!] (uix/use-state (:user-order/items order))
-
-
-             unsaved-changes? (not-every? true? (map #(= ((first %) order) (second %)) {:user-order/note   note
-                                                                                        :user-order/status status
-                                                                                        :user-order/items  items}))
-             set-item! #(set-items! (map (fn [i]
-                                           (if (= (:order-item/id i)
-                                                  (:order-item/id %)) % i))
-                                         items))
+             [editable-order set-editable-order!] (uix/use-state nil)
+             unsaved-changes? (not= order editable-order)
+             set-item! #(set-editable-order! (update editable-order
+                                                     :user-order/items
+                                                     (fn [items] (map (fn [i]
+                                                                        (if (= (:order-item/id i)
+                                                                               (:order-item/id %)) % i))
+                                                                      items))))
              remove-item! (fn [item-id]
-                            (set-items! (remove #(= item-id (:order-item/id %))
-                                                items)))
-             new-item! #(set-items! (conj items {:order-item/id :new}))
-             reset! (uix/use-memo #(fn [o]
-                                     (set-note! (or (:user-order/note o) ""))
-                                     (set-status! (or (:user-order/status o) ""))
-                                     (set-items! (:user-order/items o)))
-                                  [])
+                            (set-editable-order! (update editable-order
+                                                         :user-order/items
+                                                         remove
+                                                         #(= item-id (:order-item/id %)))))
+             new-item! (fn []
+                         (set-editable-order! (update editable-order
+                                                      :user-order/items
+                                                      #(conj % {:order-item/id :new}))))
              [refresh? set-refresh!] (uix/use-state nil)]
          (uix/use-effect
            (fn []
              (cond (keyword? order-id)
-                   ((juxt set-order! reset!) {})
+                   ((juxt set-order! set-editable-order!) {})
                    (and order-id token)
                    (.then (api/get-order token order-id)
-                          (juxt set-order! reset!))))
-           [reset! refresh? token order-id])
-         ($ (.-Provider order-context) {:value {:order            order
-                                                :note             note
-                                                :set-note!        set-note!
-                                                :status           status
-                                                :set-status!      set-status!
-                                                :items            items
-                                                :set-item!        set-item!
-                                                :remove-item!     remove-item!
-                                                :new-item!        new-item!
-                                                :unsaved-changes? unsaved-changes?
-                                                :reset!           reset!
-                                                :refresh!         #(set-refresh! (not refresh?))}}
+                          (juxt set-order! set-editable-order!))))
+           [refresh? token order-id])
+         ($ (.-Provider order-context) {:value {:order               order
+                                                :editable-order      editable-order
+                                                :set-editable-order! set-editable-order!
+                                                :set-item!           set-item!
+                                                :remove-item!        remove-item!
+                                                :new-item!           new-item!
+                                                :unsaved-changes?    unsaved-changes?
+                                                :refresh!            #(set-refresh! (not refresh?))}}
             children)))

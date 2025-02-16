@@ -52,7 +52,7 @@
          ($ TableRow
             ($ TableCell
                ($ FormControl
-                  ($ Select {:value     (str (:order-item/recipe-id order-item))
+                  ($ Select {:value     (or (str (:order-item/recipe-id order-item)) "")
                              :on-change #(set-item! (assoc order-item :order-item/recipe-id (uuid (.. % -target -value))))}
                      (for [recipe (sort-by :recipe/name recipes)]
                        ($ MenuItem {:value (str (:recipe/id recipe)) :key (:recipe/id recipe)}
@@ -74,7 +74,7 @@
                           ($ MenuItem {:value ut :key ut} (name ut)))))))
             ($ TableCell
                ($ FormControl
-                  ($ Select {:value     (:order-item/status order-item)
+                  ($ Select {:value     (or (:order-item/status order-item) "")
                              :on-change #(set-item! (assoc order-item
                                                       :order-item/status
                                                       (keyword "status" (.. % -target -value))))}
@@ -86,7 +86,7 @@
                   ($ DeleteIcon))))))
 
 (defui order-item-table []
-       (let [{:keys [items new-item!]} (uix/use-context octx/order-context)]
+       (let [{:keys [editable-order new-item!]} (uix/use-context octx/order-context)]
          ($ TableContainer {:component Paper}
             ($ Table
                ($ TableHead
@@ -97,24 +97,24 @@
                      ($ TableCell
                         "Actions"
                         ($ IconButton {:color    "primary"
-                                       :disabled (some keyword? (map :order-item/id items))
+                                       :disabled (some keyword? (map :order-item/id (:user-order/items editable-order)))
                                        :on-click new-item!}
                            ($ AddCircleIcon)))))
 
                ($ TableBody
-                  (for [i items]
+                  (for [i (:user-order/items editable-order)]
                     ($ order-item-row {:key (:order-item/id i) :order-item i})))))))
 
 (defui order-control []
        (let [{:constants/keys [order-statuses]} (uix/use-context ctx/constants-context)
-             {:keys [order note set-note! status set-status! reset! unsaved-changes?]} (uix/use-context octx/order-context)
+             {:keys [order editable-order set-editable-order! unsaved-changes?]} (uix/use-context octx/order-context)
              status-label-id (str "status-" (:user-order/status order))]
 
          (uix/use-effect
            (fn []
              (when order
-               (reset! order)))
-           [order reset!])
+               (set-editable-order! order)))
+           [order set-editable-order!])
 
          ($ Stack {:direction "column" :spacing 1}
             ($ Stack {:direction "row"}
@@ -122,18 +122,20 @@
                   "Back to list")
                ($ Button {:disabled (not unsaved-changes?)}
                   "Save")
-               ($ Button {:on-click (partial reset! order)
+               ($ Button {:on-click (partial set-editable-order! order)
                           :disabled (not unsaved-changes?)}
                   "Reset"))
             ($ TextField {:label     "Note"
-                          :value     note
-                          :on-change #(set-note! (.. % -target -value))})
+                          :value     (or (:user-order/note editable-order) "")
+                          :on-change #(set-editable-order! (assoc editable-order
+                                                             :user-order/note (.. % -target -value)))})
             ($ FormControl
                ($ InputLabel {:id status-label-id} "Status")
                ($ Select {:label-id  status-label-id
-                          :value     status
+                          :value     (or (:user-order/status editable-order) "status")
                           :label     "Status"
-                          :on-change #(set-status! (keyword "status" (.. % -target -value)))}
+                          :on-change #(set-editable-order! (assoc editable-order
+                                                             :user-order/status (keyword "status" (.. % -target -value))))}
                   (for [s order-statuses]
                     ($ MenuItem {:value s :key s} (name s)))))
             ($ order-item-table))))
@@ -148,9 +150,10 @@
 (defui order-row [{:keys [order]}]
        ($ TableRow
           ($ TableCell {:on-click #(rfe/push-state :pigeon-scoops.user-order.routes/order {:order-id (:user-order/id order)})}
-             (:user-order/note order))
+             (or (:user-order/note order) "[New Order]"))
           ($ TableCell
-             (name (:user-order/status order)))
+             (when (:user-order/status order)
+               (name (:user-order/status order))))
           ($ TableCell
              ($ IconButton {:color    "error"
                             :on-click #(prn "delete" (:user-order/id order))}
