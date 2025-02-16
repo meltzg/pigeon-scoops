@@ -28,71 +28,42 @@
 (defui with-recipe [{:keys [recipe-id scaled-amount scaled-amount-unit children]}]
        (let [{:keys [token]} (use-token)
              [recipe set-recipe!] (uix/use-state nil)
-             [recipe-name set-name!] (uix/use-state (or (:recipe/name recipe) ""))
-             [public set-public!] (uix/use-state (or (:recipe/public recipe) false))
-             [amount set-amount!] (uix/use-state (:recipe/amount recipe))
-             [amount-unit set-amount-unit!] (uix/use-state (or (:recipe/amount-unit recipe) ""))
-             [source set-source!] (uix/use-state (or (:recipe/source recipe) ""))
-             [instructions set-instructions!] (uix/use-state (or (:recipe/instructions recipe) ""))
-             [ingredients set-ingredients!] (uix/use-state (:recipe/ingredients recipe))
-
-
-             unsaved-changes? (not-every? true? (map #(= ((first %) recipe) (second %)) {:recipe/name         recipe-name
-                                                                                         :recipe/public       public
-                                                                                         :recipe/amount       amount
-                                                                                         :recipe/amount-unit  amount-unit
-                                                                                         :recipe/source       source
-                                                                                         :recipe/instructions instructions
-                                                                                         :recipe/ingredients  ingredients}))
-             set-ingredient! #(set-ingredients! (map (fn [i]
-                                                       (if (= (:ingredient/id i)
-                                                              (:ingredient/id %)) % i))
-                                                     ingredients))
+             [editable-recipe set-editable-recipe!] (uix/use-state nil)
+             unsaved-changes? (not= recipe editable-recipe)
+             set-ingredient! #(set-editable-recipe! (update editable-recipe
+                                                            :recipe/ingredients
+                                                            (fn [ingredients]
+                                                              (map (fn [i]
+                                                                     (if (= (:ingredient/id i)
+                                                                            (:ingredient/id %)) % i))
+                                                                   ingredients))))
              remove-ingredient! (fn [ingredient-id]
-                                  (set-ingredients! (remove #(= ingredient-id (:ingredient/id %))
-                                                            ingredients)))
-             new-ingredient! #(set-ingredients! (conj ingredients {:ingredient/id :new}))
-             reset! (uix/use-memo #(fn [r]
-                                     (set-name! (or (:recipe/name r) ""))
-                                     (set-public! (or (:recipe/public r) false))
-                                     (set-amount! (:recipe/amount r))
-                                     (set-amount-unit! (or (:recipe/amount-unit r) ""))
-                                     (set-source! (or (:recipe/source r) ""))
-                                     (set-instructions! (or (:recipe/instructions r) ""))
-                                     (set-ingredients! (:recipe/ingredients r)))
-                                  [])
+                                  (set-editable-recipe! (update editable-recipe
+                                                                :recipe/ingredients
+                                                                remove
+                                                                #(= ingredient-id (:ingredient/id %)))))
+             new-ingredient! (fn []
+                               (set-editable-recipe! (update editable-recipe
+                                                             :recipe/ingredients
+                                                             #(conj % {:ingredient/id :new}))))
              [refresh? set-refresh!] (uix/use-state nil)]
          (uix/use-effect
            (fn []
              (cond (keyword? recipe-id)
-                   ((juxt set-recipe! reset!) {})
+                   ((juxt set-recipe! set-editable-recipe!) {})
                    (and recipe-id token)
                    (.then (api/get-recipe token recipe-id (if (some? scaled-amount)
                                                             {:amount      scaled-amount
                                                              :amount-unit scaled-amount-unit}
                                                             {}))
-                          (juxt set-recipe! reset!))))
-           [reset! refresh? token recipe-id scaled-amount scaled-amount-unit])
-         ($ (.-Provider recipe-context) {:value {:recipe             recipe
-                                                 :recipe-name        recipe-name
-                                                 :set-name!          set-name!
-                                                 :public             public
-                                                 :set-public!        set-public!
-                                                 :scaled-amount      scaled-amount
-                                                 :scaled-amount-unit scaled-amount-unit
-                                                 :amount             amount
-                                                 :set-amount!        set-amount!
-                                                 :amount-unit        amount-unit
-                                                 :set-amount-unit!   set-amount-unit!
-                                                 :source             source
-                                                 :set-source!        set-source!
-                                                 :instructions       instructions
-                                                 :set-instructions!  set-instructions!
-                                                 :ingredients        ingredients
-                                                 :set-ingredient!    set-ingredient!
-                                                 :remove-ingredient! remove-ingredient!
-                                                 :new-ingredient!    new-ingredient!
-                                                 :unsaved-changes?   unsaved-changes?
-                                                 :reset!             reset!
-                                                 :refresh!           #(set-refresh! (not refresh?))}}
+                          (juxt set-recipe! set-editable-recipe!))))
+           [refresh? token recipe-id scaled-amount scaled-amount-unit])
+         ($ (.-Provider recipe-context) {:value {:recipe               recipe
+                                                 :editable-recipe      editable-recipe
+                                                 :set-editable-recipe! set-editable-recipe!
+                                                 :set-ingredient!      set-ingredient!
+                                                 :remove-ingredient!   remove-ingredient!
+                                                 :new-ingredient!      new-ingredient!
+                                                 :unsaved-changes?     unsaved-changes?
+                                                 :refresh!             #(set-refresh! (not refresh?))}}
             children)))

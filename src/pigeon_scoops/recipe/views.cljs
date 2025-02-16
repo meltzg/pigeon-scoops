@@ -121,7 +121,7 @@
                   ($ DeleteIcon))))))
 
 (defui ingredient-table []
-       (let [{:keys [ingredients new-ingredient!]} (uix/use-context rctx/recipe-context)]
+       (let [{:keys [editable-recipe new-ingredient!]} (uix/use-context rctx/recipe-context)]
          ($ TableContainer {:component Paper}
             ($ Table
                ($ TableHead
@@ -132,31 +132,25 @@
                      ($ TableCell
                         "Actions"
                         ($ IconButton {:color    "primary"
-                                       :disabled (some keyword? (map :ingredient/id ingredients))
+                                       :disabled (some keyword? (map :ingredient/id (:recipe/ingredients editable-recipe)))
                                        :on-click new-ingredient!}
                            ($ AddCircleIcon)))))
                ($ TableBody
-                  (for [i ingredients]
+                  (for [i (:recipe/ingredients editable-recipe)]
                     ($ ingredient-row {:key (:ingredient/id i) :ingredient i})))))))
 
 (defui recipe-control []
        (let [{:constants/keys [unit-types]} (uix/use-context ctx/constants-context)
              {:keys [recipe
-                     recipe-name set-name!
-                     public set-public!
+                     editable-recipe set-editable-recipe!
                      scaled-amount
-                     amount set-amount!
-                     amount-unit set-amount-unit!
-                     source set-source!
-                     instructions set-instructions!
-                     reset!
                      unsaved-changes?]} (uix/use-context rctx/recipe-context)]
 
          (uix/use-effect
            (fn []
              (when recipe
-               (reset! recipe)))
-           [recipe reset!])
+               (set-editable-recipe! recipe)))
+           [recipe set-editable-recipe!])
 
          ($ Stack {:direction "column" :spacing 1 :sx (clj->js {:width "100%"})}
             ($ Stack {:direction "row"}
@@ -164,7 +158,7 @@
                   "Back to list")
                ($ Button {:disabled (or (some? scaled-amount) (not unsaved-changes?))}
                   "Save")
-               ($ Button {:on-click (partial reset! recipe)
+               ($ Button {:on-click (partial set-editable-recipe! recipe)
                           :disabled (not unsaved-changes?)}
                   "Reset Changes")
                (when (some? scaled-amount)
@@ -172,32 +166,36 @@
                                                        {:recipe-id (:recipe/id recipe)})}
                     "Reset scaled amount")))
             ($ TextField {:label     "Name"
-                          :value     recipe-name
-                          :on-change #(set-name! (.. % -target -value))})
+                          :value     (or (:recipe/name editable-recipe) "")
+                          :on-change #(set-editable-recipe! (assoc editable-recipe :recipe/name (.. % -target -value)))})
             ($ Stack {:direction "row"}
-               ($ Switch {:checked   public
-                          :on-change #(set-public! (.. % -target -checked))})
-               ($ Typography (if public "Public" "Private")))
+               ($ Switch {:checked   (or (:recipe/public editable-recipe) false)
+                          :on-change #(set-editable-recipe! (assoc editable-recipe :recipe/public (.. % -target -checked)))})
+               ($ Typography (if (:recipe/public editable-recipe) "Public" "Private")))
             ($ TextField {:label     "Source"
-                          :value     source
-                          :on-change #(set-source! (.. % -target -value))})
+                          :value     (or (:recipe/source editable-recipe) "")
+                          :on-change #(set-editable-recipe! (assoc editable-recipe :recipe/source (.. % -target -value)))})
             ($ Stack {:direction "row" :spacing 1}
-               ($ number-field {:value          amount
-                                :set-value!     set-amount! :label "Amount"
+               ($ number-field {:value          (:recipe/amount editable-recipe)
+                                :set-value!     #(set-editable-recipe! (assoc editable-recipe :recipe/amount %))
+                                :label          "Amount"
                                 :hide-controls? true})
 
                ($ FormControl
-                  ($ Select {:value     amount-unit
+                  ($ Select {:value     (or (:recipe/amount-unit editable-recipe) "")
                              :label     "Unit"
-                             :on-change #(set-amount-unit! (->> unit-types
-                                                                (filter (fn [ut]
-                                                                          (= (name ut)
-                                                                             (.. % -target -value))))
-                                                                (first)))}
+                             :on-change #(set-editable-recipe! editable-recipe
+                                                               :recipe/amount-unit
+                                                               (->> unit-types
+                                                                    (filter (fn [ut]
+                                                                              (= (name ut)
+                                                                                 (.. % -target -value))))
+                                                                    (first)))}
                      (for [ut unit-types]
                        ($ MenuItem {:value ut :key ut} (name ut))))))
             ($ ingredient-table)
-            ($ numbered-text-area {:lines instructions :set-lines! set-instructions!}))))
+            ($ numbered-text-area {:lines      (:recipe/instructions editable-recipe)
+                                   :set-lines! #(set-editable-recipe! (assoc editable-recipe :recipe/instructions %))}))))
 
 (defui recipe-view [{:keys [path query]}]
        (let [{:keys [recipe-id]} path
@@ -210,13 +208,14 @@
 (defui recipe-row [{:keys [recipe]}]
        ($ TableRow
           ($ TableCell {:on-click #(rfe/push-state :pigeon-scoops.recipe.routes/recipe {:recipe-id (:recipe/id recipe)})}
-             (:recipe/name recipe))
+             (or (:recipe/name recipe) "[New Recipe]"))
           ($ TableCell
              (if (:recipe/public recipe)
                ($ CheckCircleIcon {:color "success"})
                ($ CancelIcon {:color "error"})))
           ($ TableCell
-             (str (:recipe/amount recipe) " " (name (:recipe/amount-unit recipe))))
+             (when (and (:recipe/amount recipe) (:recipe/amount-unit recipe))
+               (str (:recipe/amount recipe) " " (name (:recipe/amount-unit recipe)))))
           ($ TableCell
              ($ IconButton {:color    "error"
                             :on-click #(prn "delete" (:recipe/id recipe))}
