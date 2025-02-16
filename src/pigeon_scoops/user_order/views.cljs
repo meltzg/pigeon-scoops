@@ -1,6 +1,7 @@
 (ns pigeon-scoops.user-order.views
   (:require [pigeon-scoops.components.number-field :refer [number-field]]
             [pigeon-scoops.context :as ctx]
+            [pigeon-scoops.recipe.context :as rctx]
             [pigeon-scoops.user-order.context :as octx]
             [reitit.frontend.easy :as rfe]
             [uix.core :as uix :refer [$ defui]]
@@ -23,7 +24,8 @@
                                      TableBody
                                      TableRow
                                      TableCell
-                                     TextField]]))
+                                     TextField
+                                     Typography]]))
 
 (defui order-list [{:keys [selected-order-id]}]
        (let [{:keys [orders new-order!]} (uix/use-context octx/orders-context)]
@@ -44,39 +46,64 @@
 
 
 (defui order-item-row [{:keys [order-item]}]
-       (let [unit-types (update-keys (->> ctx/constants-context
-                                          (uix/use-context)
-                                          :constants/unit-types
-                                          (group-by namespace))
-                                     keyword)
-             {:keys [set-unit! remove-item!]} (uix/use-context octx/order-context)]
+       (let [{:constants/keys [unit-types order-statuses]} (uix/use-context ctx/constants-context)
+             {:keys [recipes]} (uix/use-context rctx/recipes-context)
+             {:keys [set-item! remove-item!]} (uix/use-context octx/order-context)]
          ($ TableRow
+            ($ TableCell
+               ($ FormControl
+                  ($ Select {:value     (str (:order-item/recipe-id order-item))
+                             :on-change #(set-item! (assoc order-item :order-item/recipe-id (uuid (.. % -target -value))))}
+                     (for [recipe (sort-by :recipe/name recipes)]
+                       ($ MenuItem {:value (str (:recipe/id recipe)) :key (:recipe/id recipe)}
+                          (:recipe/name recipe))))))
+            ($ TableCell
+               ($ Stack {:direction "row" :spacing 1}
+                  ($ number-field {:value          (:order-item/amount order-item)
+                                   :set-value!     #(set-item! (assoc order-item :order-item/amount %))
+                                   :hide-controls? true})
+                  ($ FormControl
+                     ($ Select {:value     (or (:order-item/amount-unit order-item) "")
+                                :on-change #(set-item! (assoc order-item :order-item/amount-unit
+                                                                         (->> unit-types
+                                                                              (filter (fn [ut]
+                                                                                        (= (name ut)
+                                                                                           (.. % -target -value))))
+                                                                              (first))))}
+                        (for [ut unit-types]
+                          ($ MenuItem {:value ut :key ut} (name ut)))))))
+            ($ TableCell
+               ($ FormControl
+                  ($ Select {:value     (:order-item/status order-item)
+                             :on-change #(set-item! (assoc order-item
+                                                      :order-item/status
+                                                      (keyword "status" (.. % -target -value))))}
+                     (for [s order-statuses]
+                       ($ MenuItem {:value s :key s} (name s))))))
             ($ TableCell
                ($ IconButton {:color    "error"
                               :on-click (partial remove-item! (:order-item/id order-item))}
                   ($ DeleteIcon))))))
 
 (defui order-item-table []
-       (let [{:keys [units new-unit!]} (uix/use-context octx/order-context)]
+       (let [{:keys [items new-item!]} (uix/use-context octx/order-context)]
          ($ TableContainer {:component Paper}
             ($ Table
                ($ TableHead
                   ($ TableRow
-                     ($ TableCell "Source")
-                     ($ TableCell "Cost")
-                     ($ TableCell "Mass")
-                     ($ TableCell "Volume")
-                     ($ TableCell "Common")
+                     ($ TableCell "Recipe")
+                     ($ TableCell "Amount")
+                     ($ TableCell "Status")
                      ($ TableCell
                         "Actions"
                         ($ IconButton {:color    "primary"
-                                       :disabled (some keyword? (map :order-item/id units))
-                                       :on-click new-unit!}
+                                       :disabled (some keyword? (map :order-item/id items))
+                                       :on-click new-item!}
                            ($ AddCircleIcon)))))
 
                ($ TableBody
-                  (for [u units]
-                    ($ order-item-row {:key (:order-item/id u) :unit u})))))))
+                  (for [i items]
+                    ($ order-item-row {:key (:order-item/id i) :order-item i})))))))
 
 (defui order-control []
        (let [{:constants/keys [order-statuses]} (uix/use-context ctx/constants-context)
