@@ -62,7 +62,7 @@
              {:keys [set-unit! remove-unit!]} (uix/use-context gctx/grocery-context)]
          ($ TableRow
             ($ TableCell
-               ($ TextField {:value     (:grocery-unit/source unit)
+               ($ TextField {:value     (or (:grocery-unit/source unit) "")
                              :on-change #(set-unit! (assoc unit :grocery-unit/source (.. % -target -value)))}))
             ($ TableCell
                ($ number-field {:value          (:grocery-unit/unit-cost unit)
@@ -91,7 +91,7 @@
 
 
 (defui grocery-unit-table []
-       (let [{:keys [units new-unit!]} (uix/use-context gctx/grocery-context)]
+       (let [{:keys [editable-grocery new-unit!]} (uix/use-context gctx/grocery-context)]
          ($ TableContainer {:component Paper}
             ($ Table
                ($ TableHead
@@ -104,24 +104,24 @@
                      ($ TableCell
                         "Actions"
                         ($ IconButton {:color    "primary"
-                                       :disabled (some keyword? (map :grocery-unit/id units))
+                                       :disabled (some keyword? (map :grocery-unit/id (:grocery/units editable-grocery)))
                                        :on-click new-unit!}
                            ($ AddCircleIcon)))))
 
                ($ TableBody
-                  (for [u units]
+                  (for [u (:grocery/units editable-grocery)]
                     ($ grocery-unit-row {:key (:grocery-unit/id u) :unit u})))))))
 
 (defui grocery-control []
        (let [{:constants/keys [departments]} (uix/use-context ctx/constants-context)
-             {:keys [grocery grocery-name set-name! department set-department! reset! unsaved-changes?]} (uix/use-context gctx/grocery-context)
+             {:keys [grocery editable-grocery set-editable-grocery! unsaved-changes?]} (uix/use-context gctx/grocery-context)
              department-label-id (str "department-" (:grocery/id grocery))]
 
          (uix/use-effect
            (fn []
              (when grocery
-               (reset! grocery)))
-           [grocery reset!])
+               (set-editable-grocery! grocery)))
+           [grocery set-editable-grocery!])
 
          ($ Stack {:direction "column" :spacing 1}
             ($ Stack {:direction "row"}
@@ -129,18 +129,21 @@
                   "Back to list")
                ($ Button {:disabled (not unsaved-changes?)}
                   "Save")
-               ($ Button {:on-click (partial reset! grocery)
+               ($ Button {:on-click (partial set-editable-grocery! grocery)
                           :disabled (not unsaved-changes?)}
                   "Reset"))
             ($ TextField {:label     "Name"
-                          :value     grocery-name
-                          :on-change #(set-name! (.. % -target -value))})
+                          :value     (or (:grocery/name editable-grocery) "")
+                          :on-change #(set-editable-grocery! (assoc editable-grocery
+                                                               :grocery/name (.. % -target -value)))})
             ($ FormControl
                ($ InputLabel {:id department-label-id} "Department")
                ($ Select {:label-id  department-label-id
-                          :value     department
+                          :value     (or (:grocery/department editable-grocery) "")
                           :label     "Department"
-                          :on-change #(set-department! (keyword "department" (.. % -target -value)))}
+                          :on-change #(set-editable-grocery! (assoc editable-grocery
+                                                               :grocery/department
+                                                               (keyword "department" (.. % -target -value))))}
                   (for [d departments]
                     ($ MenuItem {:value d :key d} (name d)))))
             ($ grocery-unit-table))))
@@ -155,9 +158,10 @@
 (defui grocery-row [{:keys [grocery]}]
        ($ TableRow
           ($ TableCell {:on-click #(rfe/push-state :pigeon-scoops.grocery.routes/grocery {:grocery-id (:grocery/id grocery)})}
-             (:grocery/name grocery))
+             (or (:grocery/name grocery) "[New Grocery]"))
           ($ TableCell
-             (name (:grocery/department grocery)))
+             (when (:grocery/department grocery)
+               (name (:grocery/department grocery))))
           ($ TableCell
              ($ IconButton {:color    "error"
                             :on-click #(prn "delete" (:grocery/id grocery))}

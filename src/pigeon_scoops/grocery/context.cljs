@@ -26,46 +26,42 @@
 (defui with-grocery [{:keys [grocery-id children]}]
        (let [{:keys [token]} (use-token)
              [grocery set-grocery!] (uix/use-state nil)
-             [grocery-name set-name!] (uix/use-state (or (:grocery/name grocery) ""))
-             [department set-department!] (uix/use-state (or (:grocery/department grocery) ""))
-             [units set-units!] (uix/use-state (:grocery/units grocery))
-             unsaved-changes? (not-every? true? (map #(= ((first %) grocery) (second %)) {:grocery/name       grocery-name
-                                                                                          :grocery/department department
-                                                                                          :grocery/units      units}))
-             set-unit! #(set-units! (map (fn [u]
-                                           (if (= (:grocery-unit/id u)
-                                                  (:grocery-unit/id %)) % u))
-                                         units))
+             [editable-grocery set-editable-grocery!] (uix/use-state nil)
+             unsaved-changes? (not= grocery editable-grocery)
+             set-unit! #(set-editable-grocery! (update editable-grocery
+                                                       :grocery/units
+                                                       (fn [units]
+                                                         (map (fn [u]
+                                                                (if (= (:grocery-unit/id u)
+                                                                       (:grocery-unit/id %)) % u))
+                                                              units))))
              remove-unit! (fn [unit-id]
-                            (set-units! (remove #(= unit-id (:grocery-unit/id %))
-                                                units)))
-             new-unit! #(set-units! (conj units {:grocery-unit/id :new}))
-             reset! (uix/use-memo #(fn [g]
-                                     (set-name! (or (:grocery/name g) ""))
-                                     (set-department! (or (:grocery/department g) ""))
-                                     (set-units! (:grocery/units g)))
-                                  [])
+                            (set-editable-grocery! (update editable-grocery
+                                                           :grocery/units
+                                                           remove
+                                                           #(= unit-id (:grocery-unit/id %)))))
+             new-unit! (fn []
+                         (set-editable-grocery! (update editable-grocery
+                                                        :grocery/units
+                                                        #(conj % {:grocery-unit/id :new}))))
              [refresh? set-refresh!] (uix/use-state nil)]
          (uix/use-effect
            (fn []
              (cond
                (keyword? grocery-id)
-               ((juxt set-grocery! reset!) {})
+               ((juxt set-grocery! set-editable-grocery!) {})
                (and grocery-id token)
-               (.then (api/get-grocery token grocery-id) (juxt set-grocery! reset!))))
+               (.then (api/get-grocery token grocery-id) (juxt set-grocery! set-editable-grocery!))))
            [reset! refresh? token grocery-id])
-         ($ (.-Provider grocery-context) {:value {:grocery          grocery
-                                                  :grocery-name     grocery-name
-                                                  :set-name!        set-name!
-                                                  :department       department
-                                                  :set-department!  set-department!
-                                                  :units            units
-                                                  :set-unit!        set-unit!
-                                                  :remove-unit!     remove-unit!
-                                                  :new-unit!        new-unit!
-                                                  :unsaved-changes? unsaved-changes?
-                                                  :reset!           reset!
-                                                  :refresh!         #(set-refresh! (not refresh?))}}
+         ($ (.-Provider grocery-context) {:value {:grocery               grocery
+                                                  :editable-grocery      editable-grocery
+                                                  :set-editable-grocery! set-editable-grocery!
+                                                  :set-unit!             set-unit!
+                                                  :remove-unit!          remove-unit!
+                                                  :new-unit!             new-unit!
+                                                  :unsaved-changes?      unsaved-changes?
+                                                  :reset!                reset!
+                                                  :refresh!              #(set-refresh! (not refresh?))}}
             children)))
 
 
