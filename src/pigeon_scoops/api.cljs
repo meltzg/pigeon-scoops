@@ -1,69 +1,40 @@
 (ns pigeon-scoops.api
   (:require [cognitect.transit :as transit]))
 
-(def base-url "https://api.pigeon-scoops.com/v1")
-;(def base-url "http://localhost:8080/v1")
+(defn make-request [{:keys [method url body token]}]
+  (let [base-url "https://api.pigeon-scoops.com/v1"
+        reader (transit/reader :json)
+        writer (transit/writer :json)]
+    (-> (js/fetch (str base-url url)
+                  (clj->js (cond-> {:method  method
+                                    :headers (cond-> {:Accept "application/transit+json"}
+                                                     body (assoc :Content-Type "application/transit+json")
+                                                     token (assoc :Authorization (str "Bearer " token)))}
+                                   body (assoc :body (transit/write writer body)))))
+        (.then #(.text %))
+        (.then (partial transit/read reader)))))
 
 (defn get-constants []
-  (let [reader (transit/reader :json)]
-    (-> (js/fetch (str base-url "/constants")
-                  (clj->js {:method  "GET"
-                            :headers {:Accept "application/transit+json"}}))
-        (.then #(.text %))
-        (.then (partial transit/read reader)))))
+  (make-request {:method "GET" :url "/constants"}))
 
 (defn get-groceries [token]
-  (let [reader (transit/reader :json)]
-    (-> (js/fetch (str base-url "/groceries")
-                  (clj->js {:method  "GET"
-                            :headers {:Accept        "application/transit+json"
-                                      :Authorization (str "Bearer " token)}}))
-        (.then #(.text %))
-        (.then (partial transit/read reader)))))
+  (make-request {:method "GET" :url "/groceries" :token token}))
 
 (defn get-grocery [token grocery-id]
-  (let [reader (transit/reader :json)]
-    (-> (js/fetch (str base-url "/groceries/" grocery-id)
-                  (clj->js {:method  "GET"
-                            :headers {:Accept        "application/transit+json"
-                                      :Authorization (str "Bearer " token)}}))
-        (.then #(.text %))
-        (.then (partial transit/read reader)))))
+  (make-request {:method "GET" :url (str "/groceries/" grocery-id) :token token}))
 
 (defn get-recipes [token]
-  (let [reader (transit/reader :json)]
-    (-> (js/fetch (str base-url "/recipes")
-                  (clj->js {:method  "GET"
-                            :headers {:Accept        "application/transit+json"
-                                      :Authorization (str "Bearer " token)}}))
-        (.then #(.text %))
-        (.then (partial transit/read reader)))))
+  (make-request {:method "GET" :url "/recipes" :token token}))
 
 (defn get-recipe [token recipe-id {:keys [amount amount-unit]}]
-  (let [reader (transit/reader :json)
-        query-params (when amount
-                       (js/URLSearchParams. (clj->js {:amount amount :amount-unit (str (namespace amount-unit) "/" (name amount-unit))})))]
-    (-> (js/fetch (str base-url "/recipes/" recipe-id "?" (or query-params ""))
-                  (clj->js {:method  "GET"
-                            :headers {:Accept        "application/transit+json"
-                                      :Authorization (str "Bearer " token)}}))
-        (.then #(.text %))
-        (.then (partial transit/read reader)))))
+  (let [query-params (when amount
+                       (js/URLSearchParams.
+                         (clj->js {:amount      amount
+                                   :amount-unit (str (namespace amount-unit) "/" (name amount-unit))})))]
+    (make-request {:method "GET" :url (str "/recipes/" recipe-id "?" (or query-params "")) :token token})))
 
 (defn get-orders [token]
-  (let [reader (transit/reader :json)]
-    (-> (js/fetch (str base-url "/orders")
-                  (clj->js {:method  "GET"
-                            :headers {:Accept        "application/transit+json"
-                                      :Authorization (str "Bearer " token)}}))
-        (.then #(.text %))
-        (.then (partial transit/read reader)))))
+  (make-request {:method "GET" :url "/orders" :token token}))
 
 (defn get-order [token order-id]
-  (let [reader (transit/reader :json)]
-    (-> (js/fetch (str base-url "/orders/" order-id)
-                  (clj->js {:method  "GET"
-                            :headers {:Accept        "application/transit+json"
-                                      :Authorization (str "Bearer " token)}}))
-        (.then #(.text %))
-        (.then (partial transit/read reader)))))
+  (make-request {:method "GET" :url (str "/orders/" order-id) :token token}))
