@@ -114,7 +114,7 @@
 
 (defui grocery-control []
        (let [{:constants/keys [departments]} (uix/use-context ctx/constants-context)
-             {:keys [grocery editable-grocery set-editable-grocery! unsaved-changes?]} (uix/use-context gctx/grocery-context)
+             {:keys [grocery editable-grocery set-editable-grocery! unsaved-changes? save!]} (uix/use-context gctx/grocery-context)
              department-label-id (str "department-" (:grocery/id grocery))]
 
          (uix/use-effect
@@ -127,7 +127,11 @@
             ($ Stack {:direction "row"}
                ($ Button {:on-click #(rfe/push-state :pigeon-scoops.grocery.routes/groceries)}
                   "Back to list")
-               ($ Button {:disabled (not unsaved-changes?)}
+               ($ Button {:disabled (not unsaved-changes?)
+                          :on-click #(-> (save!)
+                                         (.catch (fn [r]
+                                                   (-> (.text r)
+                                                       (.then js/alert)))))}
                   "Save")
                ($ Button {:on-click (partial set-editable-grocery! grocery)
                           :disabled (not unsaved-changes?)}
@@ -156,16 +160,17 @@
                ($ grocery-control)))))
 
 (defui grocery-row [{:keys [grocery]}]
-       ($ TableRow
-          ($ TableCell {:on-click #(rfe/push-state :pigeon-scoops.grocery.routes/grocery {:grocery-id (:grocery/id grocery)})}
-             (or (:grocery/name grocery) "[New Grocery]"))
-          ($ TableCell
-             (when (:grocery/department grocery)
-               (name (:grocery/department grocery))))
-          ($ TableCell
-             ($ IconButton {:color    "error"
-                            :on-click #(prn "delete" (:grocery/id grocery))}
-                ($ DeleteIcon)))))
+       (let [{:keys [delete!]} (uix/use-context gctx/groceries-context)]
+         ($ TableRow
+            ($ TableCell {:on-click #(rfe/push-state :pigeon-scoops.grocery.routes/grocery {:grocery-id (:grocery/id grocery)})}
+               (or (:grocery/name grocery) "[New Grocery]"))
+            ($ TableCell
+               (when (:grocery/department grocery)
+                 (name (:grocery/department grocery))))
+            ($ TableCell
+               ($ IconButton {:color    "error"
+                              :on-click #(delete! (:grocery/id grocery))}
+                  ($ DeleteIcon))))))
 
 
 (defui groceries-table []
