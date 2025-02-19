@@ -5,4 +5,7 @@
                   :asset-path "/public/cljs-out"
                   :modules    {:main {:entries [pigeon-scoops.core]
                                       :init-fn pigeon-scoops.core/init}}
-                  :devtools   {:preloads [preload devtools.preload]}}}}
+                  :devtools   {:preloads [preload devtools.preload]}
+                  :dev {:compiler-options {:closure-defines {goog.DEBUG true}}}
+
+                  :release {:compiler-options {:closure-defines {goog.DEBUG false}}}}}}

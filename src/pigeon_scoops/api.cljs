@@ -1,8 +1,10 @@
 (ns pigeon-scoops.api
   (:require [cognitect.transit :as transit]))
 
-;(def base-url "https://api.pigeon-scoops.com/v1")
-(def base-url "http://localhost:8080/v1")
+(def base-url
+  (if ^boolean goog.DEBUG
+    "http://localhost:8080/v1" ;; Development URL
+    "https://api.pigeon-scoops.com/v1")) ;; Production URL
 
 (defn make-headers [{:keys [token body]}]
   (cond-> {:Accept "application/transit+json"}
