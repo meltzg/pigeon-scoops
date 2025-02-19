@@ -52,11 +52,15 @@
          ($ TableRow
             ($ TableCell
                ($ FormControl
-                  ($ Select {:value     (or (str (:order-item/recipe-id order-item)) "")
-                             :on-change #(set-item! (assoc order-item :order-item/recipe-id (uuid (.. % -target -value))))}
-                     (for [recipe (sort-by :recipe/name recipes)]
-                       ($ MenuItem {:value (str (:recipe/id recipe)) :key (:recipe/id recipe)}
-                          (:recipe/name recipe))))))
+                  (let [full-recipes (if (some #(= (:recipe/id %) (:order-item/recipe-id order-item)) recipes)
+                                       recipes
+                                       (conj recipes {:recipe/id   (:order-item/recipe-id order-item)
+                                                      :recipe/name (:recipe/name order-item)}))]
+                    ($ Select {:value     (or (str (:order-item/recipe-id order-item)) "")
+                               :on-change #(set-item! (assoc order-item :order-item/recipe-id (uuid (.. % -target -value))))}
+                       (for [recipe (sort-by :recipe/name full-recipes)]
+                         ($ MenuItem {:value (str (:recipe/id recipe)) :key (:recipe/id recipe)}
+                            (:recipe/name recipe)))))))
             ($ TableCell
                ($ Stack {:direction "row" :spacing 1}
                   ($ number-field {:value          (:order-item/amount order-item)

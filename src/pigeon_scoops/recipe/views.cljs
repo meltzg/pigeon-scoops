@@ -88,18 +88,26 @@
             ($ TableCell
                ($ FormControl
                   (if recipe-ingredient?
-                    ($ Select {:label-id  ingredient-label-id
-                               :value     (str (:ingredient/ingredient-recipe-id ingredient))
-                               :on-change #(set-ingredient! (assoc ingredient :ingredient/ingredient-recipe-id (uuid (.. % -target -value))))}
-                       (for [recipe (sort-by :recipe/name recipes)]
-                         ($ MenuItem {:value (str (:recipe/id recipe)) :key (:recipe/id recipe)}
-                            (:recipe/name recipe))))
-                    ($ Select {:label-id  ingredient-label-id
-                               :value     (str (:ingredient/ingredient-grocery-id ingredient))
-                               :on-change #(set-ingredient! (assoc ingredient :ingredient/ingredient-grocery-id (uuid (.. % -target -value))))}
-                       (for [grocery (sort-by :grocery/name groceries)]
-                         ($ MenuItem {:value (str (:grocery/id grocery)) :key (:grocery/id grocery)}
-                            (:grocery/name grocery)))))))
+                    (let [full-recipes (if (some #(= (:recipe/id %) (:ingredient/ingredient-recipe-id ingredient)) recipes)
+                                         recipes
+                                         (conj recipes {:recipe/id   (:ingredient/ingredient-recipe-id ingredient)
+                                                        :recipe/name (:recipe/name ingredient)}))]
+                      ($ Select {:label-id  ingredient-label-id
+                                 :value     (str (:ingredient/ingredient-recipe-id ingredient))
+                                 :on-change #(set-ingredient! (assoc ingredient :ingredient/ingredient-recipe-id (uuid (.. % -target -value))))}
+                         (for [recipe (sort-by :recipe/name full-recipes)]
+                           ($ MenuItem {:value (str (:recipe/id recipe)) :key (:recipe/id recipe)}
+                              (:recipe/name recipe)))))
+                    (let [full-groceries (if (some #(= (:grocery/id %) (:ingredient/ingredient-grocery-id ingredient)) groceries)
+                                           groceries
+                                           (conj groceries {:grocery/id   (:ingredient/ingredient-grocery-id ingredient)
+                                                            :grocery/name (:grocery/name ingredient)}))]
+                      ($ Select {:label-id  ingredient-label-id
+                                 :value     (str (:ingredient/ingredient-grocery-id ingredient))
+                                 :on-change #(set-ingredient! (assoc ingredient :ingredient/ingredient-grocery-id (uuid (.. % -target -value))))}
+                         (for [grocery (sort-by :grocery/name full-groceries)]
+                           ($ MenuItem {:value (str (:grocery/id grocery)) :key (:grocery/id grocery)}
+                              (:grocery/name grocery))))))))
             ($ TableCell
                ($ Stack {:direction "row" :spacing 1}
                   ($ number-field {:value          (:ingredient/amount ingredient)
