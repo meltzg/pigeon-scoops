@@ -40,8 +40,9 @@
              remove-ingredient! (fn [ingredient-id]
                                   (set-editable-recipe! (update editable-recipe
                                                                 :recipe/ingredients
-                                                                remove
-                                                                #(= ingredient-id (:ingredient/id %)))))
+                                                                (partial
+                                                                  remove
+                                                                  #(= ingredient-id (:ingredient/id %))))))
              new-ingredient! (fn []
                                (set-editable-recipe! (update editable-recipe
                                                              :recipe/ingredients

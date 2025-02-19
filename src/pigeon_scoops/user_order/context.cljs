@@ -37,8 +37,9 @@
              remove-item! (fn [item-id]
                             (set-editable-order! (update editable-order
                                                          :user-order/items
-                                                         remove
-                                                         #(= item-id (:order-item/id %)))))
+                                                         (partial
+                                                           remove
+                                                           #(= item-id (:order-item/id %))))))
              new-item! (fn []
                          (set-editable-order! (update editable-order
                                                       :user-order/items
