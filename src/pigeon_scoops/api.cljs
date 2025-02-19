@@ -3,8 +3,8 @@
 
 (def base-url
   (if ^boolean goog.DEBUG
-    "http://localhost:8080/v1" ;; Development URL
-    "https://api.pigeon-scoops.com/v1")) ;; Production URL
+    "http://localhost:8080/v1"                              ;; Development URL
+    "https://api.pigeon-scoops.com/v1"))                    ;; Production URL
 
 (defn make-headers [{:keys [token body]}]
   (cond-> {:Accept "application/transit+json"}
@@ -24,7 +24,7 @@
 
 (defn do-fetch [{:keys [method url body] :as request}]
   (-> (js/fetch (str base-url url)
-                (clj->js (cond-> {:method (name method)
+                (clj->js (cond-> {:method  (name method)
                                   :headers (make-headers request)}
                                  body (assoc :body (encode-body body)))))
       (reject-error)))
@@ -70,7 +70,7 @@
   (fetch-request {:method :PUT :url (str "/groceries/" grocery-id "/units") :body grocery-unit :token token}))
 
 (defn delete-grocery-unit [token grocery-id grocery-unit-id]
-  (fetch-request {:method :POST :url (str "/groceries/" grocery-id "/units") :body {:id grocery-unit-id} :token token}))
+  (fetch-request {:method :DELETE :url (str "/groceries/" grocery-id "/units") :body {:id grocery-unit-id} :token token}))
 
 (defn get-recipes [token]
   (fetch-request {:method :GET :url "/recipes" :token token}))
