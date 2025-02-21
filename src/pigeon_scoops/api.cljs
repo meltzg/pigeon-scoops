@@ -82,8 +82,44 @@
                                    :amount-unit (str (namespace amount-unit) "/" (name amount-unit))})))]
     (fetch-request {:method :GET :url (str "/recipes/" recipe-id "?" (or query-params "")) :token token})))
 
+(defn create-recipe [token recipe]
+  (fetch-request {:method :POST :url "/recipes" :token token :body recipe}))
+
+(defn update-recipe [token {:recipe/keys [id] :as recipe}]
+  (fetch-request {:method :PUT :url (str "/recipes/" id) :token token :body recipe}))
+
+(defn delete-recipe [token recipe-id]
+  (fetch-request {:method :DELETE :url (str "/recipes/" recipe-id) :token token}))
+
+(defn create-ingredient [token recipe-id ingredient]
+  (fetch-request {:method :POST :url (str "/recipes/" recipe-id "/ingredients") :body ingredient :token token}))
+
+(defn update-ingredient [token recipe-id ingredient]
+  (fetch-request {:method :PUT :url (str "/recipes/" recipe-id "/ingredients") :body ingredient :token token}))
+
+(defn delete-ingredient [token recipe-id ingredient-id]
+  (fetch-request {:method :DELETE :url (str "/recipes/" recipe-id "/ingredients") :body {:id ingredient-id} :token token}))
+
 (defn get-orders [token]
   (fetch-request {:method :GET :url "/orders" :token token}))
 
 (defn get-order [token order-id]
   (fetch-request {:method :GET :url (str "/orders/" order-id) :token token}))
+
+(defn create-order [token order]
+  (fetch-request {:method :POST :url "/orders" :token token :body order}))
+
+(defn update-order [token {:user-order/keys [id] :as order}]
+  (fetch-request {:method :PUT :url (str "/orders/" id) :token token :body order}))
+
+(defn delete-order [token order-id]
+  (fetch-request {:method :DELETE :url (str "/orders/" order-id) :token token}))
+
+(defn create-item [token order-id item]
+  (fetch-request {:method :POST :url (str "/orders/" order-id "/items") :body item :token token}))
+
+(defn update-item [token order-id item]
+  (fetch-request {:method :PUT :url (str "/orders/" order-id "/items") :body item :token token}))
+
+(defn delete-item [token order-id item-id]
+  (fetch-request {:method :DELETE :url (str "/orders/" order-id "/items") :body {:id item-id} :token token}))

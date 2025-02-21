@@ -111,7 +111,7 @@
 
 (defui order-control []
        (let [{:constants/keys [order-statuses]} (uix/use-context ctx/constants-context)
-             {:keys [order editable-order set-editable-order! unsaved-changes?]} (uix/use-context octx/order-context)
+             {:keys [order editable-order set-editable-order! unsaved-changes? save!]} (uix/use-context octx/order-context)
              status-label-id (str "status-" (:user-order/status order))]
 
          (uix/use-effect
@@ -124,7 +124,11 @@
             ($ Stack {:direction "row"}
                ($ Button {:on-click #(rfe/push-state :pigeon-scoops.user-order.routes/orders)}
                   "Back to list")
-               ($ Button {:disabled (not unsaved-changes?)}
+               ($ Button {:disabled (not unsaved-changes?)
+                          :on-click #(-> (save!)
+                                         (.catch (fn [r]
+                                                   (-> (.text r)
+                                                       (.then js/alert)))))}
                   "Save")
                ($ Button {:on-click (partial set-editable-order! order)
                           :disabled (not unsaved-changes?)}
@@ -152,16 +156,17 @@
                ($ order-control)))))
 
 (defui order-row [{:keys [order]}]
-       ($ TableRow
-          ($ TableCell {:on-click #(rfe/push-state :pigeon-scoops.user-order.routes/order {:order-id (:user-order/id order)})}
-             (or (:user-order/note order) "[New Order]"))
-          ($ TableCell
-             (when (:user-order/status order)
-               (name (:user-order/status order))))
-          ($ TableCell
-             ($ IconButton {:color    "error"
-                            :on-click #(prn "delete" (:user-order/id order))}
-                ($ DeleteIcon)))))
+       (let [{:keys [delete!]} (uix/use-context octx/orders-context)]
+         ($ TableRow
+            ($ TableCell {:on-click #(rfe/push-state :pigeon-scoops.user-order.routes/order {:order-id (:user-order/id order)})}
+               (or (:user-order/note order) "[New Order]"))
+            ($ TableCell
+               (when (:user-order/status order)
+                 (name (:user-order/status order))))
+            ($ TableCell
+               ($ IconButton {:color    "error"
+                              :on-click #(delete! (:user-order/id order))}
+                  ($ DeleteIcon))))))
 
 
 (defui orders-table []

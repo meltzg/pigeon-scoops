@@ -152,7 +152,8 @@
              {:keys [recipe
                      editable-recipe set-editable-recipe!
                      scaled-amount
-                     unsaved-changes?]} (uix/use-context rctx/recipe-context)]
+                     unsaved-changes?
+                     save!]} (uix/use-context rctx/recipe-context)]
 
          (uix/use-effect
            (fn []
@@ -164,7 +165,11 @@
             ($ Stack {:direction "row"}
                ($ Button {:on-click #(rfe/push-state :pigeon-scoops.recipe.routes/recipes)}
                   "Back to list")
-               ($ Button {:disabled (or (some? scaled-amount) (not unsaved-changes?))}
+               ($ Button {:disabled (or (some? scaled-amount) (not unsaved-changes?))
+                          :on-click #(-> (save!)
+                                         (.catch (fn [r]
+                                                   (-> (.text r)
+                                                       (.then js/alert)))))}
                   "Save")
                ($ Button {:on-click (partial set-editable-recipe! recipe)
                           :disabled (not unsaved-changes?)}
@@ -192,13 +197,13 @@
                ($ FormControl
                   ($ Select {:value     (or (:recipe/amount-unit editable-recipe) "")
                              :label     "Unit"
-                             :on-change #(set-editable-recipe! editable-recipe
-                                                               :recipe/amount-unit
-                                                               (->> unit-types
-                                                                    (filter (fn [ut]
-                                                                              (= (name ut)
-                                                                                 (.. % -target -value))))
-                                                                    (first)))}
+                             :on-change #(set-editable-recipe! (assoc editable-recipe
+                                                                 :recipe/amount-unit
+                                                                 (->> unit-types
+                                                                      (filter (fn [ut]
+                                                                                (= (name ut)
+                                                                                   (.. % -target -value))))
+                                                                      (first))))}
                      (for [ut unit-types]
                        ($ MenuItem {:value ut :key ut} (name ut))))))
             ($ ingredient-table)
@@ -214,20 +219,21 @@
                ($ recipe-control)))))
 
 (defui recipe-row [{:keys [recipe]}]
-       ($ TableRow
-          ($ TableCell {:on-click #(rfe/push-state :pigeon-scoops.recipe.routes/recipe {:recipe-id (:recipe/id recipe)})}
-             (or (:recipe/name recipe) "[New Recipe]"))
-          ($ TableCell
-             (if (:recipe/public recipe)
-               ($ CheckCircleIcon {:color "success"})
-               ($ CancelIcon {:color "error"})))
-          ($ TableCell
-             (when (and (:recipe/amount recipe) (:recipe/amount-unit recipe))
-               (str (:recipe/amount recipe) " " (name (:recipe/amount-unit recipe)))))
-          ($ TableCell
-             ($ IconButton {:color    "error"
-                            :on-click #(prn "delete" (:recipe/id recipe))}
-                ($ DeleteIcon)))))
+       (let [{:keys [delete!]} (uix/use-context rctx/recipes-context)]
+         ($ TableRow
+            ($ TableCell {:on-click #(rfe/push-state :pigeon-scoops.recipe.routes/recipe {:recipe-id (:recipe/id recipe)})}
+               (or (:recipe/name recipe) "[New Recipe]"))
+            ($ TableCell
+               (if (:recipe/public recipe)
+                 ($ CheckCircleIcon {:color "success"})
+                 ($ CancelIcon {:color "error"})))
+            ($ TableCell
+               (when (and (:recipe/amount recipe) (:recipe/amount-unit recipe))
+                 (str (:recipe/amount recipe) " " (name (:recipe/amount-unit recipe)))))
+            ($ TableCell
+               ($ IconButton {:color    "error"
+                              :on-click #(delete! (:recipe/id recipe))}
+                  ($ DeleteIcon))))))
 
 (defui recipes-table []
        (let [{:keys [recipes new-recipe!]} (uix/use-context rctx/recipes-context)]

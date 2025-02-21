@@ -1,6 +1,8 @@
 (ns pigeon-scoops.recipe.context
   (:require [pigeon-scoops.api :as api]
             [pigeon-scoops.hooks :refer [use-token]]
+            [pigeon-scoops.utils :refer [determine-ops]]
+            [reitit.frontend.easy :as rfe]
             [uix.core :as uix :refer [$ defui]]))
 
 (def recipes-context (uix/create-context))
@@ -9,7 +11,11 @@
 (defui with-recipes [{:keys [children]}]
        (let [{:keys [token]} (use-token)
              [recipes set-recipes!] (uix/use-state nil)
-             [refresh? set-refresh!] (uix/use-state nil)]
+             [refresh? set-refresh!] (uix/use-state nil)
+             refresh! #(set-refresh! (not refresh?))
+             delete! (fn [recipe-id]
+                       (-> (api/delete-recipe token recipe-id)
+                           (.then refresh!)))]
          (uix/use-effect
            (fn []
              (when token
@@ -22,13 +28,16 @@
                                                   :new-recipe! #(do
                                                                   (set-recipes! (conj recipes {:recipe/id :new}))
                                                                   :new)
-                                                  :refresh!    #(set-refresh! (not refresh?))}}
+                                                  :refresh!    refresh!
+                                                  :delete!     delete!}}
             children)))
 
 (defui with-recipe [{:keys [recipe-id scaled-amount scaled-amount-unit children]}]
        (let [{:keys [token]} (use-token)
+             refresh-recipes! (:refresh! (uix/use-context recipes-context))
              [recipe set-recipe!] (uix/use-state nil)
              [editable-recipe set-editable-recipe!] (uix/use-state nil)
+             [refresh? set-refresh!] (uix/use-state nil)
              unsaved-changes? (not= recipe editable-recipe)
              set-ingredient! #(set-editable-recipe! (update editable-recipe
                                                             :recipe/ingredients
@@ -47,7 +56,22 @@
                                (set-editable-recipe! (update editable-recipe
                                                              :recipe/ingredients
                                                              #(conj % {:ingredient/id :new}))))
-             [refresh? set-refresh!] (uix/use-state nil)]
+             save! (fn []
+                     (let [unit-ops (determine-ops :ingredient/id
+                                                   (:recipe/ingredients recipe)
+                                                   (:recipe/ingredients editable-recipe))]
+                       (-> (if (uuid? (:recipe/id editable-recipe))
+                             (api/update-recipe token editable-recipe)
+                             (-> (api/create-recipe token editable-recipe)
+                                 (.then #(do (refresh-recipes!)
+                                             (rfe/push-state :pigeon-scoops.recipe.routes/recipe
+                                                             {:recipe-id (:id %)})))))
+                           (.then (fn [_]
+                                    (js/Promise.all (clj->js (concat
+                                                               (map (partial api/create-ingredient token recipe-id) (:new unit-ops))
+                                                               (map (partial api/update-ingredient token recipe-id) (:update unit-ops))
+                                                               (map (partial api/delete-ingredient token recipe-id) (:delete unit-ops)))))))
+                           (.then #(set-refresh! (not refresh?))))))]
          (uix/use-effect
            (fn []
              (cond (keyword? recipe-id)
@@ -66,5 +90,5 @@
                                                  :remove-ingredient!   remove-ingredient!
                                                  :new-ingredient!      new-ingredient!
                                                  :unsaved-changes?     unsaved-changes?
-                                                 :refresh!             #(set-refresh! (not refresh?))}}
+                                                 :save!                save!}}
             children)))

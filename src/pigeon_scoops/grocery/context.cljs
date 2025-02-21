@@ -34,8 +34,8 @@
        (let [{:keys [token]} (use-token)
              refresh-groceries! (:refresh! (uix/use-context groceries-context))
              [grocery set-grocery!] (uix/use-state nil)
-             [grocery-id set-grocery-id!] (uix/use-state grocery-id)
              [editable-grocery set-editable-grocery!] (uix/use-state nil)
+             [refresh? set-refresh!] (uix/use-state nil)
              unsaved-changes? (not= grocery editable-grocery)
              set-unit! #(set-editable-grocery! (update editable-grocery
                                                        :grocery/units
@@ -54,7 +54,6 @@
                          (set-editable-grocery! (update editable-grocery
                                                         :grocery/units
                                                         #(conj % {:grocery-unit/id :new}))))
-             [refresh? set-refresh!] (uix/use-state nil)
              save! (fn []
                      (let [unit-ops (determine-ops :grocery-unit/id
                                                    (:grocery/units grocery)
@@ -63,7 +62,6 @@
                              (api/update-grocery token editable-grocery)
                              (-> (api/create-grocery token editable-grocery)
                                  (.then #(do (refresh-groceries!)
-                                             (set-grocery-id! (:id %))
                                              (rfe/push-state :pigeon-scoops.grocery.routes/grocery
                                                              {:grocery-id (:id %)})))))
                            (.then (fn [_]
