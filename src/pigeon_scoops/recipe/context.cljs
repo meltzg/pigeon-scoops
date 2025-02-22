@@ -85,6 +85,7 @@
            [refresh? token recipe-id scaled-amount scaled-amount-unit])
          ($ (.-Provider recipe-context) {:value {:recipe               recipe
                                                  :editable-recipe      editable-recipe
+                                                 :scaled-amount        scaled-amount
                                                  :set-editable-recipe! set-editable-recipe!
                                                  :set-ingredient!      set-ingredient!
                                                  :remove-ingredient!   remove-ingredient!
