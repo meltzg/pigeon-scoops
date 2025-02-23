@@ -85,7 +85,8 @@
                                                           :amount-unit scaled-amount-unit}
                                                          {}))
                        (.then (juxt set-recipe! set-editable-recipe!))
-                       (.catch #(.back js/history)))))
+                       (.catch #(do (js/alert "Could not load recipe")
+                                    (set-editable-recipe! nil))))))
            [refresh? token recipe-id scaled-amount scaled-amount-unit])
          ($ (.-Provider recipe-context) {:value {:recipe               recipe
                                                  :editable-recipe      editable-recipe
