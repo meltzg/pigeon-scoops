@@ -166,10 +166,7 @@
                ($ Button {:on-click #(rfe/push-state :pigeon-scoops.recipe.routes/recipes)}
                   "Back to list")
                ($ Button {:disabled (or (some? scaled-amount) (not unsaved-changes?))
-                          :on-click #(-> (save!)
-                                         (.catch (fn [r]
-                                                   (-> (.text r)
-                                                       (.then js/alert)))))}
+                          :on-click save!}
                   "Save")
                ($ Button {:on-click (partial set-editable-recipe! recipe)
                           :disabled (not unsaved-changes?)}

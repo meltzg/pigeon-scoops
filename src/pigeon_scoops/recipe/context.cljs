@@ -18,11 +18,10 @@
                            (.then refresh!)))]
          (uix/use-effect
            (fn []
-             (when token
-               (-> (api/get-recipes token)
-                   (.then vals)
-                   (.then (partial apply concat))
-                   (.then set-recipes!))))
+             (-> (api/get-recipes token)
+                 (.then vals)
+                 (.then (partial apply concat))
+                 (.then set-recipes!)))
            [token refresh?])
          ($ (.-Provider recipes-context) {:value {:recipes     recipes
                                                   :new-recipe! #(do
@@ -71,17 +70,22 @@
                                                                (map (partial api/create-ingredient token recipe-id) (:new unit-ops))
                                                                (map (partial api/update-ingredient token recipe-id) (:update unit-ops))
                                                                (map (partial api/delete-ingredient token recipe-id) (:delete unit-ops)))))))
-                           (.then #(set-refresh! (not refresh?))))))]
+                           (.then #(set-refresh! (not refresh?)))
+                           (.catch (fn [r]
+                                     (-> (.text r)
+                                         (.then js/alert))
+                                     (set-refresh! (not refresh?)))))))]
          (uix/use-effect
            (fn []
              (cond (keyword? recipe-id)
                    ((juxt set-recipe! set-editable-recipe!) {})
-                   (and recipe-id token)
-                   (.then (api/get-recipe token recipe-id (if (some? scaled-amount)
-                                                            {:amount      scaled-amount
-                                                             :amount-unit scaled-amount-unit}
-                                                            {}))
-                          (juxt set-recipe! set-editable-recipe!))))
+                   (some? recipe-id)
+                   (-> (api/get-recipe token recipe-id (if (some? scaled-amount)
+                                                         {:amount      scaled-amount
+                                                          :amount-unit scaled-amount-unit}
+                                                         {}))
+                       (.then (juxt set-recipe! set-editable-recipe!))
+                       (.catch #(.back js/history)))))
            [refresh? token recipe-id scaled-amount scaled-amount-unit])
          ($ (.-Provider recipe-context) {:value {:recipe               recipe
                                                  :editable-recipe      editable-recipe
