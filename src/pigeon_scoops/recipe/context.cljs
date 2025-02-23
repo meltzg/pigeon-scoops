@@ -32,7 +32,7 @@
             children)))
 
 (defui with-recipe [{:keys [recipe-id scaled-amount scaled-amount-unit children]}]
-       (let [{:keys [token]} (use-token)
+       (let [{:keys [token loading?]} (use-token)
              refresh-recipes! (:refresh! (uix/use-context recipes-context))
              [recipe set-recipe!] (uix/use-state nil)
              [editable-recipe set-editable-recipe!] (uix/use-state nil)
@@ -79,7 +79,7 @@
            (fn []
              (cond (keyword? recipe-id)
                    ((juxt set-recipe! set-editable-recipe!) {})
-                   (some? recipe-id)
+                   (and (not loading?) (some? recipe-id))
                    (-> (api/get-recipe token recipe-id (if (some? scaled-amount)
                                                          {:amount      scaled-amount
                                                           :amount-unit scaled-amount-unit}
@@ -87,7 +87,7 @@
                        (.then (juxt set-recipe! set-editable-recipe!))
                        (.catch #(do (js/alert "Could not load recipe")
                                     (set-editable-recipe! nil))))))
-           [refresh? token recipe-id scaled-amount scaled-amount-unit])
+           [refresh? loading? token recipe-id scaled-amount scaled-amount-unit])
          ($ (.-Provider recipe-context) {:value {:recipe               recipe
                                                  :editable-recipe      editable-recipe
                                                  :scaled-amount        scaled-amount

@@ -4,12 +4,16 @@
 
 (defhook use-token []
          (let [{:keys [getAccessTokenSilently isAuthenticated]} (js->clj (useAuth0) :keywordize-keys true)
-               [token set-token!] (uix/use-state nil)]
+               [token set-token!] (uix/use-state nil)
+               [loading? set-loading!] (uix/use-state true)]
            (uix/use-effect
              (fn []
-               (when isAuthenticated
+               (set-loading! true)
+               (if isAuthenticated
                  (-> (getAccessTokenSilently (clj->js {:authorizationParams {:audience "https://api.pigeon-scoops.com"
                                                                              :scope    "openid profile email offline_access"}}))
-                     (.then set-token!))))
+                     (.then (juxt set-token! (partial set-loading! false))))
+                 (set-loading! false)))
              [getAccessTokenSilently isAuthenticated])
-           {:token token}))
+           {:token token
+            :loading? loading?}))
