@@ -94,7 +94,9 @@
                                                         :recipe/name (:recipe/name ingredient)}))]
                       ($ Select {:label-id  ingredient-label-id
                                  :value     (str (:ingredient/ingredient-recipe-id ingredient))
-                                 :on-change #(set-ingredient! (assoc ingredient :ingredient/ingredient-recipe-id (uuid (.. % -target -value))))}
+                                 :on-change #(set-ingredient! (-> ingredient
+                                                                  (dissoc :ingredient/ingredient-grocery-id)
+                                                                  (assoc :ingredient/ingredient-recipe-id (uuid (.. % -target -value)))))}
                          (for [recipe (sort-by :recipe/name full-recipes)]
                            ($ MenuItem {:value (str (:recipe/id recipe)) :key (:recipe/id recipe)}
                               (:recipe/name recipe)))))
@@ -104,7 +106,9 @@
                                                             :grocery/name (:grocery/name ingredient)}))]
                       ($ Select {:label-id  ingredient-label-id
                                  :value     (str (:ingredient/ingredient-grocery-id ingredient))
-                                 :on-change #(set-ingredient! (assoc ingredient :ingredient/ingredient-grocery-id (uuid (.. % -target -value))))}
+                                 :on-change #(set-ingredient! (-> ingredient
+                                                                  (dissoc :ingredient/ingredient-recipe-id)
+                                                                  (assoc :ingredient/ingredient-grocery-id (uuid (.. % -target -value)))))}
                          (for [grocery (sort-by :grocery/name full-groceries)]
                            ($ MenuItem {:value (str (:grocery/id grocery)) :key (:grocery/id grocery)}
                               (:grocery/name grocery))))))))
