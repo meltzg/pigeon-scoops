@@ -28,9 +28,10 @@
                                      Toolbar
                                      Typography]]))
 
-(defui app-menu-item [{:keys [text icon page]}]
+(defui app-menu-item [{:keys [text icon page on-click]}]
        ($ ListItem
-          ($ ListItemButton {:href (rfe/href page)}
+          ($ ListItemButton {:href (rfe/href page)
+                             :on-click on-click}
              ($ ListItemIcon
                 ($ icon))
              ($ ListItemText {:primary text}))))
@@ -48,7 +49,7 @@
                ($ Toolbar
                   ($ IconButton {:on-click #(set-menu-open! (not menu-open?))}
                      ($ MenuIcon))
-                  ($ Typography {:variant "h6"}
+                  ($ Typography
                      "Pigeon Scoops Manager")
                   ($ Box {:ml "auto"}
                      ($ authenticator))))
@@ -62,7 +63,8 @@
                     ($ app-menu-item {:key  app-key
                                       :text app-name
                                       :icon app-icon
-                                      :page page}))))
+                                      :page page
+                                      :on-click #(set-menu-open! (not menu-open?))}))))
             ($ Box {:component "div"}
                ($ Toolbar)
                (when route
