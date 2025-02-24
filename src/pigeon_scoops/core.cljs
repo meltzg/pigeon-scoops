@@ -3,10 +3,8 @@
             [pigeon-scoops.context :as ctx]
             [pigeon-scoops.grocery.context :as gctx]
             [pigeon-scoops.recipe.context :as rctx]
+            [pigeon-scoops.router :refer [router-context with-router]]
             [pigeon-scoops.user-order.context :as octx]
-            [pigeon-scoops.routes :as r]
-            [reitit.coercion.spec :as rss]
-            [reitit.frontend :as rf]
             [reitit.frontend.easy :as rfe]
             [uix.core :as uix :refer [$ defui]]
             [uix.dom]
@@ -30,20 +28,15 @@
 
 (defui app-menu-item [{:keys [text icon page on-click]}]
        ($ ListItem
-          ($ ListItemButton {:href (rfe/href page)
+          ($ ListItemButton {:href     (rfe/href page)
                              :on-click on-click}
              ($ ListItemIcon
                 ($ icon))
              ($ ListItemText {:primary text}))))
 
 (defui content []
-       (let [router (uix/use-memo #(rf/router r/routes {:data {:coercion rss/coercion}}) [r/routes])
-             [route set-route] (uix/use-state nil)
+       (let [{:keys [route]} (uix/use-context router-context)
              [menu-open? set-menu-open!] (uix/use-state false)]
-         (uix/use-effect
-           #(rfe/start! router set-route {:use-fragment false})
-           [router])
-
          ($ Box
             ($ AppBar
                ($ Toolbar
@@ -60,10 +53,10 @@
                   (for [[app-name app-icon app-key page] [["Groceries" LocalGroceryStoreIcon :groceries :pigeon-scoops.grocery.routes/groceries]
                                                           ["Recipes" MenuBookIcon :recipes :pigeon-scoops.recipe.routes/recipes]
                                                           ["Orders" ReceiptIcon :orders :pigeon-scoops.user-order.routes/orders]]]
-                    ($ app-menu-item {:key  app-key
-                                      :text app-name
-                                      :icon app-icon
-                                      :page page
+                    ($ app-menu-item {:key      app-key
+                                      :text     app-name
+                                      :icon     app-icon
+                                      :page     page
                                       :on-click #(set-menu-open! (not menu-open?))}))))
             ($ Box {:component "div"}
                ($ Toolbar)
@@ -79,11 +72,12 @@
                          :authorization-params (clj->js {:redirect_uri (.. js/window -location -origin)
                                                          :scope        "openid profile email offline_access"
                                                          :audience     "https://api.pigeon-scoops.com"})}
-          ($ ctx/with-constants
-             ($ gctx/with-groceries
-                ($ rctx/with-recipes
-                   ($ octx/with-orders
-                      ($ content)))))))
+          ($ with-router
+             ($ ctx/with-constants
+                ($ gctx/with-groceries
+                   ($ rctx/with-recipes
+                      ($ octx/with-orders
+                         ($ content))))))))
 
 (defonce root
          (uix.dom/create-root (js/document.getElementById "root")))
