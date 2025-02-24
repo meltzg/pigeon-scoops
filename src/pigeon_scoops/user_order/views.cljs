@@ -140,7 +140,7 @@
             ($ FormControl
                ($ InputLabel {:id status-label-id} "Status")
                ($ Select {:label-id  status-label-id
-                          :value     (or (:user-order/status editable-order) "status")
+                          :value     (or (:user-order/status editable-order) "")
                           :label     "Status"
                           :on-change #(set-editable-order! (assoc editable-order
                                                              :user-order/status (keyword "status" (.. % -target -value))))}
