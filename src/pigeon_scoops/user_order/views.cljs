@@ -1,5 +1,6 @@
 (ns pigeon-scoops.user-order.views
-  (:require [pigeon-scoops.components.number-field :refer [number-field]]
+  (:require [pigeon-scoops.components.bom-table :refer [bom-view]]
+            [pigeon-scoops.components.number-field :refer [number-field]]
             [pigeon-scoops.context :as ctx]
             [pigeon-scoops.recipe.context :as rctx]
             [pigeon-scoops.user-order.context :as octx]
@@ -13,6 +14,7 @@
                                      InputLabel
                                      Select
                                      Stack
+                                     Switch
                                      IconButton
                                      List
                                      ListItemButton
@@ -118,7 +120,8 @@
 
 (defui order-control []
        (let [{:constants/keys [order-statuses]} (uix/use-context ctx/constants-context)
-             {:keys [order editable-order set-editable-order! unsaved-changes? save!]} (uix/use-context octx/order-context)
+             {:keys [order editable-order bom set-editable-order! unsaved-changes? save!]} (uix/use-context octx/order-context)
+             [show-bom? set-show-bom!] (uix/use-state false)
              status-label-id (str "status-" (:user-order/status order))]
 
          (uix/use-effect
@@ -126,6 +129,12 @@
              (when order
                (set-editable-order! order)))
            [order set-editable-order!])
+
+         (uix/use-effect
+           (fn []
+             (when unsaved-changes?
+               (set-show-bom! false)))
+           [unsaved-changes?])
 
          ($ Stack {:direction "column" :spacing 1}
             ($ Stack {:direction "row"}
@@ -153,7 +162,15 @@
                                                              :user-order/status (keyword "status" (.. % -target -value))))}
                   (for [s order-statuses]
                     ($ MenuItem {:value s :key s} (name s)))))
-            ($ order-item-table))))
+            ($ Stack {:direction "row" :spcing 1}
+               ($ Switch {:checked   show-bom?
+                          :disabled  unsaved-changes?
+                          :on-change #(set-show-bom! (.. % -target -checked))})
+               ($ Typography
+                  (if show-bom? "Bill of Materials" "Order Items")))
+            (if show-bom?
+              ($ bom-view {:groceries bom})
+              ($ order-item-table)))))
 
 (defui order-view [{:keys [path]}]
        (let [{:keys [order-id]} path]

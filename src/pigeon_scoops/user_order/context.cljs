@@ -35,6 +35,7 @@
              refresh-orders! (:refresh (uix/use-context orders-context))
              [order set-order!] (uix/use-state nil)
              [editable-order set-editable-order!] (uix/use-state nil)
+             [bom set-bom!] (uix/use-state nil)
              [refresh? set-refresh!] (uix/use-state nil)
              unsaved-changes? (not= order editable-order)
              set-item! #(set-editable-order! (update editable-order
@@ -74,12 +75,16 @@
              (cond (keyword? order-id)
                    ((juxt set-order! set-editable-order!) {})
                    (and order-id token)
-                   (.then (api/get-order token order-id)
-                          (juxt set-order! set-editable-order!))))
-           [refresh? token order-id])
+                   (-> (api/get-order token order-id)
+                       (.then (juxt set-order! set-editable-order!))
+                       (.then #(when order
+                                 (api/get-order-bom token order-id)))
+                       (.then set-bom!))))
+           [refresh? token order order-id])
          ($ (.-Provider order-context) {:value {:order               order
                                                 :editable-order      editable-order
                                                 :set-editable-order! set-editable-order!
+                                                :bom                 bom
                                                 :set-item!           set-item!
                                                 :remove-item!        remove-item!
                                                 :new-item!           new-item!

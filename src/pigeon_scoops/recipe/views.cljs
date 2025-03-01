@@ -1,5 +1,6 @@
 (ns pigeon-scoops.recipe.views
   (:require [clojure.string :as str]
+            [pigeon-scoops.components.bom-table :refer [bom-view]]
             [pigeon-scoops.components.number-field :refer [number-field]]
             [pigeon-scoops.components.numbered-text-area :refer [numbered-text-area]]
             [pigeon-scoops.context :as ctx]
@@ -125,7 +126,7 @@
                ($ IconButton {:color    "error"
                               :on-click (partial remove-ingredient! (:ingredient/id ingredient))}
                   ($ DeleteIcon))
-               ($ IconButton {:color "primary"
+               ($ IconButton {:color    "primary"
                               :on-click #(apply rfe/push-state
                                                 (if recipe-ingredient?
                                                   [:pigeon-scoops.recipe.routes/recipe
@@ -159,15 +160,23 @@
        (let [{:constants/keys [unit-types]} (uix/use-context ctx/constants-context)
              {:keys [recipe
                      editable-recipe set-editable-recipe!
+                     bom
                      scaled-amount
                      unsaved-changes?
-                     save!]} (uix/use-context rctx/recipe-context)]
+                     save!]} (uix/use-context rctx/recipe-context)
+             [show-bom? set-show-bom!] (uix/use-state false)]
 
          (uix/use-effect
            (fn []
              (when recipe
                (set-editable-recipe! recipe)))
            [recipe set-editable-recipe!])
+
+         (uix/use-effect
+           (fn []
+             (when unsaved-changes?
+               (set-show-bom! false)))
+           [unsaved-changes?])
 
          ($ Stack {:direction "column" :spacing 1 :sx (clj->js {:width "100%"})}
             ($ Stack {:direction "row"}
@@ -211,7 +220,15 @@
                                                                       (first))))}
                      (for [ut unit-types]
                        ($ MenuItem {:value ut :key ut} (name ut))))))
-            ($ ingredient-table)
+            ($ Stack {:direction "row" :spcing 1}
+               ($ Switch {:checked   show-bom?
+                          :disabled  unsaved-changes?
+                          :on-change #(set-show-bom! (.. % -target -checked))})
+               ($ Typography
+                  (if show-bom? "Bill of Materials" "Ingredients")))
+            (if show-bom?
+              ($ bom-view {:groceries bom})
+              ($ ingredient-table))
             ($ numbered-text-area {:lines      (:recipe/instructions editable-recipe)
                                    :set-lines! #(set-editable-recipe! (assoc editable-recipe :recipe/instructions %))}))))
 

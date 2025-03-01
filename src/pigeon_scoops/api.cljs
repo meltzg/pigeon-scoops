@@ -82,6 +82,13 @@
                                    :amount-unit (str (namespace amount-unit) "/" (name amount-unit))})))]
     (fetch-request {:method :GET :url (str "/recipes/" recipe-id "?" (or query-params "")) :token token})))
 
+(defn get-recipe-bom [token recipe-id {:keys [amount amount-unit]}]
+  (let [query-params (when amount
+                       (js/URLSearchParams.
+                         (clj->js {:amount      amount
+                                   :amount-unit (str (namespace amount-unit) "/" (name amount-unit))})))]
+    (fetch-request {:method :GET :url (str "/recipes/" recipe-id "/bom?" (or query-params "")) :token token})))
+
 (defn create-recipe [token recipe]
   (fetch-request {:method :POST :url "/recipes" :token token :body recipe}))
 
@@ -105,6 +112,9 @@
 
 (defn get-order [token order-id]
   (fetch-request {:method :GET :url (str "/orders/" order-id) :token token}))
+
+(defn get-order-bom [token order-id]
+  (fetch-request {:method :GET :url (str "/orders/" order-id "/bom") :token token}))
 
 (defn create-order [token order]
   (fetch-request {:method :POST :url "/orders" :token token :body order}))

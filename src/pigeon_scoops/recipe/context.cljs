@@ -36,6 +36,7 @@
              refresh-recipes! (:refresh! (uix/use-context recipes-context))
              [recipe set-recipe!] (uix/use-state nil)
              [editable-recipe set-editable-recipe!] (uix/use-state nil)
+             [bom set-bom!] (uix/use-state nil)
              [refresh? set-refresh!] (uix/use-state nil)
              unsaved-changes? (not= recipe editable-recipe)
              set-ingredient! #(set-editable-recipe! (update editable-recipe
@@ -85,11 +86,19 @@
                                                           :amount-unit scaled-amount-unit}
                                                          {}))
                        (.then (juxt set-recipe! set-editable-recipe!))
+                       (.then #(when recipe
+                                 (api/get-recipe-bom token recipe-id (if (some? scaled-amount)
+                                                                       {:amount      scaled-amount
+                                                                        :amount-unit scaled-amount-unit}
+                                                                       {:amount      (:recipe/amount recipe)
+                                                                        :amount-unit (:recipe/amount-unit recipe)}))))
+                       (.then set-bom!)
                        (.catch #(do (js/alert "Could not load recipe")
                                     (set-editable-recipe! nil))))))
-           [refresh? loading? token recipe-id scaled-amount scaled-amount-unit])
+           [refresh? loading? token recipe recipe-id scaled-amount scaled-amount-unit])
          ($ (.-Provider recipe-context) {:value {:recipe               recipe
                                                  :editable-recipe      editable-recipe
+                                                 :bom                  bom
                                                  :scaled-amount        scaled-amount
                                                  :set-editable-recipe! set-editable-recipe!
                                                  :set-ingredient!      set-ingredient!
