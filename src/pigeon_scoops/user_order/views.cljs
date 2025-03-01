@@ -7,6 +7,7 @@
             [uix.core :as uix :refer [$ defui]]
             ["@mui/icons-material/Delete$default" :as DeleteIcon]
             ["@mui/icons-material/AddCircle$default" :as AddCircleIcon]
+            ["@mui/icons-material/ArrowForward$default" :as ArrowForwardIcon]
             ["@mui/material" :refer [Button
                                      FormControl
                                      InputLabel
@@ -87,7 +88,13 @@
             ($ TableCell
                ($ IconButton {:color    "error"
                               :on-click (partial remove-item! (:order-item/id order-item))}
-                  ($ DeleteIcon))))))
+                  ($ DeleteIcon))
+               ($ IconButton {:color    "primary"
+                              :on-click #(rfe/push-state :pigeon-scoops.recipe.routes/recipe
+                                                         {:recipe-id (:order-item/recipe-id order-item)}
+                                                         {:amount      (:order-item/amount order-item)
+                                                          :amount-unit (:order-item/amount-unit order-item)})}
+                  ($ ArrowForwardIcon))))))
 
 (defui order-item-table []
        (let [{:keys [editable-order new-item!]} (uix/use-context octx/order-context)]

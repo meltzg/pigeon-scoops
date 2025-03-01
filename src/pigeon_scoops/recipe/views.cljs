@@ -10,6 +10,7 @@
             ["@mui/icons-material/AddCircle$default" :as AddCircleIcon]
             ["@mui/icons-material/Delete$default" :as DeleteIcon]
             ["@mui/icons-material/CheckCircle$default" :as CheckCircleIcon]
+            ["@mui/icons-material/ArrowForward$default" :as ArrowForwardIcon]
             ["@mui/icons-material/Cancel$default" :as CancelIcon]
             ["@mui/material" :refer [Button
                                      FormControl
@@ -76,14 +77,7 @@
                ($ Stack {:direction "row" :spcing 1}
                   ($ Switch {:checked   recipe-ingredient?
                              :on-change #(set-recipe-ingredient! (.. % -target -checked))})
-                  ($ Typography {:on-click #(apply rfe/push-state
-                                                   (if recipe-ingredient?
-                                                     [:pigeon-scoops.recipe.routes/recipe
-                                                      {:recipe-id (:ingredient/ingredient-recipe-id ingredient)}
-                                                      {:amount      (:ingredient/amount ingredient)
-                                                       :amount-unit (:ingredient/amount-unit ingredient)}]
-                                                     [:pigeon-scoops.grocery.routes/grocery
-                                                      {:grocery-id (:ingredient/ingredient-grocery-id ingredient)}]))}
+                  ($ Typography
                      (if recipe-ingredient? "Recipe" "Grocery"))))
             ($ TableCell
                ($ FormControl
@@ -130,7 +124,17 @@
             ($ TableCell
                ($ IconButton {:color    "error"
                               :on-click (partial remove-ingredient! (:ingredient/id ingredient))}
-                  ($ DeleteIcon))))))
+                  ($ DeleteIcon))
+               ($ IconButton {:color "primary"
+                              :on-click #(apply rfe/push-state
+                                                (if recipe-ingredient?
+                                                  [:pigeon-scoops.recipe.routes/recipe
+                                                   {:recipe-id (:ingredient/ingredient-recipe-id ingredient)}
+                                                   {:amount      (:ingredient/amount ingredient)
+                                                    :amount-unit (:ingredient/amount-unit ingredient)}]
+                                                  [:pigeon-scoops.grocery.routes/grocery
+                                                   {:grocery-id (:ingredient/ingredient-grocery-id ingredient)}]))}
+                  ($ ArrowForwardIcon))))))
 
 (defui ingredient-table []
        (let [{:keys [editable-recipe new-ingredient!]} (uix/use-context rctx/recipe-context)]
