@@ -199,9 +199,22 @@
                ($ Switch {:checked   (or (:recipe/public editable-recipe) false)
                           :on-change #(set-editable-recipe! (assoc editable-recipe :recipe/public (.. % -target -checked)))})
                ($ Typography (if (:recipe/public editable-recipe) "Public" "Private")))
+            ($ Stack {:direction "row"}
+               ($ Switch {:checked   (or (:recipe/is-mystery editable-recipe) false)
+                          :on-change #(set-editable-recipe! (assoc editable-recipe :recipe/is-mystery (.. % -target -checked)))})
+               ($ Typography (if (:recipe/is-mystery editable-recipe) "Mystery Flavor" "Regular Flavor")))
             ($ TextField {:label     "Source"
                           :value     (or (:recipe/source editable-recipe) "")
                           :on-change #(set-editable-recipe! (assoc editable-recipe :recipe/source (.. % -target -value)))})
+            ($ TextField {:label     "Description"
+                          :multiline true
+                          :value     (or (:recipe/description editable-recipe) "")
+                          :on-change #(set-editable-recipe! (assoc editable-recipe :recipe/description (.. % -target -value)))})
+            (when (:recipe/is-mystery editable-recipe)
+              ($ TextField {:label     "Mystery Description"
+                            :multiline true
+                            :value     (or (:recipe/mystery-description editable-recipe) "")
+                            :on-change #(set-editable-recipe! (assoc editable-recipe :recipe/mystery-description (.. % -target -value)))}))
             ($ Stack {:direction "row" :spacing 1}
                ($ number-field {:value          (:recipe/amount editable-recipe)
                                 :set-value!     #(set-editable-recipe! (assoc editable-recipe :recipe/amount %))

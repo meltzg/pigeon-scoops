@@ -15,5 +15,5 @@
                      (.then (juxt set-token! (partial set-loading! false))))
                  (set-loading! false)))
              [getAccessTokenSilently isAuthenticated])
-           {:token token
+           {:token    token
             :loading? loading?}))
