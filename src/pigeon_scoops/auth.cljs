@@ -1,5 +1,6 @@
 (ns pigeon-scoops.auth
-  (:require [pigeon-scoops.hooks :refer [use-token]]
+  (:require [pigeon-scoops.api :as api]
+            [pigeon-scoops.hooks :refer [use-token]]
             [uix.core :as uix :refer [$ defui]]
             ["@auth0/auth0-react" :refer [useAuth0]]
             ["@mui/icons-material/AccountCircle$default" :as AccountCircle]
@@ -13,6 +14,13 @@
        (let [[anchor-el set-anchor-el!] (uix/use-state nil)
              {:keys [logout loginWithRedirect isAuthenticated user isLoading]} (js->clj (useAuth0) :keywordize-keys true)
              {:keys [token]} (use-token)]
+
+         (uix/use-effect
+           (fn []
+             (when (and isAuthenticated token)
+               (api/create-account token)))
+           [isAuthenticated token])
+
          ($ Stack {:direction "column"}
             ($ IconButton {:size     "large"
                            :on-click #(set-anchor-el! (.-currentTarget %))

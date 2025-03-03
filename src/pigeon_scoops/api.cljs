@@ -45,6 +45,11 @@
 (defmethod fetch-request :no-content [request]
   (do-fetch request))
 
+(defn create-account [token]
+  (do-fetch {:method :POST
+             :url    "/account"
+             :token  token}))
+
 (defn get-constants []
   (fetch-request {:method :GET :url "/constants"}))
 
