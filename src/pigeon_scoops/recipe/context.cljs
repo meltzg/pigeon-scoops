@@ -99,7 +99,9 @@
          ($ (.-Provider recipe-context) {:value {:recipe               recipe
                                                  :editable-recipe      editable-recipe
                                                  :bom                  bom
+                                                 :scaled?              (or scaled-amount scaled-amount-unit)
                                                  :scaled-amount        scaled-amount
+                                                 :scaled-amount-unit   scaled-amount-unit
                                                  :set-editable-recipe! set-editable-recipe!
                                                  :set-ingredient!      set-ingredient!
                                                  :remove-ingredient!   remove-ingredient!

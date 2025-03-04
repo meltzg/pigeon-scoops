@@ -161,10 +161,14 @@
              {:keys [recipe
                      editable-recipe set-editable-recipe!
                      bom
+                     scaled?
                      scaled-amount
+                     scaled-amount-unit
                      unsaved-changes?
                      save!]} (uix/use-context rctx/recipe-context)
-             [show-bom? set-show-bom!] (uix/use-state false)]
+             [show-bom? set-show-bom!] (uix/use-state false)
+             [scaled-amount set-scaled-amount!] (uix/use-state scaled-amount)
+             [scaled-amount-unit set-scaled-amount-unit!] (uix/use-state scaled-amount-unit)]
 
          (uix/use-effect
            (fn []
@@ -179,7 +183,7 @@
            [unsaved-changes?])
 
          ($ Stack {:direction "column" :spacing 1 :sx (clj->js {:width "100%"})}
-            ($ Stack {:direction "row"}
+            ($ Stack {:direction "row" :spacing 1}
                ($ Button {:on-click #(rfe/push-state :pigeon-scoops.recipe.routes/recipes)}
                   "Back to list")
                ($ Button {:disabled (or (some? scaled-amount) (not unsaved-changes?))
@@ -188,9 +192,12 @@
                ($ Button {:on-click (partial set-editable-recipe! recipe)
                           :disabled (not unsaved-changes?)}
                   "Reset Changes")
-               (when (some? scaled-amount)
-                 ($ Button {:on-click #(rfe/push-state :pigeon-scoops.recipe.routes/recipe
-                                                       {:recipe-id (:recipe/id recipe)})}
+               (when scaled?
+                 ($ Button {:on-click #(do
+                                         (set-scaled-amount! nil)
+                                         (set-scaled-amount-unit! "")
+                                         (rfe/push-state :pigeon-scoops.recipe.routes/recipe
+                                                         {:recipe-id (:recipe/id recipe)}))}
                     "Reset scaled amount")))
             ($ TextField {:label     "Name"
                           :value     (or (:recipe/name editable-recipe) "")
@@ -215,10 +222,43 @@
                             :multiline true
                             :value     (or (:recipe/mystery-description editable-recipe) "")
                             :on-change #(set-editable-recipe! (assoc editable-recipe :recipe/mystery-description (.. % -target -value)))}))
-            ($ Stack {:direction "row" :spacing 1}
+            (when editable-recipe
+              ($ Stack {:direction "row" :spacing 0.5}
+                 ($ Typography {:sx (clj->js {:display        "flex"
+                                              :alignItems     "center"
+                                              :justifyContent "center"
+                                              :height         "100%"})}
+                    "Scale Amount")
+                 ($ number-field {:value          scaled-amount
+                                  :set-value!     set-scaled-amount!
+                                  :hide-controls? true})
+                 ($ FormControl
+                    ($ Select {:value     scaled-amount-unit
+                               :label     "Scaled Unit"
+                               :on-change #(set-scaled-amount-unit! (->> unit-types
+                                                                         (filter (fn [ut]
+                                                                                   (= (name ut)
+                                                                                      (.. % -target -value))))
+                                                                         (first)))}
+                       (for [ut (get (update-keys (group-by namespace unit-types) keyword)
+                                     (-> editable-recipe
+                                         :recipe/amount-unit
+                                         (namespace)
+                                         (keyword)))]
+                         ($ MenuItem {:value ut :key ut} (name ut)))))
+                 ($ Button {:on-click #(rfe/push-state :pigeon-scoops.recipe.routes/recipe
+                                                       {:recipe-id (:recipe/id recipe)}
+                                                       {:amount scaled-amount :amount-unit scaled-amount-unit})
+                            :disabled (or (nil? scaled-amount) (nil? scaled-amount-unit))}
+                    "Scale Recipe")))
+            ($ Stack {:direction "row" :spacing 0.5}
+               ($ Typography {:sx (clj->js {:display        "flex"
+                                            :alignItems     "center"
+                                            :justifyContent "center"
+                                            :height         "100%"})}
+                  "Amount")
                ($ number-field {:value          (:recipe/amount editable-recipe)
                                 :set-value!     #(set-editable-recipe! (assoc editable-recipe :recipe/amount %))
-                                :label          "Amount"
                                 :hide-controls? true})
 
                ($ FormControl
