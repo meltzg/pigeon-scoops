@@ -55,7 +55,7 @@
              new-ingredient! (fn []
                                (set-editable-recipe! (update editable-recipe
                                                              :recipe/ingredients
-                                                             #(conj % {:ingredient/id :new}))))
+                                                             #(conj % {:ingredient/id (random-uuid)}))))
              save! (fn []
                      (let [unit-ops (determine-ops :ingredient/id
                                                    (:recipe/ingredients recipe)

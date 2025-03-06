@@ -104,7 +104,6 @@
                      ($ TableCell
                         "Actions"
                         ($ IconButton {:color    "primary"
-                                       :disabled (some keyword? (map :grocery-unit/id (:grocery/units editable-grocery)))
                                        :on-click new-unit!}
                            ($ AddCircleIcon)))))
 

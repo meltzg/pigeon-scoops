@@ -149,7 +149,6 @@
                      ($ TableCell
                         "Actions"
                         ($ IconButton {:color    "primary"
-                                       :disabled (some keyword? (map :ingredient/id (:recipe/ingredients editable-recipe)))
                                        :on-click new-ingredient!}
                            ($ AddCircleIcon)))))
                ($ TableBody
