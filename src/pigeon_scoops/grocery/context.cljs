@@ -53,7 +53,7 @@
              new-unit! (fn []
                          (set-editable-grocery! (update editable-grocery
                                                         :grocery/units
-                                                        #(conj % {:grocery-unit/id :new}))))
+                                                        #(conj % {:grocery-unit/id (random-uuid)}))))
              save! (fn []
                      (let [unit-ops (determine-ops :grocery-unit/id
                                                    (:grocery/units grocery)

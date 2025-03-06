@@ -53,7 +53,7 @@
              new-item! (fn []
                          (set-editable-order! (update editable-order
                                                       :user-order/items
-                                                      #(conj % {:order-item/id :new}))))
+                                                      #(conj % {:order-item/id (random-uuid)}))))
              save! (fn []
                      (let [unit-ops (determine-ops :order-item/id
                                                    (:user-order/items order)

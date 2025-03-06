@@ -110,7 +110,6 @@
                      ($ TableCell
                         "Actions"
                         ($ IconButton {:color    "primary"
-                                       :disabled (some keyword? (map :order-item/id (:user-order/items editable-order)))
                                        :on-click new-item!}
                            ($ AddCircleIcon)))))
 
