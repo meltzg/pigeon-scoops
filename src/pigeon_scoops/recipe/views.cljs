@@ -222,7 +222,7 @@
                             :multiline true
                             :value     (or (:recipe/mystery-description editable-recipe) "")
                             :on-change #(set-editable-recipe! (assoc editable-recipe :recipe/mystery-description (.. % -target -value)))}))
-            (when editable-recipe
+            (when (uuid? (:recipe/id editable-recipe))
               ($ Stack {:direction "row" :spacing 0.5}
                  ($ Typography {:sx (clj->js {:display        "flex"
                                               :alignItems     "center"
@@ -233,7 +233,7 @@
                                   :set-value!     set-scaled-amount!
                                   :hide-controls? true})
                  ($ FormControl
-                    ($ Select {:value     scaled-amount-unit
+                    ($ Select {:value     (or scaled-amount-unit "")
                                :label     "Scaled Unit"
                                :on-change #(set-scaled-amount-unit! (->> unit-types
                                                                          (filter (fn [ut]
