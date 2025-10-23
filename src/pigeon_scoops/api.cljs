@@ -130,11 +130,44 @@
 (defn delete-order [token order-id]
   (fetch-request {:method :DELETE :url (str "/orders/" order-id) :token token}))
 
-(defn create-item [token order-id item]
+(defn create-order-item [token order-id item]
   (fetch-request {:method :POST :url (str "/orders/" order-id "/items") :body item :token token}))
 
-(defn update-item [token order-id item]
+(defn update-order-item [token order-id item]
   (fetch-request {:method :PUT :url (str "/orders/" order-id "/items") :body item :token token}))
 
-(defn delete-item [token order-id item-id]
+(defn delete-order-item [token order-id item-id]
   (fetch-request {:method :DELETE :url (str "/orders/" order-id "/items") :body {:id item-id} :token token}))
+
+(defn get-menus [token]
+  (fetch-request {:method :GET :url "/menus" :token token}))
+
+(defn get-menu [token menu-id]
+  (fetch-request {:method :GET :url (str "/menus/" menu-id) :token token}))
+
+(defn create-menu [token menu]
+  (fetch-request {:method :POST :url "/menus" :token token :body menu}))
+
+(defn update-menu [token {:menu/keys [id] :as menu}]
+  (fetch-request {:method :PUT :url (str "/menu/" id) :token token :body menu}))
+
+(defn delete-menu [token menu-id]
+  (fetch-request {:method :DELETE :url (str "/menus/" menu-id) :token token}))
+
+(defn create-menu-item [token menu-id item]
+  (fetch-request {:method :POST :url (str "/menus/" menu-id "/items") :body item :token token}))
+
+(defn update-menu-item [token menu-id item]
+  (fetch-request {:method :PUT :url (str "/menus/" menu-id "/items") :body item :token token}))
+
+(defn delete-menu-item [token menu-id item-id]
+  (fetch-request {:method :DELETE :url (str "/menus/" menu-id "/items") :body {:id item-id} :token token}))
+
+(defn create-menu-item-size [token menu-id item-size]
+  (fetch-request {:method :POST :url (str "/menus/" menu-id "/sizes") :body item-size :token token}))
+
+(defn update-menu-item-size [token menu-id item-size]
+  (fetch-request {:method :PUT :url (str "/menus/" menu-id "/sizes") :body item-size :token token}))
+
+(defn delete-menu-item-size [token menu-id item-size-id]
+  (fetch-request {:method :DELETE :url (str "/menus/" menu-id "/sizes") :body {:id item-size-id} :token token}))

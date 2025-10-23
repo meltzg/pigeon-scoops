@@ -52,6 +52,7 @@
                ($ List
                   (for [[app-name app-icon app-key page] [["Groceries" LocalGroceryStoreIcon :groceries :pigeon-scoops.grocery.routes/groceries]
                                                           ["Recipes" MenuBookIcon :recipes :pigeon-scoops.recipe.routes/recipes]
+                                                          ["Menu" IcecreamIcon :menu :pigeon-scoops.menu.routes/menu]
                                                           ["Orders" ReceiptIcon :orders :pigeon-scoops.user-order.routes/orders]]]
                     ($ app-menu-item {:key      app-key
                                       :text     app-name

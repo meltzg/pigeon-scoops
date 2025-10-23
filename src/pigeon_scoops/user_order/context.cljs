@@ -66,9 +66,9 @@
                                                              {:order-id (:id %)})))))
                            (.then (fn [_]
                                     (js/Promise.all (clj->js (concat
-                                                               (map (partial api/create-item token order-id) (:new unit-ops))
-                                                               (map (partial api/update-item token order-id) (:update unit-ops))
-                                                               (map (partial api/delete-item token order-id) (:delete unit-ops)))))))
+                                                               (map (partial api/create-order-item token order-id) (:new unit-ops))
+                                                               (map (partial api/update-order-item token order-id) (:update unit-ops))
+                                                               (map (partial api/delete-order-item token order-id) (:delete unit-ops)))))))
                            (.then #(set-refresh! (not refresh?))))))]
          (uix/use-effect
            (fn []
