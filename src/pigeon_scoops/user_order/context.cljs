@@ -32,7 +32,7 @@
 
 (defui with-order [{:keys [order-id children]}]
        (let [{:keys [token]} (use-token)
-             refresh-orders! (:refresh (uix/use-context orders-context))
+             refresh-orders! (:refresh! (uix/use-context orders-context))
              [order set-order!] (uix/use-state nil)
              [editable-order set-editable-order!] (uix/use-state nil)
              [bom set-bom!] (uix/use-state nil)

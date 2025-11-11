@@ -5,6 +5,7 @@
             [pigeon-scoops.recipe.context :as rctx]
             [pigeon-scoops.router :refer [router-context with-router]]
             [pigeon-scoops.user-order.context :as octx]
+            [pigeon-scoops.menu.context :as mctx]
             [reitit.frontend.easy :as rfe]
             [uix.core :as uix :refer [$ defui]]
             [uix.dom]
@@ -73,12 +74,14 @@
                          :authorization-params (clj->js {:redirect_uri (.. js/window -location -origin)
                                                          :scope        "openid profile email offline_access"
                                                          :audience     "https://api.pigeon-scoops.com"})}
+
           ($ with-router
              ($ ctx/with-constants
                 ($ gctx/with-groceries
                    ($ rctx/with-recipes
                       ($ octx/with-orders
-                         ($ content))))))))
+                         ($ mctx/with-menus
+                            ($ content)))))))))
 
 (defonce root
          (uix.dom/create-root (js/document.getElementById "root")))
