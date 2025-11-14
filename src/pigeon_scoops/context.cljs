@@ -1,6 +1,5 @@
 (ns pigeon-scoops.context
   (:require [pigeon-scoops.api :as api]
-            [pigeon-scoops.hooks :refer [use-token]]
             [uix.core :as uix :refer [$ defui]]))
 
 (def constants-context (uix/create-context))

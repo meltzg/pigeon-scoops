@@ -11,11 +11,11 @@
   (let [item-ops (determine-ops :menu-item/id
                                 current-items
                                 editable-items)]
-    (js/Primise.all
+    (js/Promise.all
       (clj->js
         (concat
           (map (fn [item-to-delete]
-                 (-> (js/Primise.all
+                 (-> (js/Promise.all
                        (clj->js (map (comp (partial api/delete-menu-item-size token menu-id)
                                            :menu-item-size/id)
                                      (:menu-item/sizes item-to-delete))))
@@ -30,7 +30,23 @@
                                                     #(update % :menu-item-size/menu-item-id item-id))
                                               (:menu-item/sizes new-item))))))))
                (:new item-ops))
-          (map (fn [item-to-update])
+          (map (fn [item-to-update]
+                 (let [current-sizes (->> current-items
+                                          (filter #(= (:menu-item/id %) (:menu-item/id item-to-update)))
+                                          (first)
+                                          :menu-item/sizes)
+                       size-ops (determine-ops :menu-item-size/id
+                                               current-sizes
+                                               (:menu-item/sizes item-to-update))]
+                   (-> (js/Promise.all
+                         (clj->js
+                           (concat
+                             (map (partial api/create-menu-item-size token menu-id) (:new size-ops))
+                             (map (partial api/update-menu-item-size token menu-id) (:update size-ops))
+                             (map (partial api/delete-menu-item-size token menu-id) (:delete size-ops)))))
+                       (.then (fn []
+                                (api/update-menu-item token menu-id item-to-update))))))
+
                (:update item-ops)))))))
 
 
@@ -52,16 +68,16 @@
                (-> (api/get-menus token)
                    (.then set-menus!))))
            [token refresh?])
-         ($ (.-Provider menus-context) {:value {:menus menus
+         ($ (.-Provider menus-context) {:value {:menus     menus
                                                 :new-menu! new-menu!
-                                                :refresh! refresh!
-                                                :delete! delete!}}
+                                                :refresh!  refresh!
+                                                :delete!   delete!}}
             children)))
 
-(defui with-menu [{:keys [menu children]}]
+(defui with-menu [{:keys [menu-id children]}]
        (let [{:keys [token]} (use-token)
              refresh-menus! (:refresh! (uix/use-context menus-context))
-             [menu set-menu!] (uix/use-state menu)
+             [menu set-menu!] (uix/use-state nil)
              [editable-menu set-editable-menu!] (uix/use-state menu)
              [refresh? set-refresh!] (uix/use-state nil)
              unsaved-changes? (not= menu editable-menu)
@@ -126,27 +142,39 @@
                                                         item-id)
                                                    (update item :menu-item/sizes
                                                            #(conj % {:menu-item-size/menu-item-id (:menu-item/id %)
-                                                                     :menu-item-size/id (random-uuid)}))
+                                                                     :menu-item-size/id           (random-uuid)}))
                                                    item))
                                                items)))))
              save! (fn []
-                     (let [item-ops (determine-ops :menu-item/id
-                                                   (:menu/items menu)
-                                                   (:menu/items editable-menu))
-                           menu-id (atom (:menu/id editable-menu))]
+                     (let [menu-id (atom (:menu/id editable-menu))]
                        (-> (if (uuid? (:menu/id editable-menu))
                              (api/update-menu token editable-menu)
                              (-> (api/create-menu token editable-menu)
                                  (.then #(do (refresh-menus!)
                                              (swap! menu-id (:id %))))))
-                           (.then (fn [_]
-                                    (js/Promise.all (clj->js (concat
-                                                               (map (partial api/create-menu-item token @menu-id) (:new item-ops))
-                                                               (map (partial api/update-menu-item token @menu-id) (:update item-ops))
-                                                               (map (partial api/delete-menu-item token @menu-id) (:delete item-ops)))))))
+                           (.then (fn []
+                                    (save-menu-items! token @menu-id (:menu/items menu) (:menu/items editable-menu))))
                            (.then #(set-refresh! (not refresh?))))))]
          (uix/use-effect
-           (fn []))))
+           (fn []
+             (cond (keyword? (:menu/id menu))
+                   ((juxt set-menu! set-editable-menu!) {})
+                   (and menu-id token)
+                   (-> (api/get-menu token menu-id)
+                       (.then (juxt set-menu! set-editable-menu!)))))
+           [refresh? token menu menu-id])
+         ($ (.-Provider menu-context) {:value {:menu               menu
+                                               :editable-menu      editable-menu
+                                               :set-editable-menu! set-editable-menu!
+                                               :set-item!          set-item!
+                                               :remove-item!       remove-item!
+                                               :new-item!          new-item!
+                                               :set-item-size!     set-item-size!
+                                               :remove-item-size!  remove-item-size!
+                                               :new-item-size!     new-item-size!
+                                               :unsaved-changes?   unsaved-changes?
+                                               :save!              save!}}
+            children)))
 
 
 

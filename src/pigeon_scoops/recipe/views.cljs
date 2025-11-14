@@ -15,7 +15,6 @@
             ["@mui/icons-material/Cancel$default" :as CancelIcon]
             ["@mui/material" :refer [Button
                                      FormControl
-                                     InputLabel
                                      Select
                                      Stack
                                      IconButton

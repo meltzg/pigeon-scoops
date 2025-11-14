@@ -11,8 +11,8 @@
                                                (if (str/ends-with? (.. % -target -value) "\n")
                                                  (conj new-lines "")
                                                  new-lines)))
-                     :on-key-up #(if (and (str/blank? (last lines))
-                                          (= (.-key %) "Backspace"))
+                     :on-key-up #(when (and (str/blank? (last lines))
+                                            (= (.-key %) "Backspace"))
                                    (set-lines! (butlast lines)))
                      :label     "Instructions"
                      :multiline true}))

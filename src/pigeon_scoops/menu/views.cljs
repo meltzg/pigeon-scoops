@@ -1,6 +1,6 @@
 (ns pigeon-scoops.menu.views
-  (:require [uix.core :as uix :refer [$ defui]]
-            [pigeon-scoops.menu.context :as mctx]
+  (:require [pigeon-scoops.menu.context :as mctx]
+            [uix.core :as uix :refer [$ defui]]
             ["@mui/icons-material/ExpandMore$default" :as ExpandMoreIcon]
             ["@mui/material" :refer [Button
                                      Card
@@ -11,22 +11,27 @@
                                      IconButton
                                      Stack]]))
 
-(defui menu-card [{:keys [menu]}]
-       (let [[expanded? set-expanded!] (uix/use-state (or (:menu/active menu)
+(defui menu-card []
+       (let [{:keys [menu]} (uix/use-context mctx/menu-context)
+             [expanded? set-expanded!] (uix/use-state (or (:menu/active menu)
                                                           (= (:menu/id menu) :new)))]
+         (uix/use-effect
+           (fn []
+             (set-expanded! (or expanded? (:menu/active menu))))
+           [expanded? menu])
          ($ Card
-            ($ CardHeader {:title (or (:menu/name menu)
-                                      "[New Menu]")
-                           :subheader (str "Ends on: "(:menu/end-time menu))})
+            ($ CardHeader {:title     (or (:menu/name menu)
+                                          "[New Menu]")
+                           :subheader (str "Ends on: " (:menu/end-time menu))})
             ($ CardContent
                ($ Collapse {:in expanded?}
-                  "asdf"))
+                  (str "active " (:menu/active menu))))
             ($ CardActions
                ($ Button "Save")
                ($ Button "Reset")
                ($ Button "Delete")
-               ($ IconButton {:style {:transform (str "rotate(" (if expanded? 0 180) "deg)")
-                                      :margin-left "auto"}
+               ($ IconButton {:style    {:transform   (str "rotate(" (if expanded? 0 180) "deg)")
+                                         :margin-left "auto"}
                               :on-click #(set-expanded! (not expanded?))}
                   ($ ExpandMoreIcon))))))
 
@@ -35,4 +40,6 @@
          ($ Stack {:direction "column"}
             ($ Button {:on-click #(new-menu!)} "New Menu")
             (for [m menus]
-              ($ menu-card {:menu m :key (:menu/id m)})))))
+              ($ mctx/with-menu
+                 {:menu-id (:menu/id m) :key (:menu/id m)}
+                 ($ menu-card))))))
