@@ -149,7 +149,7 @@
   (fetch-request {:method :POST :url "/menus" :token token :body menu}))
 
 (defn update-menu [token {:menu/keys [id] :as menu}]
-  (fetch-request {:method :PUT :url (str "/menu/" id) :token token :body menu}))
+  (fetch-request {:method :PUT :url (str "/menus/" id) :token token :body menu}))
 
 (defn delete-menu [token menu-id]
   (fetch-request {:method :DELETE :url (str "/menus/" menu-id) :token token}))

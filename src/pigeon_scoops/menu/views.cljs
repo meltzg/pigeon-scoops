@@ -20,7 +20,7 @@
                                      Typography]]))
 
 (defui menu-card []
-       (let [{:keys [menu editable-menu set-editable-menu! unsaved-changes?]} (uix/use-context mctx/menu-context)
+       (let [{:keys [menu editable-menu set-editable-menu! unsaved-changes? save!]} (uix/use-context mctx/menu-context)
              {:constants/keys [menu-durations]} (uix/use-context ctx/constants-context)
              [expanded? set-expanded!] (uix/use-state (or (:menu/active menu)
                                                           (= (:menu/id menu) :new)))]
@@ -69,7 +69,10 @@
                            (for [md menu-durations]
                              ($ MenuItem {:value md :key md} (name md))))))))
             ($ CardActions
-               ($ Button {:disabled (not unsaved-changes?)} "Save")
+               ($ Button
+                  {:disabled (not unsaved-changes?)
+                   :on-click save!}
+                  "Save")
                ($ Button
                   {:disabled (not unsaved-changes?)
                    :on-click (partial set-editable-menu! menu)}
