@@ -1,8 +1,8 @@
 (ns pigeon-scoops.menu.views
-  (:require [pigeon-scoops.context :as ctx]
+  (:require [pigeon-scoops.components.number-field :refer [number-field]]
+            [pigeon-scoops.context :as ctx]
             [pigeon-scoops.menu.context :as mctx]
             [uix.core :as uix :refer [$ defui]]
-            [pigeon-scoops.components.number-field :refer [number-field]]
             ["@mui/icons-material/ExpandMore$default" :as ExpandMoreIcon]
             ["@mui/material" :refer [Button
                                      Card
@@ -20,7 +20,8 @@
                                      Typography]]))
 
 (defui menu-card []
-       (let [{:keys [menu editable-menu set-editable-menu! unsaved-changes? save!]} (uix/use-context mctx/menu-context)
+       (let [{:keys [delete!]} (uix/use-context mctx/menus-context)
+             {:keys [menu editable-menu set-editable-menu! unsaved-changes? save!]} (uix/use-context mctx/menu-context)
              {:constants/keys [menu-durations]} (uix/use-context ctx/constants-context)
              [expanded? set-expanded!] (uix/use-state (or (:menu/active menu)
                                                           (= (:menu/id menu) :new)))]
@@ -77,7 +78,7 @@
                   {:disabled (not unsaved-changes?)
                    :on-click (partial set-editable-menu! menu)}
                   "Reset")
-               ($ Button "Delete")
+               ($ Button {:on-click #(delete! (:menu/id menu))} "Delete")
                ($ IconButton {:style    {:transform   (str "rotate(" (if expanded? 0 180) "deg)")
                                          :margin-left "auto"}
                               :on-click #(set-expanded! (not expanded?))}
