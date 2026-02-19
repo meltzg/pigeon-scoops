@@ -8,8 +8,8 @@
 
 (defn make-headers [{:keys [token body]}]
   (cond-> {:Accept "application/transit+json"}
-          body (assoc :Content-Type "application/transit+json")
-          token (assoc :Authorization (str "Bearer " token))))
+    body (assoc :Content-Type "application/transit+json")
+    token (assoc :Authorization (str "Bearer " token))))
 
 (defn reject-error [response]
   (-> response
@@ -26,7 +26,7 @@
   (-> (js/fetch (str base-url url)
                 (clj->js (cond-> {:method  (name method)
                                   :headers (make-headers request)}
-                                 body (assoc :body (encode-body body)))))
+                           body (assoc :body (encode-body body)))))
       (reject-error)))
 
 (defn has-response-body? [{:keys [method]}]
@@ -83,15 +83,15 @@
 (defn get-recipe [token recipe-id {:keys [amount amount-unit]}]
   (let [query-params (when amount
                        (js/URLSearchParams.
-                         (clj->js {:amount      amount
-                                   :amount-unit (str (namespace amount-unit) "/" (name amount-unit))})))]
+                        (clj->js {:amount      amount
+                                  :amount-unit (str (namespace amount-unit) "/" (name amount-unit))})))]
     (fetch-request {:method :GET :url (str "/recipes/" recipe-id "?" (or query-params "")) :token token})))
 
 (defn get-recipe-bom [token recipe-id {:keys [amount amount-unit]}]
   (let [query-params (when amount
                        (js/URLSearchParams.
-                         (clj->js {:amount      amount
-                                   :amount-unit (str (namespace amount-unit) "/" (name amount-unit))})))]
+                        (clj->js {:amount      amount
+                                  :amount-unit (str (namespace amount-unit) "/" (name amount-unit))})))]
     (fetch-request {:method :GET :url (str "/recipes/" recipe-id "/bom?" (or query-params "")) :token token})))
 
 (defn create-recipe [token recipe]
