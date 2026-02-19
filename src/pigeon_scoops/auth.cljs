@@ -11,34 +11,34 @@
                                      Typography]]))
 
 (defui authenticator []
-       (let [[anchor-el set-anchor-el!] (uix/use-state nil)
-             {:keys [logout loginWithRedirect isAuthenticated user isLoading]} (js->clj (useAuth0) :keywordize-keys true)
-             {:keys [token]} (use-token)]
+  (let [[anchor-el set-anchor-el!] (uix/use-state nil)
+        {:keys [logout loginWithRedirect isAuthenticated user isLoading]} (js->clj (useAuth0) :keywordize-keys true)
+        {:keys [token]} (use-token)]
 
-         (uix/use-effect
-           (fn []
-             (when (and isAuthenticated token)
-               (api/create-account token)))
-           [isAuthenticated token])
+    (uix/use-effect
+     (fn []
+       (when (and isAuthenticated token)
+         (api/create-account token)))
+     [isAuthenticated token])
 
-         ($ Stack {:direction "column"}
-            ($ IconButton {:size     "large"
-                           :on-click #(set-anchor-el! (.-currentTarget %))
-                           :color    (cond isLoading "warning"
-                                           (and isAuthenticated token) "default"
-                                           :else "error")}
-               ($ AccountCircle))
-            ($ Menu {:id           "menu-connection"
-                     :anchor-el    anchor-el
-                     :keep-mounted true
-                     :open         (some? anchor-el)
-                     :on-close     #(set-anchor-el! nil)}
-               (if (and isAuthenticated token)
-                 ($ Stack {:direction "column" :spacing 1}
-                    ($ Typography
-                       (:name user))
-                    ($ MenuItem {:on-click #(logout (clj->js {:logoutParams {:returnTo (.. js/window -location -origin)}}))}
-                       "Sign Out"))
-                 ($ MenuItem {:on-click #(loginWithRedirect (clj->js {:authorizationParams {:audience "https://api.pigeon-scoops.com"
-                                                                                            :scope    "openid profile email offline_access"}}))}
-                    "Sign In"))))))
+    ($ Stack {:direction "column"}
+       ($ IconButton {:size     "large"
+                      :on-click #(set-anchor-el! (.-currentTarget %))
+                      :color    (cond isLoading "warning"
+                                      (and isAuthenticated token) "default"
+                                      :else "error")}
+          ($ AccountCircle))
+       ($ Menu {:id           "menu-connection"
+                :anchor-el    anchor-el
+                :keep-mounted true
+                :open         (some? anchor-el)
+                :on-close     #(set-anchor-el! nil)}
+          (if (and isAuthenticated token)
+            ($ Stack {:direction "column" :spacing 1}
+               ($ Typography
+                  (:name user))
+               ($ MenuItem {:on-click #(logout (clj->js {:logoutParams {:returnTo (.. js/window -location -origin)}}))}
+                  "Sign Out"))
+            ($ MenuItem {:on-click #(loginWithRedirect (clj->js {:authorizationParams {:audience "https://api.pigeon-scoops.com"
+                                                                                       :scope    "openid profile email offline_access"}}))}
+               "Sign In"))))))

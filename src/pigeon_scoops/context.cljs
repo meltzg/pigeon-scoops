@@ -6,10 +6,10 @@
 (def constants-context (uix/create-context))
 
 (defui with-constants [{:keys [children]}]
-       (let [[constants set-constants!] (uix/use-state nil)]
-         (uix/use-effect
-           (fn []
-             (.then (api/get-constants) set-constants!))
-           [])
-         ($ (.-Provider constants-context) {:value constants}
-            children)))
+  (let [[constants set-constants!] (uix/use-state nil)]
+    (uix/use-effect
+     (fn []
+       (.then (api/get-constants) set-constants!))
+     [])
+    ($ (.-Provider constants-context) {:value constants}
+       children)))

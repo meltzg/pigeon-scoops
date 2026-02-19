@@ -56,66 +56,66 @@
     (str quantity " x " unit)))
 
 (defui grocery-row [{:keys [grocery]}]
-       (let [{:grocery/keys [name
-                             required-amount
-                             required-unit
-                             purchase-amount
-                             purchase-unit
-                             waste-ratio
-                             units]} grocery
-             purchase-cost (purchase-cost units)
-             required-cost (required-cost units waste-ratio)
-             formatted-units (str/join " & " (map format-unit units))]
-         ($ TableRow
-            ($ TableCell
-               ($ Stack {:direction "row"}
-                  ($ Checkbox)
-                  ($ Typography name)))
-            ($ TableCell
-               ($ Typography (format-amount required-amount required-unit)))
-            ($ TableCell
-               ($ Typography (format-dollar required-cost)))
-            ($ TableCell
-               ($ Typography (format-amount purchase-amount purchase-unit)))
-            ($ TableCell
-               ($ Typography formatted-units))
-            ($ TableCell
-               ($ Typography (format-dollar purchase-cost)))
-            ($ TableCell
-               ($ Typography (format-percentage waste-ratio))))))
+  (let [{:grocery/keys [name
+                        required-amount
+                        required-unit
+                        purchase-amount
+                        purchase-unit
+                        waste-ratio
+                        units]} grocery
+        purchase-cost (purchase-cost units)
+        required-cost (required-cost units waste-ratio)
+        formatted-units (str/join " & " (map format-unit units))]
+    ($ TableRow
+       ($ TableCell
+          ($ Stack {:direction "row"}
+             ($ Checkbox)
+             ($ Typography name)))
+       ($ TableCell
+          ($ Typography (format-amount required-amount required-unit)))
+       ($ TableCell
+          ($ Typography (format-dollar required-cost)))
+       ($ TableCell
+          ($ Typography (format-amount purchase-amount purchase-unit)))
+       ($ TableCell
+          ($ Typography formatted-units))
+       ($ TableCell
+          ($ Typography (format-dollar purchase-cost)))
+       ($ TableCell
+          ($ Typography (format-percentage waste-ratio))))))
 
 (defui groceries-table [{:keys [groceries]}]
-       ($ TableContainer {:component Paper}
-          ($ Table
-             ($ TableHead
-                ($ TableRow
-                   ($ TableCell "Item")
-                   ($ TableCell "Amount Needed")
-                   ($ TableCell "Amount Cost")
-                   ($ TableCell "Purchase Amount")
-                   ($ TableCell "Purchase Units")
-                   ($ TableCell "Purchase Cost")
-                   ($ TableCell "Waste")))
-             ($ TableBody
-                (for [g (sort-by :grocery/name groceries)]
-                  ($ grocery-row {:key     (select-keys g [:grocery/id :grocery/required-amount :grocery/required-unit])
-                                  :grocery g}))))))
+  ($ TableContainer {:component Paper}
+     ($ Table
+        ($ TableHead
+           ($ TableRow
+              ($ TableCell "Item")
+              ($ TableCell "Amount Needed")
+              ($ TableCell "Amount Cost")
+              ($ TableCell "Purchase Amount")
+              ($ TableCell "Purchase Units")
+              ($ TableCell "Purchase Cost")
+              ($ TableCell "Waste")))
+        ($ TableBody
+           (for [g (sort-by :grocery/name groceries)]
+             ($ grocery-row {:key     (select-keys g [:grocery/id :grocery/required-amount :grocery/required-unit])
+                             :grocery g}))))))
 
 (defui bom-view [{:keys [groceries]}]
-       (let [total-cost (reduce + (map (comp purchase-cost :grocery/units) groceries))
-             required-cost (reduce + (map #(required-cost (:grocery/units %)
-                                                          (:grocery/waste-ratio %))
-                                          groceries))
-             groceries (group-by :grocery/department groceries)]
-         ($ Paper
+  (let [total-cost (reduce + (map (comp purchase-cost :grocery/units) groceries))
+        required-cost (reduce + (map #(required-cost (:grocery/units %)
+                                                     (:grocery/waste-ratio %))
+                                     groceries))
+        groceries (group-by :grocery/department groceries)]
+    ($ Paper
+       ($ Typography {:variant "h6"}
+          (str "Purchase Cost: " (format-dollar total-cost)))
+       ($ Typography {:variant "h6"}
+          (str "Required Cost: " (format-dollar required-cost)))
+       (for [[department groceries] groceries]
+         ($ Stack {:key department :direction "column"}
             ($ Typography {:variant "h6"}
-               (str "Purchase Cost: " (format-dollar total-cost)))
-            ($ Typography {:variant "h6"}
-               (str "Required Cost: " (format-dollar required-cost)))
-            (for [[department groceries] groceries]
-              ($ Stack {:key department :direction "column"}
-                 ($ Typography {:variant "h6"}
-                    (str "Department: " (kebab-to-title (name department))))
-                 ($ groceries-table {:groceries groceries}))))))
+               (str "Department: " (kebab-to-title (name department))))
+            ($ groceries-table {:groceries groceries}))))))
 
 

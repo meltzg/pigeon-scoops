@@ -17,3 +17,8 @@ pom.xml.asc
 .shadow-cljs
 node_modules
 resources/public/cljs-out
+.clj-kondo/
+.shadow-cljs
+.lsp/
+.yarn/
+.pnp.*
