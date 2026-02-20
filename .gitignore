@@ -20,5 +20,4 @@ resources/public/cljs-out
 .clj-kondo/
 .shadow-cljs
 .lsp/
-.yarn/
-.pnp.*
+lein

@@ -8,9 +8,8 @@
     "test": "test"
   },
   "scripts": {
-    "heroku-prebuild": "curl https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein > lein && chmod +x lein",
     "dev": "npx shadow-cljs watch app",
-    "build": "./lein run -m shadow.cljs.devtools.cli release app"
+    "build": "curl -fsSL -o lein https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein && chmod +x lein && PATH=\"$PWD:$PATH\" yarn run shadow-cljs release app"
   },
   "author": "",
   "license": "ISC",
@@ -26,5 +25,8 @@
     "react-refresh": "^0.16.0",
     "shadow-cljs": "^2.26.2"
   },
-  "packageManager": "yarn@4.12.0"
+  "packageManager": "yarn@4.12.0",
+  "engines": {
+    "node": "24.x"
+  }
 }
