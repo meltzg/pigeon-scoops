@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -e
+
+# Download Leiningen if not already present
+if [ ! -f lein ]; then
+  curl -fsSL -o lein https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein
+  chmod +x lein
+fi
+
+# Add current directory to PATH for this build step
+export PATH="$PWD:$PATH"
+
+echo "Leiningen installed and available in PATH: $(which lein)"
