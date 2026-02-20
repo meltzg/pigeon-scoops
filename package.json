@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "npx shadow-cljs watch app",
-    "build": "curl https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein > lein && chmod +x lein && ./lein run -m shadow.cljs.devtools.cli release app"
+    "build": "yarn run shadow-cljs release app"
   },
   "author": "",
   "license": "ISC",
