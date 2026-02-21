@@ -1,30 +1,23 @@
 (ns pigeon-scoops.core
-  (:require [pigeon-scoops.auth :refer [authenticator]]
-            [pigeon-scoops.context :as ctx]
-            [pigeon-scoops.grocery.context :as gctx]
-            [pigeon-scoops.recipe.context :as rctx]
-            [pigeon-scoops.router :refer [router-context with-router]]
-            [pigeon-scoops.user-order.context :as octx]
-            [reitit.frontend.easy :as rfe]
-            [uix.core :as uix :refer [$ defui]]
-            [uix.dom]
-            ["@auth0/auth0-react" :refer [Auth0Provider]]
-            ["@mui/icons-material/Menu$default" :as MenuIcon]
-            ["@mui/icons-material/Icecream$default" :as IcecreamIcon]
-            ["@mui/icons-material/LocalGroceryStore$default" :as LocalGroceryStoreIcon]
-            ["@mui/icons-material/MenuBook$default" :as MenuBookIcon]
-            ["@mui/icons-material/Receipt$default" :as ReceiptIcon]
-            ["@mui/material" :refer [AppBar
-                                     Box
-                                     Drawer
-                                     IconButton
-                                     List
-                                     ListItem
-                                     ListItemButton
-                                     ListItemIcon
-                                     ListItemText
-                                     Toolbar
-                                     Typography]]))
+  (:require
+   ["@auth0/auth0-react" :refer [Auth0Provider]]
+   ["@mui/icons-material/LocalGroceryStore$default" :as LocalGroceryStoreIcon]
+   ["@mui/icons-material/Menu$default" :as MenuIcon]
+   ["@mui/icons-material/MenuBook$default" :as MenuBookIcon]
+   ["@mui/icons-material/Receipt$default" :as ReceiptIcon]
+   ["@mui/material" :refer [AppBar Box Drawer IconButton List ListItem
+                            ListItemButton ListItemIcon ListItemText Toolbar
+                            Typography]]
+   [pigeon-scoops.auth :refer [authenticator]]
+   [pigeon-scoops.context :as ctx]
+   [pigeon-scoops.grocery.context :as gctx]
+   [pigeon-scoops.hooks :refer [use-constants]]
+   [pigeon-scoops.recipe.context :as rctx]
+   [pigeon-scoops.router :refer [router-context with-router]]
+   [pigeon-scoops.user-order.context :as octx]
+   [reitit.frontend.easy :as rfe]
+   [uix.core :as uix :refer [$ defui]]
+   [uix.dom]))
 
 (defui app-menu-item [{:keys [text icon page on-click]}]
   ($ ListItem
@@ -36,7 +29,12 @@
 
 (defui content []
   (let [{:keys [route]} (uix/use-context router-context)
-        [menu-open? set-menu-open!] (uix/use-state false)]
+        [menu-open? set-menu-open!] (uix/use-state false)
+        {:keys [constants error loading?]} (use-constants)]
+    (uix/use-effect
+     (fn []
+       (prn "Constants loaded:" constants "Error:" error "Loading:" loading?))
+     [constants error loading?])
     ($ Box
        ($ AppBar
           ($ Toolbar

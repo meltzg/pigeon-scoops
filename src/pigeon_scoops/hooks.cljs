@@ -1,6 +1,10 @@
 (ns pigeon-scoops.hooks
-  (:require [uix.core :as uix :refer [defhook]]
-            ["@auth0/auth0-react" :refer [useAuth0]]))
+  (:require
+   ["@auth0/auth0-react" :refer [useAuth0]]
+   [pigeon-scoops.api :refer [base-url]]
+   [pigeon-scoops.fetchers :refer [get-fetcher!]]
+   ["swr$default" :as useSWR]
+   [uix.core :as uix :refer [defhook]]))
 
 (defhook use-token []
   (let [{:keys [getAccessTokenSilently isAuthenticated]} (js->clj (useAuth0) :keywordize-keys true)
@@ -17,3 +21,13 @@
      [getAccessTokenSilently isAuthenticated])
     {:token    token
      :loading? loading?}))
+
+(defhook use-constants []
+  (let [{:keys [token]} (use-token)
+        {:keys [data error isLoading]} (useSWR [(str base-url "/constants") token]
+                                               (fn [[url]]
+                                                 (get-fetcher! url {:token token
+                                                                    :headers {"Accept" "application/transit+msgpack"}})))]
+    {:constants data
+     :error     error
+     :loading?  isLoading}))

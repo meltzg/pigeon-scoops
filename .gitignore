@@ -21,3 +21,4 @@ resources/public/cljs-out
 .shadow-cljs
 .lsp/
 lein
+.calva/
