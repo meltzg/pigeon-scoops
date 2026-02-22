@@ -17,6 +17,7 @@
    [pigeon-scoops.hooks :refer [use-constants]]
    [pigeon-scoops.recipe.context :as rctx]
    [pigeon-scoops.controls.constants-selector :refer [constants-selector]]
+   [pigeon-scoops.controls.ingredients-selector :refer [ingredients-selector]]
    [reitit.frontend.easy :as rfe]
    [uix.core :as uix :refer [$ defui]]))
 
@@ -69,6 +70,7 @@
                 (if recipe-ingredient? "Recipe" "Grocery"))))
        ($ TableCell
           ($ FormControl
+             ($ ingredients-selector {:value "" :on-change #(prn "Ingredient selected:" %)})
              (if recipe-ingredient?
                (let [full-recipes (if (some #(= (:recipe/id %) (:ingredient/ingredient-recipe-id ingredient)) recipes)
                                     recipes
@@ -109,9 +111,9 @@
                    (for [ut unit-types]
                      ($ MenuItem {:value ut :key ut} (name ut)))))
              ($ constants-selector {:value (or (:ingrdient/amount-unit ingredient) "")
-                               :on-change #(prn "Unit selector changed:" %)
-                               :constants-key :constants/unit-types
-                               :valid-type-categories [:mass :volume]})))
+                                    :on-change #(prn "Unit selector changed:" %)
+                                    :constants-key :constants/unit-types
+                                    :valid-type-categories [:mass :volume]})))
        ($ TableCell
           ($ IconButton {:color    "error"
                          :on-click (partial remove-ingredient! (:ingredient/id ingredient))}

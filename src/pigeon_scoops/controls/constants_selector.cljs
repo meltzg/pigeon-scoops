@@ -13,11 +13,11 @@
                                                constants-key
                                                (group-by namespace))
                                           keyword)
-               valid-type-categories (or valid-namespaces (keys grouped-types))] 
+               valid-type-categories (or valid-namespaces (keys grouped-types))]
            (set-options! (->> valid-type-categories
-                                 (select-keys grouped-types)
-                                 (vals)
-                                 (apply concat))))))
+                              (select-keys grouped-types)
+                              (vals)
+                              (apply concat))))))
      [constants constants-key loading? valid-namespaces])
     (if (or loading? (not (seq options)))
       ($ Spin)

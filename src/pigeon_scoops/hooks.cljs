@@ -32,3 +32,27 @@
     {:constants data
      :error     error
      :loading?  isLoading}))
+
+(defhook use-recipes []
+  (let [{:keys [token]} (use-token)
+        {:keys [data error isLoading]} (js->clj (useSWR [(str base-url "/recipes") token]
+                                                        (fn [[url]]
+                                                          (when token
+                                                            (get-fetcher! url {:token token
+                                                                               :headers {"Accept" "application/transit+json"}}))))
+                                                :keywordize-keys true)]
+    {:recipes data
+     :error   error
+     :loading? isLoading}))
+
+(defhook use-groceries []
+  (let [{:keys [token]} (use-token)
+        {:keys [data error isLoading]} (js->clj (useSWR [(str base-url "/groceries") token]
+                                                        (fn [[url]]
+                                                          (when token
+                                                            (get-fetcher! url {:token token
+                                                                               :headers {"Accept" "application/transit+json"}}))))
+                                                :keywordize-keys true)]
+    {:groceries data
+     :error     error
+     :loading?  isLoading}))
