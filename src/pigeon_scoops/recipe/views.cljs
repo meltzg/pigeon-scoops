@@ -1,38 +1,24 @@
 (ns pigeon-scoops.recipe.views
-  (:require [clojure.string :as str]
-            [pigeon-scoops.components.bom-table :refer [bom-view]]
-            [pigeon-scoops.components.numbered-text-area :refer [numbered-text-area]]
-            [pigeon-scoops.context :as ctx]
-            [pigeon-scoops.grocery.context :as gctx]
-            [pigeon-scoops.recipe.context :as rctx]
-            [reitit.frontend.easy :as rfe]
-            [uix.core :as uix :refer [$ defui]]
-            [antd :refer [InputNumber]]
-            ["@mui/icons-material/AddCircle$default" :as AddCircleIcon]
-            ["@mui/icons-material/Delete$default" :as DeleteIcon]
-            ["@mui/icons-material/CheckCircle$default" :as CheckCircleIcon]
-            ["@mui/icons-material/ArrowForward$default" :as ArrowForwardIcon]
-            ["@mui/icons-material/Cancel$default" :as CancelIcon]
-            ["@mui/material" :refer [Button
-                                     FormControl
-                                     InputLabel
-                                     Select
-                                     Stack
-                                     IconButton
-                                     List
-                                     ListItemButton
-                                     ListItemText
-                                     MenuItem
-                                     Paper
-                                     Switch
-                                     TableContainer
-                                     Table
-                                     TableHead
-                                     TableBody
-                                     TableRow
-                                     TableCell
-                                     TextField
-                                     Typography]]))
+  (:require
+   ["@mui/icons-material/AddCircle$default" :as AddCircleIcon]
+   ["@mui/icons-material/ArrowForward$default" :as ArrowForwardIcon]
+   ["@mui/icons-material/Cancel$default" :as CancelIcon]
+   ["@mui/icons-material/CheckCircle$default" :as CheckCircleIcon]
+   ["@mui/icons-material/Delete$default" :as DeleteIcon]
+   ["@mui/material" :refer [Button FormControl IconButton List ListItemButton
+                            ListItemText MenuItem Paper Select Stack Switch
+                            Table TableBody TableCell TableContainer TableHead
+                            TableRow TextField Typography]]
+   [antd :refer [InputNumber]]
+   [clojure.string :as str]
+   [pigeon-scoops.components.bom-table :refer [bom-view]]
+   [pigeon-scoops.components.numbered-text-area :refer [numbered-text-area]]
+   [pigeon-scoops.grocery.context :as gctx]
+   [pigeon-scoops.hooks :refer [use-constants]]
+   [pigeon-scoops.recipe.context :as rctx]
+   [pigeon-scoops.controls.unit-selector :refer [unit-selector]]
+   [reitit.frontend.easy :as rfe]
+   [uix.core :as uix :refer [$ defui]]))
 
 (defui recipe-list [{:keys [selected-recipe-id]}]
   (let [{:keys [recipes new-recipe!]} (uix/use-context rctx/recipes-context)
@@ -61,7 +47,8 @@
                ($ ListItemText {:primary (or (:recipe/name r) "[New Recipe]")})))))))
 
 (defui ingredient-row [{:keys [ingredient]}]
-  (let [{:constants/keys [unit-types]} (uix/use-context ctx/constants-context)
+  (let [{:keys [constants]} (use-constants)
+        {:constants/keys [unit-types]} constants
         {:keys [set-ingredient! remove-ingredient!]} (uix/use-context rctx/recipe-context)
         {:keys [groceries]} (uix/use-context gctx/groceries-context)
         {:keys [recipes]} (uix/use-context rctx/recipes-context)
@@ -120,7 +107,10 @@
                                                                                  (.. % -target -value))))
                                                                     (first))))}
                    (for [ut unit-types]
-                     ($ MenuItem {:value ut :key ut} (name ut)))))))
+                     ($ MenuItem {:value ut :key ut} (name ut)))))
+             ($ unit-selector {:value (or (:ingrdient/amount-unit ingredient) "")
+                               :on-change #(prn "Unit selector changed:" %)
+                               :valid-type-categories [:mass :volume]})))
        ($ TableCell
           ($ IconButton {:color    "error"
                          :on-click (partial remove-ingredient! (:ingredient/id ingredient))}
@@ -155,7 +145,8 @@
                ($ ingredient-row {:key (:ingredient/id i) :ingredient i})))))))
 
 (defui recipe-control []
-  (let [{:constants/keys [unit-types]} (uix/use-context ctx/constants-context)
+  (let [{:keys [constants]} (use-constants)
+        {:constants/keys [unit-types]} constants
         {:keys [recipe
                 editable-recipe set-editable-recipe!
                 bom

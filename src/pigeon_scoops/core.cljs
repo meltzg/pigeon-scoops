@@ -9,9 +9,7 @@
                             ListItemButton ListItemIcon ListItemText Toolbar
                             Typography]]
    [pigeon-scoops.auth :refer [authenticator]]
-   [pigeon-scoops.context :as ctx]
    [pigeon-scoops.grocery.context :as gctx]
-   [pigeon-scoops.hooks :refer [use-constants]]
    [pigeon-scoops.recipe.context :as rctx]
    [pigeon-scoops.router :refer [router-context with-router]]
    [pigeon-scoops.user-order.context :as octx]
@@ -29,12 +27,7 @@
 
 (defui content []
   (let [{:keys [route]} (uix/use-context router-context)
-        [menu-open? set-menu-open!] (uix/use-state false)
-        {:keys [constants error loading?]} (use-constants)]
-    (uix/use-effect
-     (fn []
-       (prn "Constants loaded:" constants "Error:" error "Loading:" loading?))
-     [constants error loading?])
+        [menu-open? set-menu-open!] (uix/use-state false)]
     ($ Box
        ($ AppBar
           ($ Toolbar
@@ -70,11 +63,10 @@
                                                     :scope        "openid profile email offline_access"
                                                     :audience     "https://api.pigeon-scoops.com"})}
      ($ with-router
-        ($ ctx/with-constants
-           ($ gctx/with-groceries
-              ($ rctx/with-recipes
-                 ($ octx/with-orders
-                    ($ content))))))))
+        ($ gctx/with-groceries
+           ($ rctx/with-recipes
+              ($ octx/with-orders
+                 ($ content)))))))
 
 (defonce root
   (uix.dom/create-root (js/document.getElementById "root")))

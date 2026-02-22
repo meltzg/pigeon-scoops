@@ -1,34 +1,20 @@
 (ns pigeon-scoops.user-order.views
-  (:require [pigeon-scoops.components.bom-table :refer [bom-view]]
-            [pigeon-scoops.context :as ctx]
-            [pigeon-scoops.recipe.context :as rctx]
-            [pigeon-scoops.user-order.context :as octx]
-            [reitit.frontend.easy :as rfe]
-            [uix.core :as uix :refer [$ defui]]
-            [antd :refer [InputNumber]]
-            ["@mui/icons-material/Delete$default" :as DeleteIcon]
-            ["@mui/icons-material/AddCircle$default" :as AddCircleIcon]
-            ["@mui/icons-material/ArrowForward$default" :as ArrowForwardIcon]
-            ["@mui/material" :refer [Button
-                                     FormControl
-                                     InputLabel
-                                     Select
-                                     Stack
-                                     Switch
-                                     IconButton
-                                     List
-                                     ListItemButton
-                                     ListItemText
-                                     MenuItem
-                                     Paper
-                                     TableContainer
-                                     Table
-                                     TableHead
-                                     TableBody
-                                     TableRow
-                                     TableCell
-                                     TextField
-                                     Typography]]))
+  (:require
+   ["@mui/icons-material/AddCircle$default" :as AddCircleIcon]
+   ["@mui/icons-material/ArrowForward$default" :as ArrowForwardIcon]
+   ["@mui/icons-material/Delete$default" :as DeleteIcon]
+   ["@mui/material" :refer [Button FormControl IconButton InputLabel List
+                            ListItemButton ListItemText MenuItem Paper Select
+                            Stack Switch Table TableBody TableCell
+                            TableContainer TableHead TableRow TextField
+                            Typography]]
+   [antd :refer [InputNumber]]
+   [pigeon-scoops.components.bom-table :refer [bom-view]]
+   [pigeon-scoops.hooks :refer [use-constants]]
+   [pigeon-scoops.recipe.context :as rctx]
+   [pigeon-scoops.user-order.context :as octx]
+   [reitit.frontend.easy :as rfe]
+   [uix.core :as uix :refer [$ defui]]))
 
 (defui order-list [{:keys [selected-order-id]}]
   (let [{:keys [orders new-order!]} (uix/use-context octx/orders-context)]
@@ -48,7 +34,8 @@
                ($ ListItemText {:primary (or (:user-order/note o) "[New Order]")})))))))
 
 (defui order-item-row [{:keys [order-item]}]
-  (let [{:constants/keys [unit-types order-statuses]} (uix/use-context ctx/constants-context)
+  (let [{:keys [constants]} (use-constants)
+        {:constants/keys [unit-types order-statuses]} constants
         {:keys [recipes]} (uix/use-context rctx/recipes-context)
         {:keys [set-item! remove-item!]} (uix/use-context octx/order-context)]
     ($ TableRow
@@ -116,7 +103,8 @@
                ($ order-item-row {:key (:order-item/id i) :order-item i})))))))
 
 (defui order-control []
-  (let [{:constants/keys [order-statuses]} (uix/use-context ctx/constants-context)
+  (let [{:keys [constants]} (use-constants)
+        {:constants/keys [order-statuses]} constants
         {:keys [order editable-order bom set-editable-order! unsaved-changes? save!]} (uix/use-context octx/order-context)
         [show-bom? set-show-bom!] (uix/use-state false)
         status-label-id (str "status-" (:user-order/status order))]

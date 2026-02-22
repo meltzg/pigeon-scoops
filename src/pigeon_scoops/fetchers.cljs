@@ -3,9 +3,6 @@
 
 (defn encode-body [content-type body]
   (cond
-    (= content-type "application/transit+msgpack")
-    (let [writer (transit/writer :msgpack)]
-      (transit/write writer body))
     (= content-type "application/transit+json")
     (let [writer (transit/writer :json)]
       (transit/write writer body))
@@ -15,11 +12,7 @@
     (throw (ex-info "Unsupported content type" {:content-type content-type}))))
 
 (defn decode-body [content-type body]
-  (prn "Decoding body with content type:" content-type "and body:" body)
   (cond
-    (= content-type "application/transit+msgpack")
-    (let [reader (transit/reader :msgpack)]
-      (transit/read reader body))
     (= content-type "application/transit+json")
     (let [reader (transit/reader :json)]
       (transit/read reader body))
@@ -48,11 +41,7 @@
                (let [content-type (-> response .-headers (.get "Content-Type") (.split ";") (first) (.trim))]
                  (-> response
                      (.text)
-                     (.then (partial decode-body content-type))))
-               :else
-               (do
-                 (prn "No content to decode for response with status:" (.-status response))
-                 nil))))))
+                     (.then (partial decode-body content-type)))))))))
 
 (defn get-fetcher! [url opts]
   (base-fetcher! url :get opts))

@@ -24,10 +24,12 @@
 
 (defhook use-constants []
   (let [{:keys [token]} (use-token)
-        {:keys [data error isLoading]} (useSWR [(str base-url "/constants") token]
-                                               (fn [[url]]
-                                                 (get-fetcher! url {:token token
-                                                                    :headers {"Accept" "application/transit+msgpack"}})))]
+        {:keys [data error isLoading]} (js->clj (useSWR [(str base-url "/constants") token]
+                                                        (fn [[url]]
+                                                          (get-fetcher! url {:token token
+                                                                             :headers {"Accept" "application/transit+json"}})))
+                                                :keywordize-keys true)]
+    (prn "Constants updated:" data error isLoading)
     {:constants data
      :error     error
      :loading?  isLoading}))

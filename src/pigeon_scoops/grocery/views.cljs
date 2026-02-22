@@ -1,30 +1,17 @@
 (ns pigeon-scoops.grocery.views
-  (:require [clojure.string :as str]
-            [pigeon-scoops.context :as ctx]
-            [pigeon-scoops.grocery.context :as gctx]
-            [reitit.frontend.easy :as rfe]
-            [uix.core :as uix :refer [$ defui]]
-            [antd :refer [InputNumber]]
-            ["@mui/icons-material/Delete$default" :as DeleteIcon]
-            ["@mui/icons-material/AddCircle$default" :as AddCircleIcon]
-            ["@mui/material" :refer [Button
-                                     FormControl
-                                     InputLabel
-                                     Select
-                                     Stack
-                                     IconButton
-                                     List
-                                     ListItemButton
-                                     ListItemText
-                                     MenuItem
-                                     Paper
-                                     TableContainer
-                                     Table
-                                     TableHead
-                                     TableBody
-                                     TableRow
-                                     TableCell
-                                     TextField]]))
+  (:require
+   ["@mui/icons-material/AddCircle$default" :as AddCircleIcon]
+   ["@mui/icons-material/Delete$default" :as DeleteIcon]
+   ["@mui/material" :refer [Button FormControl IconButton InputLabel List
+                            ListItemButton ListItemText MenuItem Paper Select
+                            Stack Table TableBody TableCell TableContainer
+                            TableHead TableRow TextField]]
+   [antd :refer [InputNumber]]
+   [clojure.string :as str]
+   [pigeon-scoops.grocery.context :as gctx]
+   [pigeon-scoops.hooks :refer [use-constants]]
+   [reitit.frontend.easy :as rfe]
+   [uix.core :as uix :refer [$ defui]]))
 
 (defui grocery-list [{:keys [selected-grocery-id]}]
   (let [{:keys [groceries new-grocery!]} (uix/use-context gctx/groceries-context)
@@ -53,8 +40,8 @@
                ($ ListItemText {:primary (or (:grocery/name g) "[New Grocery]")})))))))
 
 (defui grocery-unit-row [{:keys [unit]}]
-  (let [unit-types (update-keys (->> ctx/constants-context
-                                     (uix/use-context)
+  (let [{:keys [constants]} (use-constants)
+        unit-types (update-keys (->> constants
                                      :constants/unit-types
                                      (group-by namespace))
                                 keyword)
@@ -107,7 +94,8 @@
                ($ grocery-unit-row {:key (:grocery-unit/id u) :unit u})))))))
 
 (defui grocery-control []
-  (let [{:constants/keys [departments]} (uix/use-context ctx/constants-context)
+  (let [{:keys [constants]} (use-constants)
+        {:constants/keys [departments]} constants
         {:keys [grocery editable-grocery set-editable-grocery! unsaved-changes? save!]} (uix/use-context gctx/grocery-context)
         department-label-id (str "department-" (:grocery/id grocery))]
 

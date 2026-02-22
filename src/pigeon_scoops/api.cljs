@@ -50,9 +50,6 @@
              :url    "/account"
              :token  token}))
 
-(defn get-constants []
-  (fetch-request {:method :GET :url "/constants"}))
-
 (defn get-groceries [token]
   (fetch-request {:method :GET :url "/groceries" :token token}))
 
