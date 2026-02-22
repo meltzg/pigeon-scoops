@@ -16,7 +16,7 @@
    [pigeon-scoops.grocery.context :as gctx]
    [pigeon-scoops.hooks :refer [use-constants]]
    [pigeon-scoops.recipe.context :as rctx]
-   [pigeon-scoops.controls.unit-selector :refer [unit-selector]]
+   [pigeon-scoops.controls.constants-selector :refer [constants-selector]]
    [reitit.frontend.easy :as rfe]
    [uix.core :as uix :refer [$ defui]]))
 
@@ -108,8 +108,9 @@
                                                                     (first))))}
                    (for [ut unit-types]
                      ($ MenuItem {:value ut :key ut} (name ut)))))
-             ($ unit-selector {:value (or (:ingrdient/amount-unit ingredient) "")
+             ($ constants-selector {:value (or (:ingrdient/amount-unit ingredient) "")
                                :on-change #(prn "Unit selector changed:" %)
+                               :constants-key :constants/unit-types
                                :valid-type-categories [:mass :volume]})))
        ($ TableCell
           ($ IconButton {:color    "error"

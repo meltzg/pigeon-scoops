@@ -29,7 +29,6 @@
                                                           (get-fetcher! url {:token token
                                                                              :headers {"Accept" "application/transit+json"}})))
                                                 :keywordize-keys true)]
-    (prn "Constants updated:" data error isLoading)
     {:constants data
      :error     error
      :loading?  isLoading}))
