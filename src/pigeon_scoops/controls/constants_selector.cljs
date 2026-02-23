@@ -1,9 +1,11 @@
 (ns pigeon-scoops.controls.constants-selector
-  (:require [uix.core :as uix :refer [$ defui]]
-            [antd :refer [Select Spin]]
-            [pigeon-scoops.hooks :refer [use-constants]]))
+  (:require
+   [antd :refer [Form Select Spin]]
+   [pigeon-scoops.hooks :refer [use-constants]]
+   [pigeon-scoops.utils :refer [parse-keyword stringify-keyword]]
+   [uix.core :as uix :refer [$ defui]]))
 
-(defui constants-selector [{:keys [value on-change constants-key valid-namespaces]}]
+(defui constants-selector [{:keys [form-item-name constants-key valid-namespaces required?]}]
   (let [{:keys [constants loading?]} (use-constants)
         [options set-options!] (uix/use-state [])]
     (uix/use-effect
@@ -21,8 +23,11 @@
      [constants constants-key loading? valid-namespaces])
     (if (or loading? (not (seq options)))
       ($ Spin)
-      ($ Select {:value     value
-                 :on-change #(on-change (keyword %))
-                 :options (clj->js (for [ut options]
-                                     {:value (.substring (str ut) 1)
-                                      :label (name ut)}))}))))
+      ($ Form.Item {:name form-item-name
+                    :get-value-from-event parse-keyword
+                    :get-value-props (fn [value]
+                                       (clj->js {:value (stringify-keyword value)}))
+                    :rules (clj->js [{:required required?}])}
+         ($ Select {:options (clj->js (for [ut options]
+                                        {:value (stringify-keyword ut)
+                                         :label (name ut)}))})))))

@@ -13,11 +13,12 @@
    [clojure.string :as str]
    [pigeon-scoops.components.bom-table :refer [bom-view]]
    [pigeon-scoops.components.numbered-text-area :refer [numbered-text-area]]
+   [pigeon-scoops.controls.constants-selector :refer [constants-selector]]
+   [pigeon-scoops.controls.ingredients-selector :refer [ingredients-selector]]
    [pigeon-scoops.grocery.context :as gctx]
    [pigeon-scoops.hooks :refer [use-constants]]
    [pigeon-scoops.recipe.context :as rctx]
-   [pigeon-scoops.controls.constants-selector :refer [constants-selector]]
-   [pigeon-scoops.controls.ingredients-selector :refer [ingredients-selector]]
+   [pigeon-scoops.recipe.forms :refer [recipe-form]]
    [reitit.frontend.easy :as rfe]
    [uix.core :as uix :refer [$ defui]]))
 
@@ -281,7 +282,8 @@
     ($ rctx/with-recipe {:recipe-id recipe-id :scaled-amount amount :scaled-amount-unit amount-unit}
        ($ Stack {:direction "row" :spacing 1}
           ($ recipe-list {:selected-recipe-id recipe-id})
-          ($ recipe-control)))))
+          ;;($ recipe-control)
+          ($ recipe-form {:recipe-id recipe-id})))))
 
 (defui recipe-row [{:keys [recipe]}]
   (let [{:keys [delete!]} (uix/use-context rctx/recipes-context)]

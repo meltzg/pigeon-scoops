@@ -45,6 +45,18 @@
      :error   error
      :loading? isLoading}))
 
+(defhook use-recipe [recipe-id]
+  (let [{:keys [token]} (use-token)
+        {:keys [data error isLoading]} (js->clj (useSWR [(str base-url "/recipes/" recipe-id) token]
+                                                        (fn [[url]]
+                                                          (when (and recipe-id token)
+                                                            (get-fetcher! url {:token token
+                                                                               :headers {"Accept" "application/transit+json"}}))))
+                                                :keywordize-keys true)]
+    {:recipe data
+     :error   error
+     :loading? isLoading}))
+
 (defhook use-groceries []
   (let [{:keys [token]} (use-token)
         {:keys [data error isLoading]} (js->clj (useSWR [(str base-url "/groceries") token]
