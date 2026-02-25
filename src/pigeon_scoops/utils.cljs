@@ -20,10 +20,3 @@
   (when s (keyword (if (str/starts-with? s ":")
                      (subs s 1)
                      s))))
-
-(defn deep-stringify-keyword-vals [data]
-  (cond
-    (keyword? data) (stringify-keyword data)
-    (map? data) (into {} (map (fn [[k v]] [k (deep-stringify-keyword-vals v)])) data)
-    (coll? data) (map deep-stringify-keyword-vals data)
-    :else data))
