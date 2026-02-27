@@ -1,7 +1,6 @@
 (ns pigeon-scoops.utils
   (:require
-   [clojure.set :as set]
-   [clojure.string :as str]))
+   [clojure.set :as set]))
 
 (defn determine-ops [id-key original-entities updated-entities]
   (let [original-ids (set (map id-key original-entities))
@@ -13,10 +12,8 @@
 
 (defn stringify-keyword [k]
   (if (keyword? k)
-    (str k)
+    (.substring (str k) 1)
     k))
 
 (defn parse-keyword [s]
-  (when s (keyword (if (str/starts-with? s ":")
-                     (subs s 1)
-                     s))))
+  (when s (keyword s)))
