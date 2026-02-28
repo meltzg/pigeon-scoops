@@ -5,7 +5,7 @@
    [cljs.pprint :refer [pprint]]
    [clojure.string :as str]
    [pigeon-scoops.controls.constants-selector :refer [constants-selector]]
-   [pigeon-scoops.controls.ingredients-selector :refer [ingredient->option ingredients-selector]]
+   [pigeon-scoops.controls.ingredients-selector :refer [ingredient->option ingredients-selector parse-ingredient]]
    [pigeon-scoops.hooks :refer [use-recipe]]
    [pigeon-scoops.utils :refer [parse-keyword stringify-keyword]]
    [uix.core :as uix :refer [$ defui]]))
@@ -34,9 +34,8 @@
               (fn [ingredients]
                 (map #(-> %
                           (update :ingredient/amount-unit parse-keyword)
-                          (update-keys parse-keyword))
+                          (parse-ingredient))
                      ingredients)))))
-
 
 (defn on-finish [values]
   (prn "Submit:")
@@ -50,7 +49,6 @@
 
     (uix/use-effect
      (fn []
-       (pprint (clj->js (data->form-values recipe) :keyword-fn str))
        (when recipe
          (let [form-values (data->form-values recipe)]
            (.setFieldsValue form (clj->js form-values :keyword-fn str))
