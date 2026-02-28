@@ -5,7 +5,7 @@
    [pigeon-scoops.utils :refer [parse-keyword stringify-keyword]]
    [uix.core :as uix :refer [$ defui]]))
 
-(defui constants-selector [{:keys [form-item-name constants-key valid-namespaces required?]}]
+(defui constants-selector [{:keys [form-item-name constants-key valid-namespaces required? on-change]}]
   (let [{:keys [constants loading?]} (use-constants)
         [options set-options!] (uix/use-state [])]
     (uix/use-effect
@@ -23,11 +23,12 @@
      [constants constants-key loading? valid-namespaces])
     (if (or loading? (not (seq options)))
       ($ Spin)
-      ($ Form.Item {:name form-item-name
-                    :get-value-from-event parse-keyword
-                    :get-value-props (fn [value]
-                                       (clj->js {:value (stringify-keyword value)}))
-                    :rules (clj->js [{:required required?}])}
-         ($ Select {:options (clj->js (for [ut options]
+      ($ Form.Item (cond-> {:get-value-from-event parse-keyword
+                             :get-value-props (fn [value]
+                                                (clj->js {:value (stringify-keyword value)}))
+                             :rules (clj->js [{:required required?}])}
+                         (not (nil? form-item-name)) (assoc :name form-item-name))
+         ($ Select {:on-change on-change
+                    :options (clj->js (for [ut options]
                                         {:value (stringify-keyword ut)
                                          :label (name ut)}))})))))

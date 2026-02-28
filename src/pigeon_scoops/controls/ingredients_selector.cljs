@@ -5,9 +5,11 @@
             [clojure.string :as str]))
 
 (defn parse-ingredient [ingredient]
-  (let [[type id] (.split (:ingredient/ingredient-id ingredient) ":")
+  (let [[type id] (when (:ingredient/ingredient-id ingredient)
+                    (.split (:ingredient/ingredient-id ingredient) ":"))
         type (keyword type)]
     (cond
+      (nil? type) ingredient
       (= type :grocery) (assoc ingredient :ingredient/ingredient-grocery-id id)
       (= type :recipe) (assoc ingredient :ingredient/ingredient-recipe-id id)
       :else (throw (ex-info "Invalid ingredient type" {:type type})))))

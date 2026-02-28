@@ -45,10 +45,10 @@
   (let [{:keys [recipe loading?]} (use-recipe recipe-id)
         [form] (Form.useForm)
         [initial-values set-initial-values!] (uix/use-state nil)
-        [initial-form-data set-initial-form-data!] (uix/use-state nil)
-        [unsaved-changes? set-unsaved-changes!] (uix/use-state false)
+        [scale-amount set-scale-amount!] (uix/use-state nil)
+        [scale-amount-unit set-scale-amount-unit!] (uix/use-state nil)
         mystery? (Form.useWatch "recipe/is-mystery" form)
-        all-values (Form.useWatch (clj->js []) form)]
+        amount-unit-type (Form.useWatch "recipe/amount-unit" form)]
 
     (uix/use-effect
      (fn []
@@ -57,22 +57,23 @@
            (.setFieldsValue form (clj->js form-values :keyword-fn str))
            (set-initial-values! form-values))))
      [form recipe])
-    
-    (uix/use-effect
-     (fn []
-       (when (and (not (nil? initial-values)) (nil? initial-form-data))
-         (set-initial-form-data! (form-values->data (.getFieldsValue form))))
-       (set-unsaved-changes! (not= initial-form-data (form-values->data all-values))))
-     [form all-values initial-values initial-form-data])
 
     (if (or loading? (not recipe))
       ($ Spin)
       ($ Form {:form form :on-finish on-finish :style {:width "100%"} :initial-values (clj->js initial-values :keyword-fn str)}
-         ($ Form.Item
-            ($ Space
-               ($ Button {:type "primary" :html-type "submit" :disabled (not unsaved-changes?)}
-                  (if recipe-id "Update Recipe" "Create Recipe"))
-               ($ Button {:html-type "button" :on-click #(.resetFields form)} "Reset")))
+         ($ Space {:align "start"}
+            ($ Button {:type "primary" :html-type "submit"}
+               (if recipe-id "Update Recipe" "Create Recipe"))
+            ($ Button {:html-type "button" :on-click #(.resetFields form)} "Reset")
+            ($ InputNumber {:placeholder "Scale Amount"
+                            :value scale-amount
+                            :on-change set-scale-amount!})
+            ($ constants-selector {:constants-key :constants/unit-types
+                                   :on-change set-scale-amount-unit!
+                                   :valid-namespaces (when amount-unit-type [(keyword (namespace (parse-keyword amount-unit-type)))])})
+            ($ Button {:html-type "button"
+                       :on-click #(prn "Scale recipe by" scale-amount scale-amount-unit)}
+               "Scale Recipe"))
          ($ Form.Item {:hidden true :name (stringify-keyword :recipe/id)}
             ($ Input))
          ($ Form.Item {:label "Name" :name (stringify-keyword :recipe/name) :rules (clj->js [{:required true}])}
