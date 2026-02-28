@@ -46,7 +46,7 @@
         [form] (Form.useForm)
         [initial-values set-initial-values!] (uix/use-state nil)
         [initial-form-data set-initial-form-data!] (uix/use-state nil)
-        [submittable? set-submittable!] (uix/use-state false)
+        [unsaved-changes? set-unsaved-changes!] (uix/use-state false)
         mystery? (Form.useWatch "recipe/is-mystery" form)
         all-values (Form.useWatch (clj->js []) form)]
 
@@ -62,7 +62,7 @@
      (fn []
        (when (and (not (nil? initial-values)) (nil? initial-form-data))
          (set-initial-form-data! (form-values->data (.getFieldsValue form))))
-       (set-submittable! (not= initial-form-data (form-values->data all-values))))
+       (set-unsaved-changes! (not= initial-form-data (form-values->data all-values))))
      [form all-values initial-values initial-form-data])
 
     (if (or loading? (not recipe))
@@ -70,7 +70,7 @@
       ($ Form {:form form :on-finish on-finish :style {:width "100%"} :initial-values (clj->js initial-values :keyword-fn str)}
          ($ Form.Item
             ($ Space
-               ($ Button {:type "primary" :html-type "submit" :disabled (not submittable?)}
+               ($ Button {:type "primary" :html-type "submit" :disabled (not unsaved-changes?)}
                   (if recipe-id "Update Recipe" "Create Recipe"))
                ($ Button {:html-type "button" :on-click #(.resetFields form)} "Reset")))
          ($ Form.Item {:hidden true :name (stringify-keyword :recipe/id)}
