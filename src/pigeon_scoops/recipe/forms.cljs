@@ -1,13 +1,16 @@
 (ns pigeon-scoops.recipe.forms
   (:require
-   ["@ant-design/icons" :refer [MinusCircleOutlined]]
+   ["@ant-design/icons" :refer [ExportOutlined MinusCircleOutlined]]
    [antd :refer [Button Flex Form Input InputNumber Space Spin Switch]]
    [cljs.pprint :refer [pprint]]
    [clojure.string :as str]
    [pigeon-scoops.controls.constants-selector :refer [constants-selector]]
-   [pigeon-scoops.controls.ingredients-selector :refer [ingredient->option ingredients-selector parse-ingredient]]
+   [pigeon-scoops.controls.ingredients-selector :refer [ingredient->option
+                                                        ingredients-selector
+                                                        parse-ingredient]]
    [pigeon-scoops.hooks :refer [use-recipe]]
    [pigeon-scoops.utils :refer [parse-keyword stringify-keyword]]
+   [reitit.frontend.easy :as rfe]
    [uix.core :as uix :refer [$ defui]]))
 
 (def TextArea (.-TextArea Input))
@@ -72,8 +75,19 @@
                                    :on-change set-scale-amount-unit!
                                    :valid-namespaces (when amount-unit-type [(keyword (namespace (parse-keyword amount-unit-type)))])})
             ($ Button {:html-type "button"
-                       :on-click #(prn "Scale recipe by" scale-amount scale-amount-unit)}
-               "Scale Recipe"))
+                       :disabled (or (nil? scale-amount) (nil? scale-amount-unit))
+                       :on-click #(rfe/push-state :pigeon-scoops.recipe.routes/recipe
+                                                  {:recipe-id (:recipe/id recipe)}
+                                                  {:amount scale-amount :amount-unit scale-amount-unit})}
+               "Scale Recipe")
+            (prn "scale amount" scale-amount)
+            ($ Button {:html-type "button"
+                       :disabled (nil? scale-amount)
+                       :on-click #(do
+                                    (set-scale-amount! nil)
+                                    (rfe/push-state :pigeon-scoops.recipe.routes/recipe
+                                                    {:recipe-id (:recipe/id recipe)}))}
+               "Reset Scaling"))
          ($ Form.Item {:hidden true :name (stringify-keyword :recipe/id)}
             ($ Input))
          ($ Form.Item {:label "Name" :name (stringify-keyword :recipe/name) :rules (clj->js [{:required true}])}
@@ -99,7 +113,13 @@
               ($ :div
                  (for [field fields]
                    (let [{:keys [key] field-name :name} (js->clj field :keywordize-keys true)
-                         {:keys [remove]} (js->clj funcs :keywordize-keys true)]
+                         {:keys [remove]} (js->clj funcs :keywordize-keys true)
+                         ingredient (get-in (js->clj (.getFieldsValue form (clj->js [[(stringify-keyword :recipe/ingredients) field-name]]))
+                                                     :keywordize-keys true)
+                                            [:recipe/ingredients field-name])
+                         parsed-ingredient (when (:ingredient/ingredient-id ingredient)
+                                             (parse-ingredient ingredient))]
+                     (prn "field name" field-name "ingredient" parsed-ingredient)
                      ($ Flex {:direction "row" :key key}
                         ($ Form.Item {:hidden true :name (clj->js [field-name (stringify-keyword :ingredient/id)])}
                            ($ Input))
@@ -110,6 +130,18 @@
                         ($ constants-selector {:form-item-name (clj->js [field-name (stringify-keyword :ingredient/amount-unit)])
                                                :constants-key :constants/unit-types
                                                :required? true})
+                        ($ Form.Item
+                           ($ Button {:type "text"
+                                      :disabled (nil? (:ingredient/id parsed-ingredient))
+                                      :icon ($ ExportOutlined)
+                                      :on-click #(apply rfe/push-state
+                                                        (if (:ingredient/ingredient-recipe-id parsed-ingredient)
+                                                          [:pigeon-scoops.recipe.routes/recipe
+                                                           {:recipe-id (:ingredient/ingredient-recipe-id parsed-ingredient)}
+                                                           {:amount      (:ingredient/amount parsed-ingredient)
+                                                            :amount-unit (:ingredient/amount-unit parsed-ingredient)}]
+                                                          [:pigeon-scoops.grocery.routes/grocery
+                                                           {:grocery-id (:ingredient/ingredient-grocery-id parsed-ingredient)}]))}))
                         ($ Form.Item
                            ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove field-name)})))))
                  ($ Form.Item

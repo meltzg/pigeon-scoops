@@ -24,10 +24,10 @@
     (if (or loading? (not (seq options)))
       ($ Spin)
       ($ Form.Item (cond-> {:get-value-from-event parse-keyword
-                             :get-value-props (fn [value]
-                                                (clj->js {:value (stringify-keyword value)}))
-                             :rules (clj->js [{:required required?}])}
-                         (not (nil? form-item-name)) (assoc :name form-item-name))
+                            :get-value-props (fn [value]
+                                               (clj->js {:value (stringify-keyword value)}))
+                            :rules (clj->js [{:required required?}])}
+                     (not (nil? form-item-name)) (assoc :name form-item-name))
          ($ Select {:on-change on-change
                     :options (clj->js (for [ut options]
                                         {:value (stringify-keyword ut)
