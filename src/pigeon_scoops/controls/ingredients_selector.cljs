@@ -10,8 +10,8 @@
         type (keyword type)]
     (cond
       (nil? type) ingredient
-      (= type :grocery) (assoc ingredient :ingredient/ingredient-grocery-id id)
-      (= type :recipe) (assoc ingredient :ingredient/ingredient-recipe-id id)
+      (= type :grocery) (assoc ingredient :ingredient/ingredient-grocery-id (uuid id))
+      (= type :recipe) (assoc ingredient :ingredient/ingredient-recipe-id (uuid id))
       :else (throw (ex-info "Invalid ingredient type" {:type type})))))
 
 (defn stringify-ingredient [type id]

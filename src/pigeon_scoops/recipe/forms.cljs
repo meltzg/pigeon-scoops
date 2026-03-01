@@ -15,7 +15,7 @@
 
 (def TextArea (.-TextArea Input))
 
-(defn data->form-values [data]
+(defn recipe-data->form-values [data]
   (-> data
       (update :recipe/instructions #(str/join "\n" %))
       (update :recipe/amount-unit stringify-keyword)
@@ -28,21 +28,25 @@
                      ingredients)))
       (update-keys stringify-keyword)))
 
-(defn form-values->data [form-values]
+(defn ingredient-form-values->data [form-value]
+  (-> form-value
+      (js->clj :keywordize-keys true)
+      (update :ingredient/amount-unit parse-keyword)
+      (parse-ingredient)))
+
+(defn recipe-form-values->data [form-values]
   (-> form-values
       (js->clj :keywordize-keys true)
       (update :recipe/instructions #(str/split % #"\n"))
       (update :recipe/amount-unit parse-keyword)
       (update :recipe/ingredients
               (fn [ingredients]
-                (map #(-> %
-                          (update :ingredient/amount-unit parse-keyword)
-                          (parse-ingredient))
+                (map ingredient-form-values->data
                      ingredients)))))
 
 (defn on-finish [values]
   (prn "Submit:")
-  (pprint (form-values->data values)))
+  (pprint (recipe-form-values->data values)))
 
 (defui recipe-form [{:keys [recipe-id]}]
   (let [{:keys [recipe loading?]} (use-recipe recipe-id)
@@ -56,7 +60,7 @@
     (uix/use-effect
      (fn []
        (when recipe
-         (let [form-values (data->form-values recipe)]
+         (let [form-values (recipe-data->form-values recipe)]
            (.setFieldsValue form (clj->js form-values :keyword-fn str))
            (set-initial-values! form-values))))
      [form recipe])
@@ -80,7 +84,6 @@
                                                   {:recipe-id (:recipe/id recipe)}
                                                   {:amount scale-amount :amount-unit scale-amount-unit})}
                "Scale Recipe")
-            (prn "scale amount" scale-amount)
             ($ Button {:html-type "button"
                        :disabled (nil? scale-amount)
                        :on-click #(do
@@ -118,8 +121,7 @@
                                                      :keywordize-keys true)
                                             [:recipe/ingredients field-name])
                          parsed-ingredient (when (:ingredient/ingredient-id ingredient)
-                                             (parse-ingredient ingredient))]
-                     (prn "field name" field-name "ingredient" parsed-ingredient)
+                                             (ingredient-form-values->data ingredient))]
                      ($ Flex {:direction "row" :key key}
                         ($ Form.Item {:hidden true :name (clj->js [field-name (stringify-keyword :ingredient/id)])}
                            ($ Input))
@@ -132,7 +134,14 @@
                                                :required? true})
                         ($ Form.Item
                            ($ Button {:type "text"
-                                      :disabled (nil? (:ingredient/id parsed-ingredient))
+                                      :disabled (or (nil? (:ingredient/id parsed-ingredient))
+                                                    (apply not= (map #(select-keys %
+                                                                                   [:ingredient/amount
+                                                                                    :ingredient/amount-unit
+                                                                                    :ingredient/ingredient-grocery-id
+                                                                                    :ingredient/ingredient-recipe-id])
+                                                                     [(get-in recipe [:recipe/ingredients field-name])
+                                                                      parsed-ingredient])))
                                       :icon ($ ExportOutlined)
                                       :on-click #(apply rfe/push-state
                                                         (if (:ingredient/ingredient-recipe-id parsed-ingredient)
