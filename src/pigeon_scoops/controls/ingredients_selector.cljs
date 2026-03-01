@@ -1,8 +1,10 @@
 (ns pigeon-scoops.controls.ingredients-selector
-  (:require [uix.core :as uix :refer [$ defui]]
-            [antd :refer [Form Select Spin]]
-            [pigeon-scoops.hooks :refer [use-groceries use-recipes]]
-            [clojure.string :as str]))
+  (:require
+   [antd :refer [Form Select Spin]]
+   [clojure.string :as str]
+   [pigeon-scoops.components.select-options-sizer :refer [select-options-sizer]]
+   [pigeon-scoops.hooks :refer [use-groceries use-recipes]]
+   [uix.core :as uix :refer [$ defui]]))
 
 (defn parse-ingredient [ingredient]
   (let [[type id] (when (:ingredient/ingredient-id ingredient)
@@ -31,7 +33,8 @@
                                  valid-ingredients
                                  [:grocery :recipe]))
         recipes (apply concat (vals recipes))
-        [options set-options!] (uix/use-state [])]
+        [options set-options!] (uix/use-state [])
+        [select-width set-select-width!] (uix/use-state "auto")]
     (uix/use-effect
      (fn []
        (when-not (or groceries-loading? recipes-loading?)
@@ -48,7 +51,11 @@
      [valid-ingredients groceries recipes groceries-loading? recipes-loading?])
     (if (or groceries-loading? recipes-loading?)
       ($ Spin)
-      ($ Form.Item {:name form-item-name
-                    :rules (clj->js [{:required true}])}
-         ($ Select {:show-search (clj->js {:optionFilterProp :label})
-                    :options (clj->js options)})))))
+      ($ :div
+         ($ select-options-sizer {:options options
+                                  :on-size-change set-select-width!})
+         ($ Form.Item {:name form-item-name
+                       :rules (clj->js [{:required true}])}
+            ($ Select {:show-search (clj->js {:optionFilterProp :label})
+                       :style (clj->js {:width select-width})
+                       :options (clj->js options)}))))))
