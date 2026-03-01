@@ -1,7 +1,7 @@
 (ns pigeon-scoops.controls.constants-selector
   (:require
    [antd :refer [Form Select Spin]]
-    [pigeon-scoops.components.select-options-sizer :refer [select-options-sizer]]
+   [pigeon-scoops.components.select-options-sizer :refer [select-options-sizer]]
    [pigeon-scoops.hooks :refer [use-constants]]
    [pigeon-scoops.utils :refer [parse-keyword stringify-keyword]]
    [uix.core :as uix :refer [$ defui]]))
@@ -25,17 +25,17 @@
                            {:value (stringify-keyword const)
                             :label (name const)})))))
      [constants constants-key loading? valid-namespaces])
-    
+
     (if (or loading? (not (seq options)))
       ($ Spin)
       ($ :div
          ($ select-options-sizer {:options options
                                   :on-size-change set-select-width!})
          ($ Form.Item (cond-> {:get-value-from-event parse-keyword
-                            :get-value-props (fn [value]
-                                               (clj->js {:value (stringify-keyword value)}))
-                            :rules (clj->js [{:required required?}])}
-                     (not (nil? form-item-name)) (assoc :name form-item-name))
-         ($ Select {:on-change on-change
-                    :style (clj->js {:width select-width})
-                    :options (clj->js options)}))))))
+                               :get-value-props (fn [value]
+                                                  (clj->js {:value (stringify-keyword value)}))
+                               :rules (clj->js [{:required required?}])}
+                        (not (nil? form-item-name)) (assoc :name form-item-name))
+            ($ Select {:on-change on-change
+                       :style (clj->js {:width select-width})
+                       :options (clj->js options)}))))))

@@ -37,12 +37,35 @@
 (defn recipe-form-values->data [form-values]
   (-> form-values
       (js->clj :keywordize-keys true)
-      (update :recipe/instructions #(str/split % #"\n"))
+      (update :recipe/instructions #(if (coll? %) % (str/split % #"\n")))
       (update :recipe/amount-unit parse-keyword)
       (update :recipe/ingredients
               (fn [ingredients]
                 (map ingredient-form-values->data
                      ingredients)))))
+
+(defn ingredient->comparable [ingredient]
+  (-> ingredient
+      (ingredient-form-values->data)
+      (select-keys [:ingredient/amount
+                    :ingredient/amount-unit
+                    :ingredient/ingredient-grocery-id
+                    :ingredient/ingredient-recipe-id])))
+
+(defn recipe->comparable [recipe]
+  (-> recipe
+      (recipe-form-values->data)
+      (select-keys [:recipe/name
+                    :recipe/public
+                    :recipe/is-mystery
+                    :recipe/source
+                    :recipe/description
+                    :recipe/mystery-description
+                    :recipe/amount
+                    :recipe/amount-unit
+                    :recipe/instructions
+                    :recipe/ingredients])
+      (update :recipe/ingredients #(map ingredient->comparable %))))
 
 (defn on-finish [values]
   (prn "Submit:")
@@ -54,8 +77,10 @@
         [initial-values set-initial-values!] (uix/use-state nil)
         [scale-amount set-scale-amount!] (uix/use-state nil)
         [scale-amount-unit set-scale-amount-unit!] (uix/use-state nil)
+        [unsaved-changes? set-unsaved-changes!] (uix/use-state false)
         mystery? (Form.useWatch "recipe/is-mystery" form)
-        amount-unit-type (Form.useWatch "recipe/amount-unit" form)]
+        amount-unit-type (Form.useWatch "recipe/amount-unit" form)
+        all-values (Form.useWatch nil form)]
 
     (uix/use-effect
      (fn []
@@ -65,11 +90,16 @@
            (set-initial-values! form-values))))
      [form recipe])
 
+    (uix/use-effect
+     (fn []
+       (set-unsaved-changes! (apply not= (map recipe->comparable [recipe all-values]))))
+     [recipe all-values])
+
     (if (or loading? (not recipe))
       ($ Spin)
       ($ Form {:form form :on-finish on-finish :style {:width "100%"} :initial-values (clj->js initial-values :keyword-fn str)}
          ($ Space {:align "start"}
-            ($ Button {:type "primary" :html-type "submit"}
+            ($ Button {:type "primary" :html-type "submit" :disabled (not unsaved-changes?)}
                (if recipe-id "Update Recipe" "Create Recipe"))
             ($ Button {:html-type "button" :on-click #(.resetFields form)} "Reset")
             ($ InputNumber {:placeholder "Scale Amount"
@@ -135,13 +165,7 @@
                         ($ Form.Item
                            ($ Button {:type "text"
                                       :disabled (or (nil? (:ingredient/id parsed-ingredient))
-                                                    (apply not= (map #(select-keys %
-                                                                                   [:ingredient/amount
-                                                                                    :ingredient/amount-unit
-                                                                                    :ingredient/ingredient-grocery-id
-                                                                                    :ingredient/ingredient-recipe-id])
-                                                                     [(get-in recipe [:recipe/ingredients field-name])
-                                                                      parsed-ingredient])))
+                                                    unsaved-changes?)
                                       :icon ($ ExportOutlined)
                                       :on-click #(apply rfe/push-state
                                                         (if (:ingredient/ingredient-recipe-id parsed-ingredient)
