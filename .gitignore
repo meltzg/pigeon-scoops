@@ -22,3 +22,4 @@ resources/public/cljs-out
 .lsp/
 lein
 .calva/
+.yarn/
