@@ -1,9 +1,10 @@
 (ns pigeon-scoops.hooks
   (:require
    ["@auth0/auth0-react" :refer [useAuth0]]
+   ["swr$default" :as useSWR]
    [pigeon-scoops.api :refer [base-url]]
    [pigeon-scoops.fetchers :refer [get-fetcher!]]
-   ["swr$default" :as useSWR]
+   [pigeon-scoops.utils :refer [stringify-keyword]]
    [uix.core :as uix :refer [defhook]]))
 
 (defhook use-token []
@@ -45,9 +46,13 @@
      :error   error
      :loading? isLoading}))
 
-(defhook use-recipe [recipe-id]
+(defhook use-recipe [recipe-id scaled-amount scaled-amount-unit]
   (let [{:keys [token]} (use-token)
-        {:keys [data error isLoading]} (js->clj (useSWR [(str base-url "/recipes/" recipe-id) token]
+        query-params (when scaled-amount
+                           (js/URLSearchParams.
+                            (clj->js {:amount scaled-amount
+                                      :amount-unit (stringify-keyword scaled-amount-unit)})))
+        {:keys [data error isLoading]} (js->clj (useSWR [(str base-url "/recipes/" recipe-id "?" (or query-params "")) token]
                                                         (fn [[url]]
                                                           (when (and recipe-id token)
                                                             (get-fetcher! url {:token token

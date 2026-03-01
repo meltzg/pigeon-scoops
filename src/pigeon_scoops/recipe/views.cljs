@@ -283,7 +283,9 @@
        ($ Stack {:direction "row" :spacing 1}
           ($ recipe-list {:selected-recipe-id recipe-id})
           ;;($ recipe-control)
-          ($ recipe-form {:recipe-id recipe-id})))))
+          ($ recipe-form {:recipe-id recipe-id
+                          :scaled-amount amount
+                          :scaled-amount-unit amount-unit})))))
 
 (defui recipe-row [{:keys [recipe]}]
   (let [{:keys [delete!]} (uix/use-context rctx/recipes-context)]

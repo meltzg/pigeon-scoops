@@ -8,7 +8,7 @@
      (fn []
        (when @measure-ref
          (let [widths (map #(.-offsetWidth %) (.-children @measure-ref))]
-           (on-size-change (str (+ (apply max widths) 40) "px")))))
+           (on-size-change (str (+ (apply max widths) 45) "px")))))
      [on-size-change options])
     ($ :div {:style {:position "absolute"
                      :visibility "hidden"

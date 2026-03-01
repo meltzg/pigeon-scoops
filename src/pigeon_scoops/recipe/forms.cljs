@@ -37,7 +37,10 @@
 (defn recipe-form-values->data [form-values]
   (-> form-values
       (js->clj :keywordize-keys true)
-      (update :recipe/instructions #(if (coll? %) % (str/split % #"\n")))
+      (update :recipe/instructions #(cond
+                                      (coll? %) %
+                                      (> (count %) 0)(str/split % #"\n")
+                                      :else []))
       (update :recipe/amount-unit parse-keyword)
       (update :recipe/ingredients
               (fn [ingredients]
@@ -71,16 +74,18 @@
   (prn "Submit:")
   (pprint (recipe-form-values->data values)))
 
-(defui recipe-form [{:keys [recipe-id]}]
-  (let [{:keys [recipe loading?]} (use-recipe recipe-id)
+(defui recipe-form [{:keys [recipe-id scaled-amount scaled-amount-unit]}]
+  (let [{:keys [recipe loading?]} (use-recipe recipe-id scaled-amount scaled-amount-unit)
         [form] (Form.useForm)
         [initial-values set-initial-values!] (uix/use-state nil)
-        [scale-amount set-scale-amount!] (uix/use-state nil)
-        [scale-amount-unit set-scale-amount-unit!] (uix/use-state nil)
+        [scaled-amount set-scaled-amount!] (uix/use-state scaled-amount)
+        [scaled-amount-unit set-scaled-amount-unit!] (uix/use-state scaled-amount-unit)
         [unsaved-changes? set-unsaved-changes!] (uix/use-state false)
         mystery? (Form.useWatch "recipe/is-mystery" form)
         amount-unit-type (Form.useWatch "recipe/amount-unit" form)
         all-values (Form.useWatch nil form)]
+    
+    (prn "scaled-amount" scaled-amount "scaled-amount-unit" scaled-amount-unit)
 
     (uix/use-effect
      (fn []
@@ -103,21 +108,22 @@
                (if recipe-id "Update Recipe" "Create Recipe"))
             ($ Button {:html-type "button" :on-click #(.resetFields form)} "Reset")
             ($ InputNumber {:placeholder "Scale Amount"
-                            :value scale-amount
-                            :on-change set-scale-amount!})
+                            :value scaled-amount
+                            :on-change set-scaled-amount!})
             ($ constants-selector {:constants-key :constants/unit-types
-                                   :on-change set-scale-amount-unit!
+                                   :value scaled-amount-unit
+                                   :on-change set-scaled-amount-unit!
                                    :valid-namespaces (when amount-unit-type [(keyword (namespace (parse-keyword amount-unit-type)))])})
             ($ Button {:html-type "button"
-                       :disabled (or (nil? scale-amount) (nil? scale-amount-unit))
+                       :disabled (or (nil? scaled-amount) (nil? scaled-amount-unit))
                        :on-click #(rfe/push-state :pigeon-scoops.recipe.routes/recipe
                                                   {:recipe-id (:recipe/id recipe)}
-                                                  {:amount scale-amount :amount-unit scale-amount-unit})}
+                                                  {:amount scaled-amount :amount-unit scaled-amount-unit})}
                "Scale Recipe")
             ($ Button {:html-type "button"
-                       :disabled (nil? scale-amount)
+                       :disabled (nil? scaled-amount)
                        :on-click #(do
-                                    (set-scale-amount! nil)
+                                    (set-scaled-amount! nil)
                                     (rfe/push-state :pigeon-scoops.recipe.routes/recipe
                                                     {:recipe-id (:recipe/id recipe)}))}
                "Reset Scaling"))
