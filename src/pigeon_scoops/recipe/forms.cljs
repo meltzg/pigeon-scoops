@@ -1,14 +1,15 @@
 (ns pigeon-scoops.recipe.forms
   (:require
    ["@ant-design/icons" :refer [ExportOutlined MinusCircleOutlined]]
-   [antd :refer [Button Flex Form Input InputNumber Space Spin Switch]]
+   [antd :refer [Button Flex Form Input InputNumber Space Spin Switch Tabs]]
    [cljs.pprint :refer [pprint]]
    [clojure.string :as str]
+   [pigeon-scoops.components.bom-table :refer [bom-view]]
    [pigeon-scoops.controls.constants-selector :refer [constants-selector]]
    [pigeon-scoops.controls.ingredients-selector :refer [ingredient->option
                                                         ingredients-selector
                                                         parse-ingredient]]
-   [pigeon-scoops.hooks :refer [use-recipe]]
+   [pigeon-scoops.hooks :refer [use-recipe use-recipe-bom]]
    [pigeon-scoops.utils :refer [parse-keyword stringify-keyword]]
    [reitit.frontend.easy :as rfe]
    [uix.core :as uix :refer [$ defui]]))
@@ -39,7 +40,7 @@
       (js->clj :keywordize-keys true)
       (update :recipe/instructions #(cond
                                       (coll? %) %
-                                      (> (count %) 0)(str/split % #"\n")
+                                      (> (count %) 0) (str/split % #"\n")
                                       :else []))
       (update :recipe/amount-unit parse-keyword)
       (update :recipe/ingredients
@@ -76,6 +77,11 @@
 
 (defui recipe-form [{:keys [recipe-id scaled-amount scaled-amount-unit]}]
   (let [{:keys [recipe loading?]} (use-recipe recipe-id scaled-amount scaled-amount-unit)
+        {:keys [groceries]} (use-recipe-bom recipe-id
+                                            (or scaled-amount
+                                                (:recipe/amount recipe))
+                                            (or scaled-amount-unit
+                                                (:recipe/amount-unit recipe)))
         [form] (Form.useForm)
         [initial-values set-initial-values!] (uix/use-state nil)
         [scaled-amount set-scaled-amount!] (uix/use-state scaled-amount)
@@ -84,8 +90,6 @@
         mystery? (Form.useWatch "recipe/is-mystery" form)
         amount-unit-type (Form.useWatch "recipe/amount-unit" form)
         all-values (Form.useWatch nil form)]
-    
-    (prn "scaled-amount" scaled-amount "scaled-amount-unit" scaled-amount-unit)
 
     (uix/use-effect
      (fn []
@@ -102,8 +106,8 @@
 
     (if (or loading? (not recipe))
       ($ Spin)
-      ($ Form {:form form :on-finish on-finish 
-               :style {:width "100%"} 
+      ($ Form {:form form :on-finish on-finish
+               :style {:width "100%"}
                :disabled scaled-amount
                :initial-values (clj->js initial-values :keyword-fn str)}
          ($ Space {:align "start"}
@@ -152,41 +156,50 @@
             ($ constants-selector {:form-item-name (stringify-keyword :recipe/amount-unit) :constants-key :constants/unit-types :required? true}))
          ($ Form.Item {:label "Instructions" :name (stringify-keyword :recipe/instructions)}
             ($ TextArea))
-         ($ Form.List {:name (stringify-keyword :recipe/ingredients)}
-            (fn [fields funcs]
-              ($ :div
-                 (for [field fields]
-                   (let [{:keys [key] field-name :name} (js->clj field :keywordize-keys true)
-                         {:keys [remove]} (js->clj funcs :keywordize-keys true)
-                         ingredient (get-in (js->clj (.getFieldsValue form (clj->js [[(stringify-keyword :recipe/ingredients) field-name]]))
-                                                     :keywordize-keys true)
-                                            [:recipe/ingredients field-name])
-                         parsed-ingredient (when (:ingredient/ingredient-id ingredient)
-                                             (ingredient-form-values->data ingredient))]
-                     ($ Flex {:direction "row" :key key}
-                        ($ Form.Item {:hidden true :name (clj->js [field-name (stringify-keyword :ingredient/id)])}
-                           ($ Input))
-                        ($ ingredients-selector {:form-item-name (clj->js [field-name (stringify-keyword :ingredient/ingredient-id)])})
-                        ($ Form.Item {:name (clj->js [field-name (stringify-keyword :ingredient/amount)])
-                                      :rules (clj->js [{:required true}])}
-                           ($ InputNumber))
-                        ($ constants-selector {:form-item-name (clj->js [field-name (stringify-keyword :ingredient/amount-unit)])
-                                               :constants-key :constants/unit-types
-                                               :required? true})
-                        ($ Form.Item
-                           ($ Button {:type "text"
-                                      :disabled (or (nil? (:ingredient/id parsed-ingredient))
-                                                    unsaved-changes?)
-                                      :icon ($ ExportOutlined)
-                                      :on-click #(apply rfe/push-state
-                                                        (if (:ingredient/ingredient-recipe-id parsed-ingredient)
-                                                          [:pigeon-scoops.recipe.routes/recipe
-                                                           {:recipe-id (:ingredient/ingredient-recipe-id parsed-ingredient)}
-                                                           {:amount      (:ingredient/amount parsed-ingredient)
-                                                            :amount-unit (:ingredient/amount-unit parsed-ingredient)}]
-                                                          [:pigeon-scoops.grocery.routes/grocery
-                                                           {:grocery-id (:ingredient/ingredient-grocery-id parsed-ingredient)}]))}))
-                        ($ Form.Item
-                           ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove field-name)})))))
-                 ($ Form.Item
-                    ($ Button {:type "dashed" :on-click (:add (js->clj funcs :keywordize-keys true))} "Add Ingredient")))))))))
+         ($ Tabs {:default-activity-key :ingredient
+                  :items
+                  (clj->js
+                   [{:label "Ingredients"
+                     :key :ingredient
+                     :children
+                     ($ Form.List {:name (stringify-keyword :recipe/ingredients)}
+                        (fn [fields funcs]
+                          ($ :div
+                             (for [field fields]
+                               (let [{:keys [key] field-name :name} (js->clj field :keywordize-keys true)
+                                     {:keys [remove]} (js->clj funcs :keywordize-keys true)
+                                     ingredient (get-in (js->clj (.getFieldsValue form (clj->js [[(stringify-keyword :recipe/ingredients) field-name]]))
+                                                                 :keywordize-keys true)
+                                                        [:recipe/ingredients field-name])
+                                     parsed-ingredient (when (:ingredient/ingredient-id ingredient)
+                                                         (ingredient-form-values->data ingredient))]
+                                 ($ Flex {:direction "row" :key key}
+                                    ($ Form.Item {:hidden true :name (clj->js [field-name (stringify-keyword :ingredient/id)])}
+                                       ($ Input))
+                                    ($ ingredients-selector {:form-item-name (clj->js [field-name (stringify-keyword :ingredient/ingredient-id)])})
+                                    ($ Form.Item {:name (clj->js [field-name (stringify-keyword :ingredient/amount)])
+                                                  :rules (clj->js [{:required true}])}
+                                       ($ InputNumber))
+                                    ($ constants-selector {:form-item-name (clj->js [field-name (stringify-keyword :ingredient/amount-unit)])
+                                                           :constants-key :constants/unit-types
+                                                           :required? true})
+                                    ($ Form.Item
+                                       ($ Button {:type "text"
+                                                  :disabled (or (nil? (:ingredient/id parsed-ingredient))
+                                                                unsaved-changes?)
+                                                  :icon ($ ExportOutlined)
+                                                  :on-click #(apply rfe/push-state
+                                                                    (if (:ingredient/ingredient-recipe-id parsed-ingredient)
+                                                                      [:pigeon-scoops.recipe.routes/recipe
+                                                                       {:recipe-id (:ingredient/ingredient-recipe-id parsed-ingredient)}
+                                                                       {:amount      (:ingredient/amount parsed-ingredient)
+                                                                        :amount-unit (:ingredient/amount-unit parsed-ingredient)}]
+                                                                      [:pigeon-scoops.grocery.routes/grocery
+                                                                       {:grocery-id (:ingredient/ingredient-grocery-id parsed-ingredient)}]))}))
+                                    ($ Form.Item
+                                       ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove field-name)})))))
+                             ($ Form.Item
+                                ($ Button {:type "dashed" :on-click (:add (js->clj funcs :keywordize-keys true))} "Add Ingredient")))))}
+                    {:label "Bill of Materials"
+                     :key :bom
+                     :children ($ bom-view {:groceries groceries})}])})))))

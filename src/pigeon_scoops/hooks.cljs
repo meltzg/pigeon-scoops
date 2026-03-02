@@ -49,9 +49,9 @@
 (defhook use-recipe [recipe-id scaled-amount scaled-amount-unit]
   (let [{:keys [token]} (use-token)
         query-params (when scaled-amount
-                           (js/URLSearchParams.
-                            (clj->js {:amount scaled-amount
-                                      :amount-unit (stringify-keyword scaled-amount-unit)})))
+                       (js/URLSearchParams.
+                        (clj->js {:amount scaled-amount
+                                  :amount-unit (stringify-keyword scaled-amount-unit)})))
         {:keys [data error isLoading]} (js->clj (useSWR [(str base-url "/recipes/" recipe-id "?" (or query-params "")) token]
                                                         (fn [[url]]
                                                           (when (and recipe-id token)
@@ -59,6 +59,21 @@
                                                                                :headers {"Accept" "application/transit+json"}}))))
                                                 :keywordize-keys true)]
     {:recipe data
+     :error   error
+     :loading? isLoading}))
+
+(defhook use-recipe-bom [recipe-id scaled-amount scaled-amount-unit]
+  (let [{:keys [token]} (use-token)
+        query-params (js/URLSearchParams.
+                      (clj->js {:amount scaled-amount
+                                :amount-unit (stringify-keyword scaled-amount-unit)}))
+        {:keys [data error isLoading]} (js->clj (useSWR [(str base-url "/recipes/" recipe-id "/bom?" (or query-params "")) token]
+                                                        (fn [[url]]
+                                                          (when (and recipe-id token)
+                                                            (get-fetcher! url {:token token
+                                                                               :headers {"Accept" "application/transit+json"}}))))
+                                                :keywordize-keys true)]
+    {:groceries data
      :error   error
      :loading? isLoading}))
 

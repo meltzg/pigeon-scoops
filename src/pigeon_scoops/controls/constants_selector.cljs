@@ -39,5 +39,5 @@
             ($ Select (cond-> {:on-change on-change
                                :style (clj->js {:width select-width})
                                :options (clj->js options)
-                               :disabled disabled?} 
+                               :disabled disabled?}
                         (not (nil? value)) (assoc :value (stringify-keyword value)))))))))
