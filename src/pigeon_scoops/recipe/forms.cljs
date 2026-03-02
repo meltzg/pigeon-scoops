@@ -102,17 +102,22 @@
 
     (if (or loading? (not recipe))
       ($ Spin)
-      ($ Form {:form form :on-finish on-finish :style {:width "100%"} :initial-values (clj->js initial-values :keyword-fn str)}
+      ($ Form {:form form :on-finish on-finish 
+               :style {:width "100%"} 
+               :disabled scaled-amount
+               :initial-values (clj->js initial-values :keyword-fn str)}
          ($ Space {:align "start"}
             ($ Button {:type "primary" :html-type "submit" :disabled (not unsaved-changes?)}
                (if recipe-id "Update Recipe" "Create Recipe"))
             ($ Button {:html-type "button" :on-click #(.resetFields form)} "Reset")
             ($ InputNumber {:placeholder "Scale Amount"
                             :value scaled-amount
+                            :disabled false
                             :on-change set-scaled-amount!})
             ($ constants-selector {:constants-key :constants/unit-types
                                    :value scaled-amount-unit
                                    :on-change set-scaled-amount-unit!
+                                   :disabled? false
                                    :valid-namespaces (when amount-unit-type [(keyword (namespace (parse-keyword amount-unit-type)))])})
             ($ Button {:html-type "button"
                        :disabled (or (nil? scaled-amount) (nil? scaled-amount-unit))
