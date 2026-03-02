@@ -1,19 +1,11 @@
 (ns pigeon-scoops.components.bom-table
-  (:require [clojure.string :as str]
-            [goog.string :as gstring]
-            [goog.string.format]
-            [uix.core :refer [$ defui]]
-            [antd :refer [Descriptions]]
-            ["@mui/material" :refer [Checkbox
-                                     Paper
-                                     Stack
-                                     TableContainer
-                                     Table
-                                     TableHead
-                                     TableBody
-                                     TableRow
-                                     TableCell
-                                     Typography]]))
+  (:require
+   [antd :refer [Descriptions Space Table]]
+   [clojure.string :as str]
+   [goog.string :as gstring]
+   [goog.string.format]
+   [pigeon-scoops.utils :refer [stringify-keyword]]
+   [uix.core :refer [$ defui]]))
 
 (defn format-amount [amount amount-unit]
   (when amount
@@ -24,11 +16,6 @@
 
 (defn format-percentage [decimal]
   (str (gstring/format "%.2f" (* decimal 100)) "%"))
-
-(defn kebab-to-title [kebab-str]
-  (->> (str/split kebab-str #"-")                           ; Split the string by "-"
-       (map str/capitalize)                                 ; Capitalize each word
-       (str/join " ")))                                     ; Join them with a space
 
 (defn purchase-cost [units]
   (->> units
@@ -56,7 +43,7 @@
                   (str/join ":"))]
     (str quantity " x " unit)))
 
-(defui grocery-row [{:keys [grocery]}]
+(defn add-derived-fields [grocery]
   (let [{:grocery/keys [name
                         required-amount
                         required-unit
@@ -67,57 +54,36 @@
         purchase-cost (purchase-cost units)
         required-cost (required-cost units waste-ratio)
         formatted-units (str/join " & " (map format-unit units))]
-    ($ TableRow
-       ($ TableCell
-          ($ Stack {:direction "row"}
-             ($ Checkbox)
-             ($ Typography name)))
-       ($ TableCell
-          ($ Typography (format-amount required-amount required-unit)))
-       ($ TableCell
-          ($ Typography (format-dollar required-cost)))
-       ($ TableCell
-          ($ Typography (format-amount purchase-amount purchase-unit)))
-       ($ TableCell
-          ($ Typography formatted-units))
-       ($ TableCell
-          ($ Typography (format-dollar purchase-cost)))
-       ($ TableCell
-          ($ Typography (format-percentage waste-ratio))))))
+    (assoc grocery
+           :grocery/amount-needed (format-amount required-amount required-unit)
+           :grocery/amount-cost required-cost
+           :grocery/purchase-amount (format-amount purchase-amount purchase-unit)
+           :grocery/purchase-units formatted-units
+           :grocery/purchase-cost purchase-cost
+           :grocery/waste-ratio waste-ratio)))
 
-(defui groceries-table [{:keys [groceries]}]
-  ($ TableContainer {:component Paper}
-     ($ Table
-        ($ TableHead
-           ($ TableRow
-              ($ TableCell "Item")
-              ($ TableCell "Amount Needed")
-              ($ TableCell "Amount Cost")
-              ($ TableCell "Purchase Amount")
-              ($ TableCell "Purchase Units")
-              ($ TableCell "Purchase Cost")
-              ($ TableCell "Waste")))
-        ($ TableBody
-           (for [g (sort-by :grocery/name groceries)]
-             ($ grocery-row {:key     (select-keys g [:grocery/id :grocery/required-amount :grocery/required-unit])
-                             :grocery g}))))))
+(def columns
+  [{:title "Item" :dataIndex (stringify-keyword :grocery/name) :key :name}
+   {:title "Department" :dataIndex (stringify-keyword :grocery/department) :render #(last (str/split % #"/")) :key :department}
+   {:title "Amount Needed" :dataIndex (stringify-keyword :grocery/amount-needed) :key :amount-needed}
+   {:title "Amount Cost" :dataIndex (stringify-keyword :grocery/amount-cost) :render format-dollar :key :amount-cost}
+   {:title "Purchase Amount" :dataIndex (stringify-keyword :grocery/purchase-amount) :key :purchase-amount}
+   {:title "Purchase Units" :dataIndex (stringify-keyword :grocery/purchase-units) :key :purchase-units}
+   {:title "Purchase Cost" :dataIndex (stringify-keyword :grocery/purchase-cost) :render format-dollar :key :purchase-cost}
+   {:title "Waste Ratio" :dataIndex (stringify-keyword :grocery/waste-ratio) :render format-percentage :key :waste-ratio}])
 
 (defui bom-view [{:keys [groceries]}]
   (let [total-cost (reduce + (map (comp purchase-cost :grocery/units) groceries))
         required-cost (reduce + (map #(required-cost (:grocery/units %)
                                                      (:grocery/waste-ratio %))
-                                     groceries))
-        groceries (group-by :grocery/department groceries)]
-    ($ Paper
+                                     groceries))]
+    ($ Space {:orientation "vertical"}
        ($ Descriptions {:Title "Cost Summary" :column 1 :bordered true}
           ($ Descriptions.Item {:label "Total Cost"}
              (format-dollar total-cost))
           ($ Descriptions.Item {:label "Required Cost"}
-             (format-dollar required-cost))) 
-       (for [[department groceries] groceries]
-         ($ Stack {:key department :direction "column"}
-            ($ Typography {:variant "h6"}
-               (str "Department: " (kebab-to-title (name department))))
-            ($ groceries-table {:groceries groceries}))))))
-
-
+             (format-dollar required-cost)))
+       ($ Table {:columns (clj->js columns)
+                 :dataSource (clj->js (map-indexed (fn [idx grocery] (assoc (add-derived-fields grocery) :key idx)) groceries) :keyword-fn stringify-keyword)
+                 :pagination false
+                 :bordered true}))))

@@ -69,7 +69,7 @@
                                 :amount-unit (stringify-keyword scaled-amount-unit)}))
         {:keys [data error isLoading]} (js->clj (useSWR [(str base-url "/recipes/" recipe-id "/bom?" (or query-params "")) token]
                                                         (fn [[url]]
-                                                          (when (and recipe-id token)
+                                                          (when (and recipe-id scaled-amount scaled-amount-unit token)
                                                             (get-fetcher! url {:token token
                                                                                :headers {"Accept" "application/transit+json"}}))))
                                                 :keywordize-keys true)]

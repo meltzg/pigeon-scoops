@@ -156,8 +156,7 @@
             ($ constants-selector {:form-item-name (stringify-keyword :recipe/amount-unit) :constants-key :constants/unit-types :required? true}))
          ($ Form.Item {:label "Instructions" :name (stringify-keyword :recipe/instructions)}
             ($ TextArea))
-         ($ Tabs {:default-activity-key :ingredient
-                  :items
+         ($ Tabs {:items
                   (clj->js
                    [{:label "Ingredients"
                      :key :ingredient
