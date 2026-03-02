@@ -3,6 +3,7 @@
             [goog.string :as gstring]
             [goog.string.format]
             [uix.core :refer [$ defui]]
+            [antd :refer [Descriptions]]
             ["@mui/material" :refer [Checkbox
                                      Paper
                                      Stack
@@ -108,10 +109,11 @@
                                      groceries))
         groceries (group-by :grocery/department groceries)]
     ($ Paper
-       ($ Typography {:variant "h6"}
-          (str "Purchase Cost: " (format-dollar total-cost)))
-       ($ Typography {:variant "h6"}
-          (str "Required Cost: " (format-dollar required-cost)))
+       ($ Descriptions {:Title "Cost Summary" :column 1 :bordered true}
+          ($ Descriptions.Item {:label "Total Cost"}
+             (format-dollar total-cost))
+          ($ Descriptions.Item {:label "Required Cost"}
+             (format-dollar required-cost))) 
        (for [[department groceries] groceries]
          ($ Stack {:key department :direction "column"}
             ($ Typography {:variant "h6"}
