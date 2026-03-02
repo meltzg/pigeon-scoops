@@ -111,6 +111,9 @@
                :disabled scaled-amount
                :initial-values (clj->js initial-values :keyword-fn str)}
          ($ Space {:align "start"}
+            ($ Button {:html-type "button"
+                       :disabled unsaved-changes?
+                       :on-click #(rfe/push-state :pigeon-scoops.recipe.routes/recipes)} "Return to Recipes")
             ($ Button {:type "primary" :html-type "submit" :disabled (not unsaved-changes?)}
                (if recipe-id "Update Recipe" "Create Recipe"))
             ($ Button {:html-type "button" :on-click #(.resetFields form)} "Reset")
