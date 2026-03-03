@@ -2,10 +2,12 @@
   (:require
    ["@auth0/auth0-react" :refer [useAuth0]]
    ["swr$default" :as useSWR]
+   [swr :refer [mutate]]
    [pigeon-scoops.api :refer [base-url]]
    [pigeon-scoops.fetchers :refer [get-fetcher!]]
    [pigeon-scoops.utils :refer [stringify-keyword]]
-   [uix.core :as uix :refer [defhook]]))
+   [uix.core :as uix :refer [defhook]]
+   [clojure.string :as str]))
 
 (defhook use-token []
   (let [{:keys [getAccessTokenSilently isAuthenticated]} (js->clj (useAuth0) :keywordize-keys true)
@@ -76,6 +78,10 @@
     {:groceries data
      :error   error
      :loading? isLoading}))
+
+(defn invalidate-recipes []
+  (mutate (fn [key]
+            (str/starts-with? (first key) (str base-url "/recipes")))))
 
 (defhook use-groceries []
   (let [{:keys [token]} (use-token)

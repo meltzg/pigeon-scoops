@@ -4,13 +4,16 @@
    [antd :refer [Button Flex Form Input InputNumber Space Spin Switch Tabs]]
    [cljs.pprint :refer [pprint]]
    [clojure.string :as str]
+   [pigeon-scoops.api :refer [base-url]]
    [pigeon-scoops.components.bom-table :refer [bom-view]]
    [pigeon-scoops.controls.constants-selector :refer [constants-selector]]
    [pigeon-scoops.controls.ingredients-selector :refer [ingredient->option
                                                         ingredients-selector
                                                         parse-ingredient]]
-   [pigeon-scoops.hooks :refer [use-recipe use-recipe-bom]]
-   [pigeon-scoops.utils :refer [parse-keyword stringify-keyword]]
+   [pigeon-scoops.fetchers :refer [delete-fetcher! post-fetcher! put-fetcher!]]
+   [pigeon-scoops.hooks :refer [invalidate-recipes use-recipe use-recipe-bom
+                                use-token]]
+   [pigeon-scoops.utils :refer [determine-ops parse-keyword stringify-keyword]]
    [reitit.frontend.easy :as rfe]
    [uix.core :as uix :refer [$ defui]]))
 
@@ -71,12 +74,46 @@
                     :recipe/ingredients])
       (update :recipe/ingredients #(map ingredient->comparable %))))
 
-(defn on-finish [values]
-  (prn "Submit:")
-  (pprint (recipe-form-values->data values)))
+(defn on-finish [initial-recipe token values]
+  (let [recipe (recipe-form-values->data values)
+        recipe-id (atom (:recipe/id recipe))
+        ingredient-ops (determine-ops :ingredient/id
+                                      (:recipe/ingredients initial-recipe)
+                                      (:recipe/ingredients recipe))
+        headers {"Content-Type" "application/transit+json"}]
+    (prn "submitting" @recipe-id)
+    (pprint recipe)
+    (-> (if (nil? @recipe-id)
+          (-> (post-fetcher! (str base-url "/recipes") {:token token :body recipe :headers headers})
+              (.then #(do
+                        (swap! recipe-id (:id %))
+                        (rfe/push-state :pigeon-scoops.recipe.routes/recipe
+                                        {:recipe-id @recipe-id}))))
+          (put-fetcher! (str base-url "/recipes/" @recipe-id) {:token token :body recipe :headers headers}))
+        (.then (fn [_]
+                 (js/Promise.all (clj->js (concat
+                                           (map #(post-fetcher! (str base-url "/recipes/" @recipe-id "/ingredients")
+                                                                {:token token :body % :headers headers})
+                                                (:new ingredient-ops))
+                                           (map #(put-fetcher! (str base-url "/recipes/" @recipe-id "/ingredients")
+                                                               {:token token :body % :headers headers}) (:update ingredient-ops))
+                                           (map #(delete-fetcher! (str base-url "/recipes/" @recipe-id "/ingredients")
+                                                                  {:token token :body % :headers headers}) (:delete ingredient-ops)))))))
+        (.then #(invalidate-recipes))
+        (.catch (fn [e]
+                  (js/alert (str "Error saving recipe: " (.-message e))))))))
+
+(defn on-delete [token recipe-id]
+  (-> (delete-fetcher! (str base-url "/recipes/" recipe-id) {:token token})
+      (.then (fn [_]
+               (invalidate-recipes)
+               (rfe/push-state :pigeon-scoops.recipe.routes/recipes)))
+      (.catch (fn [error]
+                (js/alert (str "Error deleting recipe: " (.-message error)))))))
 
 (defui recipe-form [{:keys [recipe-id scaled-amount scaled-amount-unit]}]
-  (let [{:keys [recipe loading?]} (use-recipe recipe-id scaled-amount scaled-amount-unit)
+  (let [{:keys [token]} (use-token)
+        {:keys [recipe loading?]} (use-recipe recipe-id scaled-amount scaled-amount-unit)
         {:keys [groceries]} (use-recipe-bom recipe-id
                                             (or scaled-amount
                                                 (:recipe/amount recipe))
@@ -106,7 +143,7 @@
 
     (if (or loading? (not recipe))
       ($ Spin)
-      ($ Form {:form form :on-finish on-finish
+      ($ Form {:form form :on-finish (partial on-finish recipe token all-values)
                :style {:width "100%"}
                :disabled scaled-amount
                :initial-values (clj->js initial-values :keyword-fn str)}
@@ -117,6 +154,7 @@
             ($ Button {:type "primary" :html-type "submit" :disabled (not unsaved-changes?)}
                (if recipe-id "Update Recipe" "Create Recipe"))
             ($ Button {:html-type "button" :on-click #(.resetFields form)} "Reset")
+            ($ Button {:html-type "button" :danger true :on-click (partial on-delete token recipe-id)} "Delete")
             ($ InputNumber {:placeholder "Scale Amount"
                             :value scaled-amount
                             :disabled false

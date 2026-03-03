@@ -1,5 +1,6 @@
 (ns pigeon-scoops.fetchers
-  (:require [cognitect.transit :as transit]))
+  (:require
+   [cognitect.transit :as transit]))
 
 (defn encode-body [content-type body]
   (cond
@@ -7,7 +8,7 @@
     (let [writer (transit/writer :json)]
       (transit/write writer body))
     (= content-type "application/json")
-    (js/JSON.stringify (clj->js body))
+    (js/JSON.stringify (clj->js body :keyword-fn str))
     :else
     (throw (ex-info "Unsupported content type" {:content-type content-type}))))
 
