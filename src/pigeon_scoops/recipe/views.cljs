@@ -15,10 +15,9 @@
 (defui recipe-view [{:keys [path query]}]
   (let [{:keys [recipe-id]} path
         {:keys [amount amount-unit]} query]
-    ($ rctx/with-recipe {:recipe-id recipe-id :scaled-amount amount :scaled-amount-unit amount-unit}
-       ($ recipe-form {:recipe-id recipe-id
-                       :scaled-amount amount
-                       :scaled-amount-unit amount-unit}))))
+    ($ recipe-form {:recipe-id recipe-id
+                    :scaled-amount amount
+                    :scaled-amount-unit amount-unit})))
 
 (defui recipe-row [{:keys [recipe]}]
   (let [{:keys [delete!]} (uix/use-context rctx/recipes-context)]
