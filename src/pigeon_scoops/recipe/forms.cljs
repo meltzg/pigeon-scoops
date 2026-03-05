@@ -2,7 +2,6 @@
   (:require
    ["@ant-design/icons" :refer [ExportOutlined MinusCircleOutlined]]
    [antd :refer [Button Flex Form Input InputNumber Space Spin Switch Tabs]]
-   [cljs.pprint :refer [pprint]]
    [clojure.string :as str]
    [pigeon-scoops.api :refer [base-url]]
    [pigeon-scoops.components.bom-table :refer [bom-view]]
@@ -87,9 +86,15 @@
                                       #(ingredient->comparable % [:ingredient/id]))
         headers {"Content-Type" "application/transit+json"}]
     (-> (if (nil? @recipe-id)
-          (-> (post-fetcher! (str base-url "/recipes") {:token token :body recipe :headers headers})
+          (-> (post-fetcher!
+               (str base-url "/recipes")
+               {:token token
+                :body (->> recipe
+                           (remove #(nil? (second %)))
+                           (into {}))
+                :headers headers})
               (.then #(do
-                        (swap! recipe-id (:id %))
+                        (reset! recipe-id (:id %))
                         (rfe/push-state :pigeon-scoops.recipe.routes/recipe
                                         {:recipe-id @recipe-id}))))
           (put-fetcher! (str base-url "/recipes/" @recipe-id) {:token token :body recipe :headers headers}))
@@ -144,7 +149,7 @@
        (set-unsaved-changes! (apply not= (map recipe->comparable [recipe all-values]))))
      [recipe all-values])
 
-    (if (or loading? (not recipe))
+    (if (or loading? (and (not= recipe-id :new) (not (uuid? recipe-id))))
       ($ Spin)
       ($ Form {:form form :on-finish (partial on-finish recipe token all-values)
                :style {:width "100%"}
@@ -155,7 +160,7 @@
                        :disabled unsaved-changes?
                        :on-click #(rfe/push-state :pigeon-scoops.recipe.routes/recipes)} "Return to Recipes")
             ($ Button {:type "primary" :html-type "submit" :disabled (not unsaved-changes?)}
-               (if recipe-id "Update Recipe" "Create Recipe"))
+               (if (uuid? recipe-id) "Update Recipe" "Create Recipe"))
             ($ Button {:html-type "button" :on-click #(.resetFields form)} "Reset")
             ($ Button {:html-type "button" :danger true :on-click (partial on-delete token recipe-id)} "Delete")
             ($ InputNumber {:placeholder "Scale Amount"
@@ -188,7 +193,7 @@
             ($ Switch))
          ($ Form.Item {:label "Mystery Flavor" :name (stringify-keyword :recipe/is-mystery)}
             ($ Switch))
-         ($ Form.Item {:label "Source" :name (stringify-keyword :recipe/source)}
+         ($ Form.Item {:label "Source" :name (stringify-keyword :recipe/source) :rules (clj->js [{:required true}])}
             ($ Input))
          ($ Form.Item {:label "Description" :name (stringify-keyword :recipe/description)}
             ($ TextArea))

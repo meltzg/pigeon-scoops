@@ -67,32 +67,32 @@
     :sorter (make-sorter :grocery/name)
     :key :name}
    {:title "Department"
-    :dataIndex (stringify-keyword :grocery/department) 
-    :render #(last (str/split % #"/")) 
+    :dataIndex (stringify-keyword :grocery/department)
+    :render #(last (str/split % #"/"))
     :sorter (make-sorter :grocery/department)
     :key :department}
    {:title "Amount Needed"
-    :dataIndex (stringify-keyword :grocery/amount-needed) 
+    :dataIndex (stringify-keyword :grocery/amount-needed)
     :key :amount-needed}
-   {:title "Amount Cost" 
-    :dataIndex (stringify-keyword :grocery/amount-cost) 
-    :render format-dollar 
+   {:title "Amount Cost"
+    :dataIndex (stringify-keyword :grocery/amount-cost)
+    :render format-dollar
     :sorter (make-sorter :grocery/amount-cost)
     :key :amount-cost}
-   {:title "Purchase Amount" 
-    :dataIndex (stringify-keyword :grocery/purchase-amount) 
+   {:title "Purchase Amount"
+    :dataIndex (stringify-keyword :grocery/purchase-amount)
     :key :purchase-amount}
-   {:title "Purchase Units" 
-    :dataIndex (stringify-keyword :grocery/purchase-units) 
+   {:title "Purchase Units"
+    :dataIndex (stringify-keyword :grocery/purchase-units)
     :key :purchase-units}
-   {:title "Purchase Cost" 
-    :dataIndex (stringify-keyword :grocery/purchase-cost) 
-    :render format-dollar 
+   {:title "Purchase Cost"
+    :dataIndex (stringify-keyword :grocery/purchase-cost)
+    :render format-dollar
     :sorter (make-sorter :grocery/purchase-cost)
     :key :purchase-cost}
-   {:title "Waste Ratio" 
-    :dataIndex (stringify-keyword :grocery/waste-ratio) 
-    :render format-percentage 
+   {:title "Waste Ratio"
+    :dataIndex (stringify-keyword :grocery/waste-ratio)
+    :render format-percentage
     :sorter (make-sorter :grocery/waste-ratio)
     :key :waste-ratio}])
 
@@ -109,7 +109,7 @@
              (format-dollar required-cost)))
        ($ Table {:columns (clj->js columns)
                  :dataSource (clj->js (map-indexed (fn [idx grocery]
-                                                     (assoc (add-derived-fields grocery) :key idx)) groceries) 
+                                                     (assoc (add-derived-fields grocery) :key idx)) groceries)
                                       :keyword-fn stringify-keyword)
                  :pagination false
                  :row-selection (clj->js {:type "checkbox"})
