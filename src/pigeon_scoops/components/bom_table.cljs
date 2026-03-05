@@ -4,7 +4,7 @@
    [clojure.string :as str]
    [goog.string :as gstring]
    [goog.string.format]
-   [pigeon-scoops.utils :refer [stringify-keyword]]
+   [pigeon-scoops.utils :refer [make-sorter stringify-keyword]]
    [uix.core :refer [$ defui]]))
 
 (defn format-amount [amount amount-unit]
@@ -44,8 +44,7 @@
     (str quantity " x " unit)))
 
 (defn add-derived-fields [grocery]
-  (let [{:grocery/keys [name
-                        required-amount
+  (let [{:grocery/keys [required-amount
                         required-unit
                         purchase-amount
                         purchase-unit
@@ -63,14 +62,39 @@
            :grocery/waste-ratio waste-ratio)))
 
 (def columns
-  [{:title "Item" :dataIndex (stringify-keyword :grocery/name) :key :name}
-   {:title "Department" :dataIndex (stringify-keyword :grocery/department) :render #(last (str/split % #"/")) :key :department}
-   {:title "Amount Needed" :dataIndex (stringify-keyword :grocery/amount-needed) :key :amount-needed}
-   {:title "Amount Cost" :dataIndex (stringify-keyword :grocery/amount-cost) :render format-dollar :key :amount-cost}
-   {:title "Purchase Amount" :dataIndex (stringify-keyword :grocery/purchase-amount) :key :purchase-amount}
-   {:title "Purchase Units" :dataIndex (stringify-keyword :grocery/purchase-units) :key :purchase-units}
-   {:title "Purchase Cost" :dataIndex (stringify-keyword :grocery/purchase-cost) :render format-dollar :key :purchase-cost}
-   {:title "Waste Ratio" :dataIndex (stringify-keyword :grocery/waste-ratio) :render format-percentage :key :waste-ratio}])
+  [{:title "Item"
+    :dataIndex (stringify-keyword :grocery/name)
+    :sorter (make-sorter :grocery/name)
+    :key :name}
+   {:title "Department"
+    :dataIndex (stringify-keyword :grocery/department) 
+    :render #(last (str/split % #"/")) 
+    :sorter (make-sorter :grocery/department)
+    :key :department}
+   {:title "Amount Needed"
+    :dataIndex (stringify-keyword :grocery/amount-needed) 
+    :key :amount-needed}
+   {:title "Amount Cost" 
+    :dataIndex (stringify-keyword :grocery/amount-cost) 
+    :render format-dollar 
+    :sorter (make-sorter :grocery/amount-cost)
+    :key :amount-cost}
+   {:title "Purchase Amount" 
+    :dataIndex (stringify-keyword :grocery/purchase-amount) 
+    :key :purchase-amount}
+   {:title "Purchase Units" 
+    :dataIndex (stringify-keyword :grocery/purchase-units) 
+    :key :purchase-units}
+   {:title "Purchase Cost" 
+    :dataIndex (stringify-keyword :grocery/purchase-cost) 
+    :render format-dollar 
+    :sorter (make-sorter :grocery/purchase-cost)
+    :key :purchase-cost}
+   {:title "Waste Ratio" 
+    :dataIndex (stringify-keyword :grocery/waste-ratio) 
+    :render format-percentage 
+    :sorter (make-sorter :grocery/waste-ratio)
+    :key :waste-ratio}])
 
 (defui bom-view [{:keys [groceries]}]
   (let [total-cost (reduce + (map (comp purchase-cost :grocery/units) groceries))
@@ -78,12 +102,15 @@
                                                      (:grocery/waste-ratio %))
                                      groceries))]
     ($ Space {:orientation "vertical"}
-       ($ Descriptions {:Title "Cost Summary" :column 1 :bordered true}
+       ($ Descriptions {:title "Cost Summary" :column 1 :bordered true}
           ($ Descriptions.Item {:label "Total Cost"}
              (format-dollar total-cost))
           ($ Descriptions.Item {:label "Required Cost"}
              (format-dollar required-cost)))
        ($ Table {:columns (clj->js columns)
-                 :dataSource (clj->js (map-indexed (fn [idx grocery] (assoc (add-derived-fields grocery) :key idx)) groceries) :keyword-fn stringify-keyword)
+                 :dataSource (clj->js (map-indexed (fn [idx grocery]
+                                                     (assoc (add-derived-fields grocery) :key idx)) groceries) 
+                                      :keyword-fn stringify-keyword)
                  :pagination false
+                 :row-selection (clj->js {:type "checkbox"})
                  :bordered true}))))

@@ -51,13 +51,17 @@
                 (map ingredient-form-values->data
                      ingredients)))))
 
-(defn ingredient->comparable [ingredient]
-  (-> ingredient
-      (ingredient-form-values->data)
-      (select-keys [:ingredient/amount
-                    :ingredient/amount-unit
-                    :ingredient/ingredient-grocery-id
-                    :ingredient/ingredient-recipe-id])))
+(defn ingredient->comparable
+  ([ingredient]
+   (ingredient->comparable ingredient []))
+  ([ingredient additional-keys]
+   (-> ingredient
+       (ingredient-form-values->data)
+       (select-keys (concat [:ingredient/amount
+                             :ingredient/amount-unit
+                             :ingredient/ingredient-grocery-id
+                             :ingredient/ingredient-recipe-id]
+                            additional-keys)))))
 
 (defn recipe->comparable [recipe]
   (-> recipe
@@ -79,10 +83,9 @@
         recipe-id (atom (:recipe/id recipe))
         ingredient-ops (determine-ops :ingredient/id
                                       (:recipe/ingredients initial-recipe)
-                                      (:recipe/ingredients recipe))
+                                      (:recipe/ingredients recipe)
+                                      #(ingredient->comparable % [:ingredient/id]))
         headers {"Content-Type" "application/transit+json"}]
-    (prn "submitting" @recipe-id)
-    (pprint recipe)
     (-> (if (nil? @recipe-id)
           (-> (post-fetcher! (str base-url "/recipes") {:token token :body recipe :headers headers})
               (.then #(do
@@ -98,7 +101,7 @@
                                            (map #(put-fetcher! (str base-url "/recipes/" @recipe-id "/ingredients")
                                                                {:token token :body % :headers headers}) (:update ingredient-ops))
                                            (map #(delete-fetcher! (str base-url "/recipes/" @recipe-id "/ingredients")
-                                                                  {:token token :body % :headers headers}) (:delete ingredient-ops)))))))
+                                                                  {:token token :body {:ingredient/id %} :headers headers}) (:delete ingredient-ops)))))))
         (.then #(invalidate-recipes))
         (.catch (fn [e]
                   (js/alert (str "Error saving recipe: " (.-message e))))))))
