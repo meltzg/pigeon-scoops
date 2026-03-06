@@ -9,7 +9,6 @@
                             ListItemButton ListItemIcon ListItemText Toolbar
                             Typography]]
    [pigeon-scoops.auth :refer [authenticator]]
-   [pigeon-scoops.grocery.context :as gctx]
    [pigeon-scoops.recipe.context :as rctx]
    [pigeon-scoops.router :refer [router-context with-router]]
    [pigeon-scoops.user-order.context :as octx]
@@ -63,10 +62,9 @@
                                                     :scope        "openid profile email offline_access"
                                                     :audience     "https://api.pigeon-scoops.com"})}
      ($ with-router
-        ($ gctx/with-groceries
-           ($ rctx/with-recipes
-              ($ octx/with-orders
-                 ($ content)))))))
+        ($ rctx/with-recipes
+           ($ octx/with-orders
+              ($ content))))))
 
 (defonce root
   (uix.dom/create-root (js/document.getElementById "root")))
