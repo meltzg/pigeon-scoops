@@ -62,36 +62,43 @@
 (defn on-finish [initial-grocery token values]
   (let [grocery (grocery-form-values->data values)
         grocery-id (atom (:grocery/id grocery))
-        grocery-unit-ops (determine-ops :grocery-unit/id
-                                        (:grocery/units initial-grocery)
-                                        (:grocery/units grocery)
-                                        #(unit->comparable % [:grocery-unit/id]))
+        grocery-unit-ops (-> (determine-ops :grocery-unit/id
+                                            (:grocery/units initial-grocery)
+                                            (:grocery/units grocery)
+                                            #(unit->comparable % [:grocery-unit/id]))
+                             (update-vals (fn [vals]
+                                            (map #(if (map? %)
+                                                    (->> %
+                                                         (remove (comp nil? second))
+                                                         (into {}))
+                                                    %)
+                                                 vals))))
         headers {"Content-Type" "application/transit+json"}]
-    (comment -> (if (nil? @grocery-id)
-                  (-> (post-fetcher!
-                       (str base-url "/groceries")
-                       {:token token
-                        :body (->> grocery
-                                   (remove #(nil? (second %)))
-                                   (into {}))
-                        :headers headers})
-                      (.then #(do
-                                (reset! grocery-id (:id %))
-                                (rfe/push-state :pigeon-scoops.grocery.routes/grocery
-                                                {:grocery-id @grocery-id}))))
-                  (put-fetcher! (str base-url "/groceries/" @grocery-id) {:token token :body grocery :headers headers}))
-             (.then (fn [_]
-                      (js/Promise.all (clj->js (concat
-                                                (map #(post-fetcher! (str base-url "/groceries/" @grocery-id "/grocery-units")
-                                                                     {:token token :body % :headers headers})
-                                                     (:new grocery-unit-ops))
-                                                (map #(put-fetcher! (str base-url "/groceries/" @grocery-id "/grocery-units")
-                                                                    {:token token :body % :headers headers}) (:update grocery-unit-ops))
-                                                (map #(delete-fetcher! (str base-url "/groceries/" @grocery-id "/grocery-units")
-                                                                       {:token token :body {:grocery-unit/id %} :headers headers}) (:delete grocery-unit-ops)))))))
-             (.then #(invalidate-groceries))
-             (.catch (fn [e]
-                       (js/alert (str "Error saving grocery: " (.-message e))))))))
+    (-> (if (nil? @grocery-id)
+          (-> (post-fetcher!
+               (str base-url "/groceries")
+               {:token token
+                :body (->> grocery
+                           (remove #(nil? (second %)))
+                           (into {}))
+                :headers headers})
+              (.then #(do
+                        (reset! grocery-id (:id %))
+                        (rfe/push-state :pigeon-scoops.grocery.routes/grocery
+                                        {:grocery-id @grocery-id}))))
+          (put-fetcher! (str base-url "/groceries/" @grocery-id) {:token token :body grocery :headers headers}))
+        (.then (fn [_]
+                 (js/Promise.all (clj->js (concat
+                                           (map #(post-fetcher! (str base-url "/groceries/" @grocery-id "/units")
+                                                                {:token token :body % :headers headers})
+                                                (:new grocery-unit-ops))
+                                           (map #(put-fetcher! (str base-url "/groceries/" @grocery-id "/units")
+                                                               {:token token :body % :headers headers}) (:update grocery-unit-ops))
+                                           (map #(delete-fetcher! (str base-url "/groceries/" @grocery-id "/units")
+                                                                  {:token token :body {:grocery-unit/id %} :headers headers}) (:delete grocery-unit-ops)))))))
+        (.then #(invalidate-groceries))
+        (.catch (fn [e]
+                  (js/alert (str "Error saving grocery: " (.-message e))))))))
 
 (defn on-delete [token grocery-id]
   (-> (delete-fetcher! (str base-url "/groceries/" grocery-id) {:token token})
