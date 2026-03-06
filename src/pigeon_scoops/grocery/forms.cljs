@@ -39,25 +39,29 @@
   ([unit]
    (unit->comparable unit []))
   ([unit additional-keys]
-   (-> unit
-       (unit-form-values->data)
-       (select-keys (concat [:grocery-unit/source
-                             :grocery-unit/unit-cost
-                             :grocery-unit/unit-mass
-                             :grocery-unit/unit-mass-type
-                             :grocery-unit/unit-volume
-                             :grocery-unit/unit-volume-type
-                             :grocery-unit/unit-common
-                             :grocery-unit/unit-common-type]
-                            additional-keys)))))
+   (->> (-> unit
+            (unit-form-values->data)
+            (select-keys (concat [:grocery-unit/source
+                                  :grocery-unit/unit-cost
+                                  :grocery-unit/unit-mass
+                                  :grocery-unit/unit-mass-type
+                                  :grocery-unit/unit-volume
+                                  :grocery-unit/unit-volume-type
+                                  :grocery-unit/unit-common
+                                  :grocery-unit/unit-common-type]
+                                 additional-keys)))
+        (remove (comp nil? second))
+        (into {}))))
 
 (defn grocery->comparable [grocery]
-  (-> grocery
-      (grocery-form-values->data)
-      (select-keys [:grocery/name
-                    :grocery/department
-                    :grocery/units])
-      (update :grocery/units #(map unit->comparable %))))
+  (->> (-> grocery
+           (grocery-form-values->data)
+           (select-keys [:grocery/name
+                         :grocery/department
+                         :grocery/units])
+           (update :grocery/units #(map unit->comparable %)))
+       (remove (comp nil? second))
+       (into {})))
 
 (defn on-finish [initial-grocery token values]
   (let [grocery (grocery-form-values->data values)
