@@ -9,6 +9,7 @@
    [antd :refer [InputNumber]]
    [clojure.string :as str]
    [pigeon-scoops.grocery.context :as gctx]
+   [pigeon-scoops.grocery.forms :refer [grocery-form]]
    [pigeon-scoops.hooks :refer [use-constants]]
    [reitit.frontend.easy :as rfe]
    [uix.core :as uix :refer [$ defui]]))
@@ -136,10 +137,7 @@
 
 (defui grocery-view [{:keys [path]}]
   (let [{:keys [grocery-id]} path]
-    ($ gctx/with-grocery {:grocery-id grocery-id}
-       ($ Stack {:direction "row" :spacing 1}
-          ($ grocery-list {:selected-grocery-id grocery-id})
-          ($ grocery-control)))))
+    ($ grocery-form {:grocery-id grocery-id})))
 
 (defui grocery-row [{:keys [grocery]}]
   (let [{:keys [delete!]} (uix/use-context gctx/groceries-context)]

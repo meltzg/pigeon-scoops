@@ -14,7 +14,8 @@
                                 use-token]]
    [pigeon-scoops.utils :refer [determine-ops parse-keyword stringify-keyword]]
    [reitit.frontend.easy :as rfe]
-   [uix.core :as uix :refer [$ defui]]))
+   [uix.core :as uix :refer [$ defui]]
+   [clojure.string :as string]))
 
 (def TextArea (.-TextArea Input))
 
@@ -140,7 +141,7 @@
      (fn []
        (when recipe
          (let [form-values (recipe-data->form-values recipe)]
-           (.setFieldsValue form (clj->js form-values :keyword-fn str))
+           (.setFieldsValue form (clj->js form-values :keyword-fn stringify-keyword))
            (set-initial-values! form-values))))
      [form recipe])
 
@@ -151,10 +152,11 @@
 
     (if (or loading? (and (not= recipe-id :new) (not (uuid? recipe-id))))
       ($ Spin)
-      ($ Form {:form form :on-finish (partial on-finish recipe token all-values)
+      ($ Form {:form form
+               :on-finish (partial on-finish recipe token all-values)
                :style {:width "100%"}
                :disabled scaled-amount
-               :initial-values (clj->js initial-values :keyword-fn str)}
+               :initial-values (clj->js initial-values :keyword-fn stringify-keyword)}
          ($ Space {:align "start"}
             ($ Button {:html-type "button"
                        :disabled unsaved-changes?

@@ -6,7 +6,7 @@
    [pigeon-scoops.utils :refer [parse-keyword stringify-keyword]]
    [uix.core :as uix :refer [$ defui]]))
 
-(defui constants-selector [{:keys [form-item-name constants-key valid-namespaces required? value on-change disabled?]}]
+(defui constants-selector [{:keys [form-item-name label constants-key valid-namespaces required? value on-change disabled?]}]
   (let [{:keys [constants loading?]} (use-constants)
         [options set-options!] (uix/use-state [])
         [select-width set-select-width!] (uix/use-state "auto")]
@@ -35,7 +35,8 @@
                                :get-value-props (fn [value]
                                                   (clj->js {:value (stringify-keyword value)}))
                                :rules (clj->js [{:required required?}])}
-                        (not (nil? form-item-name)) (assoc :name form-item-name))
+                        (not (nil? form-item-name)) (assoc :name form-item-name)
+                        (not (nil? label)) (assoc :label label))
             ($ Select (cond-> {:on-change on-change
                                :style (clj->js {:width select-width})
                                :options (clj->js options)

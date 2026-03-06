@@ -94,3 +94,19 @@
     {:groceries data
      :error     error
      :loading?  isLoading}))
+
+(defhook use-grocery [grocery-id]
+  (let [{:keys [token]} (use-token)
+        {:keys [data error isLoading]} (js->clj (useSWR [(str base-url "/groceries/" grocery-id) token]
+                                                        (fn [[url]]
+                                                          (when (and (uuid? grocery-id) token)
+                                                            (get-fetcher! url {:token token
+                                                                               :headers {"Accept" "application/transit+json"}}))))
+                                                :keywordize-keys true)]
+    {:grocery data
+     :error   error
+     :loading? isLoading}))
+
+(defn invalidate-groceries []
+  (mutate (fn [key]
+            (str/starts-with? (first key) (str base-url "/groceries")))))
