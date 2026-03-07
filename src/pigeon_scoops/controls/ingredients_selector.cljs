@@ -19,12 +19,12 @@
 (defn stringify-ingredient [type id]
   (str (name type) ":" id))
 
-(defn ingredient->option [ingredient]
+(defn ingredient->option [ingredient-keys ingredient]
   (cond
-    (:ingredient/ingredient-recipe-id ingredient)
-    (stringify-ingredient :recipe (:ingredient/ingredient-recipe-id ingredient))
-    (:ingredient/ingredient-grocery-id ingredient)
-    (stringify-ingredient :grocery (:ingredient/ingredient-grocery-id ingredient))))
+    ((:recipe ingredient-keys) ingredient)
+    (stringify-ingredient :recipe ((:recipe ingredient-keys) ingredient))
+    ((:grocery ingredient-keys) ingredient)
+    (stringify-ingredient :grocery ((:grocery ingredient-keys) ingredient))))
 
 (defui ingredients-selector [{:keys [form-item-name ingredient-keys]}]
   (let [{:keys [groceries] groceries-loading? :loading?} (use-groceries)

@@ -26,7 +26,10 @@
               (fn [ingredients]
                 (map #(-> %
                           (update :ingredient/amount-unit stringify-keyword)
-                          (assoc :ingredient/ingredient-id (ingredient->option %))
+                          (assoc :ingredient/ingredient-id (ingredient->option
+                                                            {:grocery :ingredient/ingredient-grocery-id
+                                                             :recipe :ingredient/ingredient-recipe-id}
+                                                            %))
                           (update-keys stringify-keyword))
                      ingredients)))
       (update-keys stringify-keyword)))

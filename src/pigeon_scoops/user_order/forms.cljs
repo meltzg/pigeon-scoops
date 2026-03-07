@@ -1,11 +1,11 @@
 (ns pigeon-scoops.user-order.forms
   (:require
-   [antd :refer [Button Flex Form Input Space Spin]]
+   [antd :refer [Button Flex Form Input InputNumber Space Spin]]
    [pigeon-scoops.api :refer [base-url]]
    [pigeon-scoops.controls.constants-selector :refer [constants-selector]]
    [pigeon-scoops.controls.ingredients-selector :refer [ingredients-selector
                                                         parse-ingredient
-                                                        stringify-ingredient]]
+                                                        ingredient->option]]
    [pigeon-scoops.fetchers :refer [delete-fetcher! post-fetcher! put-fetcher!]]
    [pigeon-scoops.hooks :refer [invalidate-orders use-order use-token]]
    [pigeon-scoops.utils :refer [determine-ops parse-keyword stringify-keyword]]
@@ -20,7 +20,9 @@
                 (map #(-> %
                           (update :order-item/amount-unit stringify-keyword)
                           (update :order-item/status stringify-keyword)
-                          (update :order-item/recipe-id (partial stringify-ingredient :order-item/recipe-id)))
+                          (assoc :order-item/recipe-id (ingredient->option
+                                                        {:recipe :order-item/recipe-id}
+                                                        %)))
                      items)))))
 
 (defn item-form-values->data [form-value]
@@ -84,7 +86,7 @@
                 :headers headers})
               (.then #(do
                         (reset! order-id (:id %))
-                        (rfe/push-state :pigeon-scoops.order.routes/order
+                        (rfe/push-state :pigeon-scoops.user-order.routes/order
                                         {:order-id @order-id}))))
           (put-fetcher! (str base-url "/orders/" @order-id) {:token token :body order :headers headers}))
         (.then (fn [_]
@@ -104,7 +106,7 @@
   (-> (delete-fetcher! (str base-url "/orders/" order-id) {:token token})
       (.then (fn [_]
                (invalidate-orders)
-               (rfe/push-state :pigeon-scoops.order.routes/orders)))
+               (rfe/push-state :pigeon-scoops.user-order.routes/orders)))
       (.catch (fn [error]
                 (js/alert (str "Error deleting order: " (.-message error)))))))
 
@@ -138,7 +140,7 @@
          ($ Space {:align "start"}
             ($ Button {:html-type "button"
                        :disabled unsaved-changes?
-                       :on-click #(rfe/push-state :pigeon-scoops.order.routes/orders)} "Return to Orders")
+                       :on-click #(rfe/push-state :pigeon-scoops.user-order.routes/orders)} "Return to Orders")
             ($ Button {:type "primary" :html-type "submit" :disabled (not unsaved-changes?)}
                (if (uuid? order-id) "Update Order" "Create Order"))
             ($ Button {:html-type "button" :on-click #(.resetFields form)} "Reset")
@@ -162,4 +164,10 @@
                                       :name (clj->js [field-name (stringify-keyword :order-item/id)])}
                            ($ Input))
                         ($ ingredients-selector {:form-item-name (clj->js [field-name (stringify-keyword :order-item/recipe-id)])
-                                                 :ingredient-keys {:recipe :order-item/recipe-id}})))))))))))
+                                                 :ingredient-keys {:recipe :order-item/recipe-id}})
+                        ($ Form.Item {:name (clj->js [field-name (stringify-keyword :order-item/amount)])
+                                      :rules (clj->js [{:required true}])}
+                           ($ InputNumber))
+                        ($ constants-selector {:form-item-name (clj->js [field-name (stringify-keyword :order-item/amount-unit)])
+                                               :constants-key :constants/unit-types
+                                               :required-true true})))))))))))
