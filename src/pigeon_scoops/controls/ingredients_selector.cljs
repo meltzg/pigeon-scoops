@@ -6,14 +6,14 @@
    [pigeon-scoops.hooks :refer [use-groceries use-recipes]]
    [uix.core :as uix :refer [$ defui]]))
 
-(defn parse-ingredient [ingredient]
-  (let [[type id] (when (:ingredient/ingredient-id ingredient)
-                    (.split (:ingredient/ingredient-id ingredient) ":"))
+(defn parse-ingredient [ingredient-id-key ingredient-keys ingredient]
+  (let [[type id] (when (ingredient-id-key ingredient)
+                    (.split (ingredient-id-key ingredient) ":"))
         type (keyword type)]
     (cond
       (nil? type) ingredient
-      (= type :grocery) (assoc ingredient :ingredient/ingredient-grocery-id (uuid id))
-      (= type :recipe) (assoc ingredient :ingredient/ingredient-recipe-id (uuid id))
+      (= type :grocery) (assoc ingredient (:grocery ingredient-keys) (uuid id))
+      (= type :recipe) (assoc ingredient (:recipe ingredient-keys) (uuid id))
       :else (throw (ex-info "Invalid ingredient type" {:type type})))))
 
 (defn stringify-ingredient [type id]
@@ -26,12 +26,10 @@
     (:ingredient/ingredient-grocery-id ingredient)
     (stringify-ingredient :grocery (:ingredient/ingredient-grocery-id ingredient))))
 
-(defui ingredients-selector [{:keys [form-item-name valid-ingredients]}]
+(defui ingredients-selector [{:keys [form-item-name ingredient-keys]}]
   (let [{:keys [groceries] groceries-loading? :loading?} (use-groceries)
         {:keys [recipes] recipes-loading? :loading?} (use-recipes)
-        valid-ingredients (set (if (seq valid-ingredients)
-                                 valid-ingredients
-                                 [:grocery :recipe]))
+        valid-ingredients (set (keys ingredient-keys))
         recipes (apply concat (vals recipes))
         [options set-options!] (uix/use-state [])
         [select-width set-select-width!] (uix/use-state "auto")]

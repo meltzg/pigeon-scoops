@@ -13,12 +13,13 @@
 (defn grocery-data->form-values [grocery]
   (-> grocery
       (update :grocery/department stringify-keyword)
-      (update :grocery/units (fn [units]
-                               (mapv #(-> %
-                                          (update :grocery-unit/unit-mass-type stringify-keyword)
-                                          (update :grocery-unit/unit-volume-type stringify-keyword)
-                                          (update :grocery-unit/unit-common-type stringify-keyword))
-                                     units)))))
+      (update :grocery/units
+              (fn [units]
+                (mapv #(-> %
+                           (update :grocery-unit/unit-mass-type stringify-keyword)
+                           (update :grocery-unit/unit-volume-type stringify-keyword)
+                           (update :grocery-unit/unit-common-type stringify-keyword))
+                      units)))))
 
 (defn unit-form-values->data [form-value]
   (-> form-value

@@ -13,6 +13,7 @@
    [pigeon-scoops.hooks :refer [use-constants]]
    [pigeon-scoops.recipe.context :as rctx]
    [pigeon-scoops.user-order.context :as octx]
+   [pigeon-scoops.user-order.forms :refer [order-form]]
    [reitit.frontend.easy :as rfe]
    [uix.core :as uix :refer [$ defui]]))
 
@@ -159,10 +160,7 @@
 
 (defui order-view [{:keys [path]}]
   (let [{:keys [order-id]} path]
-    ($ octx/with-order {:order-id order-id}
-       ($ Stack {:direction "row" :spacing 1}
-          ($ order-list {:selected-order-id order-id})
-          ($ order-control)))))
+    ($ order-form {:order-id order-id})))
 
 (defui order-row [{:keys [order]}]
   (let [{:keys [delete!]} (uix/use-context octx/orders-context)]

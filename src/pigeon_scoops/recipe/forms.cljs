@@ -14,8 +14,7 @@
                                 use-token]]
    [pigeon-scoops.utils :refer [determine-ops parse-keyword stringify-keyword]]
    [reitit.frontend.easy :as rfe]
-   [uix.core :as uix :refer [$ defui]]
-   [clojure.string :as string]))
+   [uix.core :as uix :refer [$ defui]]))
 
 (def TextArea (.-TextArea Input))
 
@@ -36,7 +35,10 @@
   (-> form-value
       (js->clj :keywordize-keys true)
       (update :ingredient/amount-unit parse-keyword)
-      (parse-ingredient)))
+      ((partial parse-ingredient
+                :ingredient/ingredient-id
+                {:grocery :ingredient/ingredient-grocery-id
+                 :recipe :ingredient/ingredient-recipe-id}))))
 
 (defn recipe-form-values->data [form-values]
   (-> form-values
@@ -226,7 +228,9 @@
                                  ($ Flex {:direction "row" :key key}
                                     ($ Form.Item {:hidden true :name (clj->js [field-name (stringify-keyword :ingredient/id)])}
                                        ($ Input))
-                                    ($ ingredients-selector {:form-item-name (clj->js [field-name (stringify-keyword :ingredient/ingredient-id)])})
+                                    ($ ingredients-selector {:form-item-name (clj->js [field-name (stringify-keyword :ingredient/ingredient-id)])
+                                                             :ingredient-keys {:grocery :ingredient/ingredient-grocery-id
+                                                                               :recipe :ingredient/ingredient-recipe-id}})
                                     ($ Form.Item {:name (clj->js [field-name (stringify-keyword :ingredient/amount)])
                                                   :rules (clj->js [{:required true}])}
                                        ($ InputNumber))
