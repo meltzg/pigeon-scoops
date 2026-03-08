@@ -1,13 +1,10 @@
 (ns pigeon-scoops.core
   (:require
-   ["@auth0/auth0-react" :refer [Auth0Provider]]
-   ["@mui/icons-material/LocalGroceryStore$default" :as LocalGroceryStoreIcon]
-   ["@mui/icons-material/Menu$default" :as MenuIcon]
-   ["@mui/icons-material/MenuBook$default" :as MenuBookIcon]
-   ["@mui/icons-material/Receipt$default" :as ReceiptIcon]
+   ["@auth0/auth0-react" :refer [Auth0Provider]] 
    ["@mui/material" :refer [AppBar Box Drawer IconButton List ListItem
                             ListItemButton ListItemIcon ListItemText Toolbar
                             Typography]]
+   ["@ant-design/icons" :refer [BookOutlined ContainerOutlined MenuOutlined ShoppingCartOutlined]]
    [pigeon-scoops.auth :refer [authenticator]]
    [pigeon-scoops.router :refer [router-context with-router]]
    [reitit.frontend.easy :as rfe]
@@ -29,7 +26,7 @@
        ($ AppBar
           ($ Toolbar
              ($ IconButton {:on-click #(set-menu-open! (not menu-open?))}
-                ($ MenuIcon))
+                ($ MenuOutlined))
              ($ Typography
                 "Pigeon Scoops Manager")
              ($ Box {:ml "auto"}
@@ -38,9 +35,9 @@
                   :open     menu-open?
                   :on-close #(set-menu-open! (not menu-open?))}
           ($ List
-             (for [[app-name app-icon app-key page] [["Groceries" LocalGroceryStoreIcon :groceries :pigeon-scoops.grocery.routes/groceries]
-                                                     ["Recipes" MenuBookIcon :recipes :pigeon-scoops.recipe.routes/recipes]
-                                                     ["Orders" ReceiptIcon :orders :pigeon-scoops.user-order.routes/orders]]]
+             (for [[app-name app-icon app-key page] [["Groceries" ShoppingCartOutlined :groceries :pigeon-scoops.grocery.routes/groceries]
+                                                     ["Recipes" BookOutlined :recipes :pigeon-scoops.recipe.routes/recipes]
+                                                     ["Orders" ContainerOutlined :orders :pigeon-scoops.user-order.routes/orders]]]
                ($ app-menu-item {:key      app-key
                                  :text     app-name
                                  :icon     app-icon
