@@ -167,7 +167,7 @@
                          {:keys [remove]} (js->clj funcs :keywordize-keys true)
                          item (get (js->clj (.getFieldValue form (clj->js [[(stringify-keyword :user-order/items)]]))
                                             :keywordize-keys true)
-                                   0)
+                                   field-name)
                          parsed-item (when (:order-item/ingredient-id item)
                                        (item-form-values->data item))]
                      ($ Flex {:key key :direction "row"}
