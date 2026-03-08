@@ -19,7 +19,7 @@
     :sorter (make-sorter :user-order/note)
     :key :name}
    {:title "Department"
-    :dataIndex (stringify-keyword :user-order/department)
+    :dataIndex (stringify-keyword :user-order/status)
     :render (fn [val]
               (str/capitalize (name (keyword val))))
     :key :public}
