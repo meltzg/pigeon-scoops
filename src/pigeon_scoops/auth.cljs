@@ -1,44 +1,42 @@
 (ns pigeon-scoops.auth
-  (:require [pigeon-scoops.api :as api]
-            [pigeon-scoops.hooks :refer [use-token]]
-            [uix.core :as uix :refer [$ defui]]
-            ["@auth0/auth0-react" :refer [useAuth0]]
-            ["@mui/icons-material/AccountCircle$default" :as AccountCircle]
-            ["@mui/material" :refer [IconButton
-                                     Menu
-                                     MenuItem
-                                     Stack
-                                     Typography]]))
+  (:require
+   ["@ant-design/icons" :refer [UserOutlined]]
+   ["@auth0/auth0-react" :refer [useAuth0]]
+   [antd :refer [Button Spin]]
+   [pigeon-scoops.hooks :refer [base-url use-token]]
+   [uix.core :as uix :refer [$ defui]]))
 
 (defui authenticator []
-  (let [[anchor-el set-anchor-el!] (uix/use-state nil)
-        {:keys [logout loginWithRedirect isAuthenticated user isLoading]} (js->clj (useAuth0) :keywordize-keys true)
-        {:keys [token]} (use-token)]
+  (let [{:keys [loginWithRedirect isAuthenticated user isLoading] auth-logout :logout} (js->clj (useAuth0) :keywordize-keys true)
+        {:keys [token]} (use-token)
+        login #(loginWithRedirect
+                (clj->js {:authorizationParams
+                          {:audience "https://api.pigeon-scoops.com"
+                           :scope    "openid profile email offline_access"}}))
+        logout #(auth-logout (clj->js {:logoutParams {:returnTo (.. js/window -location -origin)}}))]
 
     (uix/use-effect
      (fn []
        (when (and isAuthenticated token)
-         (api/create-account token)))
-     [isAuthenticated token])
+         (-> (js/fetch (str base-url "/account")
+                       (clj->js {:method :POST
+                                 :headers {:Accept "application/transit+json"
+                                           :Authorization (str "Bearer " token)}}))
+             (.then #(when-not (.-ok %)
+                       (js/Promise.reject %)))
+             (.catch #(do
+                        (js/alert (str "Login failed." %))
+                        (logout))))))
+     [isAuthenticated token logout])
 
-    ($ Stack {:direction "column"}
-       ($ IconButton {:size     "large"
-                      :on-click #(set-anchor-el! (.-currentTarget %))
-                      :color    (cond isLoading "warning"
-                                      (and isAuthenticated token) "default"
-                                      :else "error")}
-          ($ AccountCircle))
-       ($ Menu {:id           "menu-connection"
-                :anchor-el    anchor-el
-                :keep-mounted true
-                :open         (some? anchor-el)
-                :on-close     #(set-anchor-el! nil)}
-          (if (and isAuthenticated token)
-            ($ Stack {:direction "column" :spacing 1}
-               ($ Typography
-                  (:name user))
-               ($ MenuItem {:on-click #(logout (clj->js {:logoutParams {:returnTo (.. js/window -location -origin)}}))}
-                  "Sign Out"))
-            ($ MenuItem {:on-click #(loginWithRedirect (clj->js {:authorizationParams {:audience "https://api.pigeon-scoops.com"
-                                                                                       :scope    "openid profile email offline_access"}}))}
-               "Sign In"))))))
+    ($ Button {:type "primary"
+               :on-click (if (and isAuthenticated token)
+                           logout
+                           login)
+               :icon-placement "end"
+               :icon ($ UserOutlined {:style {:color (cond isLoading "orange"
+                                                           (and isAuthenticated token) "black"
+                                                           :else "red")}})}
+       (cond isLoading ($ Spin)
+             (and isAuthenticated token) (:name user)
+             :else "Sign In"))))

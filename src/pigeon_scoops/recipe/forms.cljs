@@ -3,15 +3,14 @@
    ["@ant-design/icons" :refer [ExportOutlined MinusCircleOutlined]]
    [antd :refer [Button Flex Form Input InputNumber Space Spin Switch Tabs]]
    [clojure.string :as str]
-   [pigeon-scoops.api :refer [base-url]]
    [pigeon-scoops.components.bom-table :refer [bom-view]]
    [pigeon-scoops.controls.constants-selector :refer [constants-selector]]
    [pigeon-scoops.controls.ingredients-selector :refer [ingredient->option
                                                         ingredients-selector
                                                         parse-ingredient]]
    [pigeon-scoops.fetchers :refer [delete-fetcher! post-fetcher! put-fetcher!]]
-   [pigeon-scoops.hooks :refer [invalidate-recipes use-recipe use-recipe-bom
-                                use-token]]
+   [pigeon-scoops.hooks :refer [base-url invalidate-recipes use-recipe
+                                use-recipe-bom use-token]]
    [pigeon-scoops.utils :refer [determine-ops parse-keyword stringify-keyword]]
    [reitit.frontend.easy :as rfe]
    [uix.core :as uix :refer [$ defui]]))

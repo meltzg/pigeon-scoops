@@ -3,11 +3,16 @@
    ["@auth0/auth0-react" :refer [useAuth0]]
    ["swr$default" :as useSWR]
    [swr :refer [mutate]]
-   [pigeon-scoops.api :refer [base-url]]
    [pigeon-scoops.fetchers :refer [get-fetcher!]]
    [pigeon-scoops.utils :refer [stringify-keyword]]
    [uix.core :as uix :refer [defhook]]
    [clojure.string :as str]))
+
+(def base-url
+  (if ^boolean goog.DEBUG
+    "http://localhost:8080/v1"                              ;; Development URL
+    "https://api.pigeon-scoops.com/v1"))                    ;; Production URL
+
 
 (defhook use-token []
   (let [{:keys [getAccessTokenSilently isAuthenticated]} (js->clj (useAuth0) :keywordize-keys true)

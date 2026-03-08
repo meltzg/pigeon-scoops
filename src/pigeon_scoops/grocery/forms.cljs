@@ -2,10 +2,10 @@
   (:require
    ["@ant-design/icons" :refer [MinusCircleOutlined]]
    [antd :refer [Button Card Flex Form Input InputNumber Space Spin]]
-   [pigeon-scoops.api :refer [base-url]]
    [pigeon-scoops.controls.constants-selector :refer [constants-selector]]
    [pigeon-scoops.fetchers :refer [delete-fetcher! post-fetcher! put-fetcher!]]
-   [pigeon-scoops.hooks :refer [invalidate-groceries use-grocery use-token]]
+   [pigeon-scoops.hooks :refer [base-url invalidate-groceries use-grocery
+                                use-token]]
    [pigeon-scoops.utils :refer [determine-ops parse-keyword stringify-keyword]]
    [reitit.frontend.easy :as rfe]
    [uix.core :as uix :refer [$ defui]]))
