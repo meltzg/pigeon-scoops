@@ -1,6 +1,6 @@
 (ns pigeon-scoops.user-order.forms
   (:require
-   ["@ant-design/icons" :refer [MinusCircleOutlined]]
+   ["@ant-design/icons" :refer [ExportOutlined MinusCircleOutlined]]
    [antd :refer [Button Flex Form Input InputNumber Space Spin]]
    [pigeon-scoops.api :refer [base-url]]
    [pigeon-scoops.controls.constants-selector :refer [constants-selector]]
@@ -164,7 +164,12 @@
               ($ :div
                  (for [field fields]
                    (let [{:keys [key] field-name :name} (js->clj field :keywordize-keys true)
-                         {:keys [remove]} (js->clj funcs :keywordize-keys true)]
+                         {:keys [remove]} (js->clj funcs :keywordize-keys true)
+                         item (get (js->clj (.getFieldValue form (clj->js [[(stringify-keyword :user-order/items)]]))
+                                            :keywordize-keys true)
+                                   0)
+                         parsed-item (when (:order-item/ingredient-id item)
+                                       (item-form-values->data item))]
                      ($ Flex {:key key :direction "row"}
                         ($ Form.Item {:hidden true :name (clj->js [field-name (stringify-keyword :order-item/id)])}
                            ($ Input))
@@ -184,6 +189,15 @@
                                                      :constants-key :constants/order-statuses
                                                      :required? true})
                               ($ Form.Item
+                                 ($ Button {:type "text"
+                                            :disabled (or (nil? (:order-item/id parsed-item))
+                                                          unsaved-changes?)
+                                            :icon ($ ExportOutlined)
+                                            :on-click #(rfe/push-state
+                                                        :pigeon-scoops.recipe.routes/recipe
+                                                        {:recipe-id (:order-item/recipe-id parsed-item)}
+                                                        {:amount (:order-item/amount parsed-item)
+                                                         :amount-unit (:order-item/amount-unit parsed-item)})})
                                  ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove field-name)})))))))
                  ($ Form.Item
                     ($ Button {:type "dashed" :on-click (:add (js->clj funcs :keywordize-keys true))} "Add item")))))))))

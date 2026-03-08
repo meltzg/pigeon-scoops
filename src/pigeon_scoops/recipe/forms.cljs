@@ -252,8 +252,7 @@
                                                                        {:amount      (:ingredient/amount parsed-ingredient)
                                                                         :amount-unit (:ingredient/amount-unit parsed-ingredient)}]
                                                                       [:pigeon-scoops.grocery.routes/grocery
-                                                                       {:grocery-id (:ingredient/ingredient-grocery-id parsed-ingredient)}]))}))
-                                    ($ Form.Item
+                                                                       {:grocery-id (:ingredient/ingredient-grocery-id parsed-ingredient)}]))})
                                        ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove field-name)})))))
                              ($ Form.Item
                                 ($ Button {:type "dashed" :on-click (:add (js->clj funcs :keywordize-keys true))} "Add Ingredient")))))}
