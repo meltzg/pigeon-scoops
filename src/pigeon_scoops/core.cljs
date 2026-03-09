@@ -1,67 +1,57 @@
 (ns pigeon-scoops.core
-  (:require [pigeon-scoops.auth :refer [authenticator]]
-            [pigeon-scoops.context :as ctx]
-            [pigeon-scoops.grocery.context :as gctx]
-            [pigeon-scoops.recipe.context :as rctx]
-            [pigeon-scoops.router :refer [router-context with-router]]
-            [pigeon-scoops.user-order.context :as octx]
-            [reitit.frontend.easy :as rfe]
-            [uix.core :as uix :refer [$ defui]]
-            [uix.dom]
-            ["@auth0/auth0-react" :refer [Auth0Provider]]
-            ["@mui/icons-material/Menu$default" :as MenuIcon]
-            ["@mui/icons-material/Icecream$default" :as IcecreamIcon]
-            ["@mui/icons-material/LocalGroceryStore$default" :as LocalGroceryStoreIcon]
-            ["@mui/icons-material/MenuBook$default" :as MenuBookIcon]
-            ["@mui/icons-material/Receipt$default" :as ReceiptIcon]
-            ["@mui/material" :refer [AppBar
-                                     Box
-                                     Drawer
-                                     IconButton
-                                     List
-                                     ListItem
-                                     ListItemButton
-                                     ListItemIcon
-                                     ListItemText
-                                     Toolbar
-                                     Typography]]))
+  (:require
+   ["@auth0/auth0-react" :refer [Auth0Provider]]
+   ["react-icons/gi" :refer [GiIceCreamCone]]
+   ["@ant-design/icons" :refer [BookOutlined ContainerOutlined HomeOutlined MenuOutlined ShoppingCartOutlined]]
+   [antd :refer [Flex Layout Menu Typography]]
+   [pigeon-scoops.auth :refer [authenticator]]
+   [pigeon-scoops.router :refer [router-context with-router]]
+   [reitit.frontend.easy :as rfe]
+   [uix.core :as uix :refer [$ defui]]
+   [uix.dom]))
 
-(defui app-menu-item [{:keys [text icon page on-click]}]
-  ($ ListItem
-     ($ ListItemButton {:href     (rfe/href page)
-                        :on-click on-click}
-        ($ ListItemIcon
-           ($ icon))
-        ($ ListItemText {:primary text}))))
+(def Header (.-Header Layout))
+(def Content (.-Content Layout))
+(def Sider (.-Sider Layout))
+
+(def menu-on-clicks
+  {:home #(rfe/push-state :pigeon-scoops.router/root)
+   :recipes #(rfe/push-state :pigeon-scoops.recipe.routes/recipes)
+   :groceries #(rfe/push-state :pigeon-scoops.grocery.routes/groceries)
+   :orders #(rfe/push-state :pigeon-scoops.user-order.routes/orders)})
+
+(def menu-items [{:key :home
+                  :icon ($ HomeOutlined)
+                  :label "Home"}
+                 {:key :recipes
+                  :icon ($ BookOutlined)
+                  :label "Recipes"}
+                 {:key :groceries
+                  :icon ($ ShoppingCartOutlined)
+                  :label "Groceries"}
+                 {:key :orders
+                  :icon ($ ContainerOutlined)
+                  :label "Orders"}])
 
 (defui content []
-  (let [{:keys [route]} (uix/use-context router-context)
-        [menu-open? set-menu-open!] (uix/use-state false)]
-    ($ Box
-       ($ AppBar
-          ($ Toolbar
-             ($ IconButton {:on-click #(set-menu-open! (not menu-open?))}
-                ($ MenuIcon))
-             ($ Typography
+  (let [{:keys [route]} (uix/use-context router-context)]
+
+    ($ Layout {:style {:min-height "100vh"}}
+       ($ Header
+          ($ Flex {:justify "space-between" :align "center" :style {:height "100%"}}
+             ($ Typography.Title {:level 3 :style {:color "white"}}
+                ($ GiIceCreamCone)
                 "Pigeon Scoops Manager")
-             ($ Box {:ml "auto"}
-                ($ authenticator))))
-       ($ Drawer {:anchor   "left"
-                  :open     menu-open?
-                  :on-close #(set-menu-open! (not menu-open?))}
-          ($ List
-             (for [[app-name app-icon app-key page] [["Groceries" LocalGroceryStoreIcon :groceries :pigeon-scoops.grocery.routes/groceries]
-                                                     ["Recipes" MenuBookIcon :recipes :pigeon-scoops.recipe.routes/recipes]
-                                                     ["Orders" ReceiptIcon :orders :pigeon-scoops.user-order.routes/orders]]]
-               ($ app-menu-item {:key      app-key
-                                 :text     app-name
-                                 :icon     app-icon
-                                 :page     page
-                                 :on-click #(set-menu-open! (not menu-open?))}))))
-       ($ Box {:component "div"}
-          ($ Toolbar)
-          (when route
-            ($ (-> route :data :view) (:parameters route)))))))
+             ($ authenticator)))
+       ($ Layout
+          ($ Sider {:collapsible true}
+             ($ Menu {:items (clj->js menu-items)
+                      :mode "inline"
+                      :theme "dark"
+                      :on-click (fn [e] (((keyword (.-key e)) menu-on-clicks)))}))
+          ($ Content {:style {:margin "0.5rem"}}
+             (when route
+               ($ (-> route :data :view) (:parameters route))))))))
 
 (defui app []
   ($ Auth0Provider {:domain               "pigeon-scoops.us.auth0.com"
@@ -72,11 +62,7 @@
                                                     :scope        "openid profile email offline_access"
                                                     :audience     "https://api.pigeon-scoops.com"})}
      ($ with-router
-        ($ ctx/with-constants
-           ($ gctx/with-groceries
-              ($ rctx/with-recipes
-                 ($ octx/with-orders
-                    ($ content))))))))
+        ($ content))))
 
 (defonce root
   (uix.dom/create-root (js/document.getElementById "root")))

@@ -14,16 +14,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@ant-design/icons": "6.x",
     "@auth0/auth0-react": "^2.2.4",
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
-    "@mui/icons-material": "^5.14.6",
-    "@mui/material": "^5.15.2",
-    "antd": "^6.3.0",
+    "antd": "6.x",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-icons": "^5.6.0",
     "react-refresh": "^0.16.0",
-    "shadow-cljs": "^2.26.2"
+    "shadow-cljs": "^2.26.2",
+    "swr": "^2.4.0"
   },
   "packageManager": "yarn@4.12.0",
   "engines": {
