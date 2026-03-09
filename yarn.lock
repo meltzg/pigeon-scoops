@@ -2765,6 +2765,7 @@ __metadata:
     antd: "npm:6.x"
     react: "npm:^18.3.1"
     react-dom: "npm:^18.3.1"
+    react-icons: "npm:^5.6.0"
     react-refresh: "npm:^0.16.0"
     shadow-cljs: "npm:^2.26.2"
     swr: "npm:^2.4.0"
@@ -2885,6 +2886,15 @@ __metadata:
   peerDependencies:
     react: ^18.3.1
   checksum: 10c0/a752496c1941f958f2e8ac56239172296fcddce1365ce45222d04a1947e0cc5547df3e8447f855a81d6d39f008d7c32eab43db3712077f09e3f67c4874973e85
+  languageName: node
+  linkType: hard
+
+"react-icons@npm:^5.6.0":
+  version: 5.6.0
+  resolution: "react-icons@npm:5.6.0"
+  peerDependencies:
+    react: "*"
+  checksum: 10c0/addba1ebfd45cdf7f69291d0c93df64fca1271cfdb66df657abd223e3451c73356b035f50e75858627dd182b02129596c79eaaaa45d32eb52658e443a992645c
   languageName: node
   linkType: hard
 
