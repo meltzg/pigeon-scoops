@@ -31,10 +31,10 @@
 
     ($ Dropdown
        {:menu (clj->js {:onClick #(let [key (:key (js->clj % :keywordize-keys true))]
-                                  (case key
-                                    "1" nil
-                                    "2" (logout)
-                                    "3" (login)))
+                                    (case key
+                                      "1" nil
+                                      "2" (logout)
+                                      "3" (login)))
                         :items (if (and isAuthenticated token)
                                  [{:key "1" :label (:name user)}
                                   {:key "2" :label ($ :span {:style {:display "block" :width "100%" :text-align "right"}}
