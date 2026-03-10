@@ -63,7 +63,7 @@
                                      {:menu-id (:menu/id (js->clj menu :keywordize-keys true))})}))}])
 
 (defui menu-table []
-  (let [{:keys [menus loading?]} (use-menus)] 
+  (let [{:keys [menus loading?]} (use-menus)]
     (if loading?
       ($ Spin)
       ($ Table {:columns (clj->js columns)

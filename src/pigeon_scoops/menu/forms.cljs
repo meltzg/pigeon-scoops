@@ -21,8 +21,8 @@
                            (update :menu-item/amount-unit stringify-keyword)
                            (update :menu-item/status stringify-keyword)
                            (assoc :menu-item/ingredient-id (ingredient->option
-                                                             {:recipe :menu-item/recipe-id}
-                                                             %)))
+                                                            {:recipe :menu-item/recipe-id}
+                                                            %)))
                       items)))))
 
 (defn item-form-values->data [form-value]
@@ -39,8 +39,8 @@
       (js->clj :keywordize-keys true)
       (update :menu/status parse-keyword)
       (update :menu/items (fn [items]
-                                  (map item-form-values->data
-                                       items)))))
+                            (map item-form-values->data
+                                 items)))))
 
 (defn item->comparable
   ([item]
@@ -70,16 +70,16 @@
   (let [menu (menu-form-values->data values)
         menu-id (atom (:menu/id menu))
         menu-item-ops (-> (determine-ops :menu-item/id
-                                          (:menu/items initial-menu)
-                                          (:menu/items menu)
-                                          #(item->comparable % [:menu-item/id]))
-                           (update-vals (fn [vals]
-                                          (map #(if (map? %)
-                                                  (->> %
-                                                       (remove (comp nil? second))
-                                                       (into {}))
-                                                  %)
-                                               vals))))
+                                         (:menu/items initial-menu)
+                                         (:menu/items menu)
+                                         #(item->comparable % [:menu-item/id]))
+                          (update-vals (fn [vals]
+                                         (map #(if (map? %)
+                                                 (->> %
+                                                      (remove (comp nil? second))
+                                                      (into {}))
+                                                 %)
+                                              vals))))
         headers {"Content-Type" "application/transit+json"}]
     (-> (if (nil? @menu-id)
           (-> (post-fetcher!
@@ -162,7 +162,7 @@
             ($ Form.Item {:name (stringify-keyword :menu/duration) :label "Duration"}
                ($ InputNumber {:placeholder "Duration"}))
             ($ constants-selector {:form-item-name (stringify-keyword :menu/duration-type)
-                                   :constants-key :constants/menu-durations}) ) 
+                                   :constants-key :constants/menu-durations}))
          ($ Form.List {:name (stringify-keyword :menu/items)}
             (fn [fields funcs]
               ($ :div
