@@ -39,7 +39,17 @@
 
 (defui content []
   (let [{:keys [route]} (uix/use-context router-context)
-        [light-theme? set-light-theme!] (uix/use-state false)]
+        [light-theme? set-light-theme!] (uix/use-state false)
+        set-light-theme! (fn [is-light?]
+                           (js/localStorage.setItem "light-theme?" is-light?)
+                           (set-light-theme! is-light?))]
+
+    (uix/use-effect
+     (fn []
+       (let [stored-theme (js/localStorage.getItem "light-theme?")]
+         (when stored-theme
+           (set-light-theme! (= stored-theme "true")))))
+     [])
 
     ($ ConfigProvider {:theme (clj->js {:algorithm
                                         (if light-theme?
