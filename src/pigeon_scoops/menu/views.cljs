@@ -1,16 +1,17 @@
 (ns pigeon-scoops.menu.views
   (:require
-   [antd :refer [Button Space Spin Table Tag]]
    ["@ant-design/icons" :refer [ExportOutlined FileAddOutlined]]
-   [reitit.frontend.easy :as rfe]
-   [pigeon-scoops.utils :refer [make-sorter parse-keyword stringify-keyword]]
-   [uix.core :refer [$ defui] :as uix]
-   [pigeon-scoops.hooks :refer [use-menus]]
+   [antd :refer [Button Space Spin Table Tag]]
    [clojure.string :as str]
-   [cljs.pprint :refer [pprint]]))
+   [pigeon-scoops.hooks :refer [use-menus]]
+   [pigeon-scoops.menu.forms :refer [menu-form]]
+   [pigeon-scoops.utils :refer [make-sorter parse-keyword stringify-keyword]]
+   [reitit.frontend.easy :as rfe]
+   [uix.core :refer [$ defui] :as uix]))
 
-(defui menu-view []
-  ($ :div "Menu View"))
+(defui menu-view [{:keys [path]}]
+  (let [{:keys [menu-id]} path]
+    ($ menu-form {:menu-id menu-id})))
 
 (def columns
   [{:title "Name"
@@ -62,9 +63,7 @@
                                      {:menu-id (:menu/id (js->clj menu :keywordize-keys true))})}))}])
 
 (defui menu-table []
-  (let [{:keys [menus loading?]} (use-menus)]
-    (pprint (map-indexed (fn [idx menu] (assoc menu :key idx))
-                         (sort-by #(str/lower-case (:menu/name %)) menus)))
+  (let [{:keys [menus loading?]} (use-menus)] 
     (if loading?
       ($ Spin)
       ($ Table {:columns (clj->js columns)
