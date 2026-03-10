@@ -42,7 +42,7 @@
         set-light-theme! (fn [is-light?]
                            (js/localStorage.setItem "light-theme?" is-light?)
                            (set-light-theme! is-light?))
-        [prefer-sys-theme? set-prefer-sys-theme!] (uix/use-state false)
+        [prefer-sys-theme? set-prefer-sys-theme!] (uix/use-state true)
         set-prefer-sys-theme! (fn [prefer?]
                                 (js/localStorage.setItem "prefer-system-theme?" prefer?)
                                 (set-prefer-sys-theme! prefer?))]
