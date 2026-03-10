@@ -2,7 +2,7 @@
   (:require
    ["@ant-design/icons" :refer [UserOutlined]]
    ["@auth0/auth0-react" :refer [useAuth0]]
-   [antd :refer [Button Popconfirm Spin]]
+   [antd :refer [Dropdown Space]]
    [pigeon-scoops.hooks :refer [base-url use-token]]
    [uix.core :as uix :refer [$ defui]]))
 
@@ -29,22 +29,20 @@
                         (logout))))))
      [isAuthenticated token logout])
 
-    (if (and isAuthenticated token)
-      ($ Popconfirm {:title "Sign out"
-                     :description "Are you sure you want to sign out?"
-                     :on-confirm logout
-                     :ok-text "Yes"
-                     :cancel-text "No"}
-         ($ Button {:type "primary"
-                    :icon-placement "end"
-                    :icon ($ UserOutlined {:style {:color "black"}})}
-            (if isLoading
-              ($ Spin)
-              (:name user))))
-      ($ Button {:type "primary"
-                 :on-click login
-                 :icon-placement "end"
-                 :icon ($ UserOutlined {:style {:color (if isLoading
-                                                         "orange"
-                                                         "red")}})}
-         "Sign in"))))
+    ($ Dropdown
+       {:menu (clj->js {:onClick #(let [key (:key (js->clj % :keywordize-keys true))]
+                                    (case key
+                                      "1" nil
+                                      "2" (logout)
+                                      "3" (login)))
+                        :items (if (and isAuthenticated token)
+                                 [{:key "1" :label (:name user)}
+                                  {:key "2" :label ($ :span {:style {:display "block" :width "100%" :text-align "right"}}
+                                                      "Sign Out")}]
+                                 [{:key "3" :label "Sign In"}])})}
+       ($ :a {:on-click #(.preventDefault %)}
+          ($ Space
+             "Account"
+             ($ UserOutlined {:style {:color (cond isLoading "orange"
+                                                   isAuthenticated "white"
+                                                   :else "red")}}))))))
