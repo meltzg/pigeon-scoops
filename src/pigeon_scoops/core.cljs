@@ -6,7 +6,7 @@
    ["react-icons/pi" :refer [PiCookingPot]]
    ["react-icons/fa" :refer [FaMoon FaSun]]
    ["@ant-design/icons" :refer [HomeOutlined ShoppingCartOutlined]]
-   [antd :refer [ConfigProvider Flex Layout Menu Space Switch Typography theme]]
+   [antd :refer [ConfigProvider Dropdown Flex Layout Menu Space Switch Tooltip Typography theme]]
    [pigeon-scoops.auth :refer [authenticator]]
    [pigeon-scoops.router :refer [router-context with-router]]
    [reitit.frontend.easy :as rfe]
@@ -41,14 +41,35 @@
         [light-theme? set-light-theme!] (uix/use-state false)
         set-light-theme! (fn [is-light?]
                            (js/localStorage.setItem "light-theme?" is-light?)
-                           (set-light-theme! is-light?))]
+                           (set-light-theme! is-light?))
+        [prefer-sys-theme? set-prefer-sys-theme!] (uix/use-state true)
+        set-prefer-sys-theme! (fn [prefer?]
+                                (js/localStorage.setItem "prefer-system-theme?" prefer?)
+                                (set-prefer-sys-theme! prefer?))]
 
     (uix/use-effect
      (fn []
-       (let [stored-theme (js/localStorage.getItem "light-theme?")]
+       (let [stored-theme (js/localStorage.getItem "light-theme?")
+             stored-prefer-sys-theme (js/localStorage.getItem "prefer-system-theme?")]
+
          (when stored-theme
-           (set-light-theme! (= stored-theme "true")))))
+           (set-light-theme! (= stored-theme "true")))
+         (when stored-prefer-sys-theme
+           (set-prefer-sys-theme! (= stored-prefer-sys-theme "true")))))
      [])
+
+    (uix/use-effect
+     (fn []
+       (let [mq (js/window.matchMedia "(prefers-color-scheme: light)")
+             on-change (fn [_]
+                         (when prefer-sys-theme?
+                           (set-light-theme! (.-matches mq))))]
+         (when prefer-sys-theme?
+           (set-light-theme! (.-matches mq)))
+         (.addEventListener mq "change" on-change)
+         (fn []
+           (.removeEventListener mq "change" on-change))))
+     [prefer-sys-theme?])
 
     ($ ConfigProvider {:theme (clj->js {:algorithm
                                         (if light-theme?
@@ -62,10 +83,20 @@
                    ($ GiIceCreamCone)
                    "Pigeon Scoops Manager")
                 ($ Space
-                   ($ Switch {:checked light-theme?
-                              :on-change #(set-light-theme! %)
-                              :checked-children ($ FaSun)
-                              :un-checked-children ($ FaMoon)})
+                   ($ Dropdown {:trigger (clj->js ["contextMenu"])
+                                :menu
+                                (clj->js
+                                 {:items [{:key :prefer-system-theme
+                                           :label ($ Space
+                                                     "Prefer system thme"
+                                                     ($ Switch {:checked prefer-sys-theme?
+                                                                :on-change #(set-prefer-sys-theme! %)}))}]})}
+                      ($ Tooltip {:title "Toggle light/dark theme.\nRight click for more options."}
+                         ($ Switch {:checked light-theme?
+                                    :on-change (when-not prefer-sys-theme?
+                                                 #(set-light-theme! %))
+                                    :checked-children ($ FaSun)
+                                    :un-checked-children ($ FaMoon)})))
                    ($ authenticator))))
           ($ Layout
              ($ Sider {:collapsible true
