@@ -4,7 +4,6 @@
    ["react-icons/gi" :refer [GiIceCreamCone]]
    ["react-icons/io5" :refer [IoReceiptOutline]]
    ["react-icons/pi" :refer [PiCookingPot]]
-   ["react-icons/md" :refer [MdMenuBook]]
    ["react-icons/fa" :refer [FaMoon FaSun]]
    ["@ant-design/icons" :refer [HomeOutlined ShoppingCartOutlined]]
    [antd :refer [ConfigProvider Flex Layout Menu Space Switch Typography theme]]
@@ -28,13 +27,13 @@
                   :icon ($ HomeOutlined)
                   :label "Home"}
                  {:key :recipes
-                  :icon ($ BookOutlined)
+                  :icon ($ PiCookingPot)
                   :label "Recipes"}
                  {:key :groceries
                   :icon ($ ShoppingCartOutlined)
                   :label "Groceries"}
                  {:key :orders
-                  :icon ($ ContainerOutlined)
+                  :icon ($ IoReceiptOutline)
                   :label "Orders"}])
 
 (defui content []
