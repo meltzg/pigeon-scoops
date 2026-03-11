@@ -36,26 +36,34 @@
                   :icon ($ IoReceiptOutline)
                   :label "Orders"}])
 
+(defn get-stored-settings []
+  (let [stored-theme (js/localStorage.getItem "light-theme?")
+        stored-prefer-sys-theme (js/localStorage.getItem "prefer-system-theme?")]
+    {:light-theme? (if (nil? stored-theme)
+                     false
+                     (= stored-theme "true"))
+     :prefer-sys-theme? (if (nil? stored-prefer-sys-theme)
+                          true
+                          (= stored-prefer-sys-theme "true"))}))
+
 (defui content []
-  (let [{:keys [route]} (uix/use-context router-context)
-        [light-theme? set-light-theme!] (uix/use-state false)
+  (let [{:keys [light-theme? prefer-sys-theme?]} (get-stored-settings)
+        {:keys [route]} (uix/use-context router-context)
+        [light-theme? set-light-theme!] (uix/use-state light-theme?)
         set-light-theme! (fn [is-light?]
                            (js/localStorage.setItem "light-theme?" is-light?)
                            (set-light-theme! is-light?))
-        [prefer-sys-theme? set-prefer-sys-theme!] (uix/use-state true)
+        [prefer-sys-theme? set-prefer-sys-theme!] (uix/use-state prefer-sys-theme?)
         set-prefer-sys-theme! (fn [prefer?]
                                 (js/localStorage.setItem "prefer-system-theme?" prefer?)
                                 (set-prefer-sys-theme! prefer?))]
 
     (uix/use-effect
      (fn []
-       (let [stored-theme (js/localStorage.getItem "light-theme?")
-             stored-prefer-sys-theme (js/localStorage.getItem "prefer-system-theme?")]
-
-         (when stored-theme
-           (set-light-theme! (= stored-theme "true")))
-         (when stored-prefer-sys-theme
-           (set-prefer-sys-theme! (= stored-prefer-sys-theme "true")))))
+       (let [{stored-theme :light-theme?
+              stored-prefer-sys-theme :prefer-sys-theme?} (get-stored-settings)]
+         (set-light-theme! stored-theme)
+         (set-prefer-sys-theme! stored-prefer-sys-theme)))
      [])
 
     (uix/use-effect
@@ -75,7 +83,6 @@
                                         (if light-theme?
                                           (.-defaultAlgorithm theme)
                                           (.-darkAlgorithm theme))})}
-       (prn light-theme?)
        ($ Layout {:style {:min-height "100vh"}}
           ($ Header
              ($ Flex {:justify "space-between" :align "center" :style {:height "100%"}}
