@@ -2,6 +2,7 @@
   (:require
    ["@ant-design/icons" :refer [MinusCircleOutlined]]
    [antd :refer [Button Card Flex Form Input InputNumber Space Spin]]
+   [pigeon-scoops.components.form-actions :refer [form-actions]]
    [pigeon-scoops.controls.constants-selector :refer [constants-selector]]
    [pigeon-scoops.fetchers :refer [delete-fetcher! post-fetcher! put-fetcher!]]
    [pigeon-scoops.hooks :refer [base-url invalidate-groceries use-grocery
@@ -140,14 +141,11 @@
                :on-finish (partial on-finish grocery token all-values)
                :style {:width "100%"}
                :initial-values (clj->js initial-values :keyword-fn stringify-keyword)}
-         ($ Space {:align "start"}
-            ($ Button {:html-type "button"
-                       :disabled unsaved-changes?
-                       :on-click #(rfe/push-state :pigeon-scoops.grocery.routes/groceries)} "Return to Groceries")
-            ($ Button {:type "primary" :html-type "submit" :disabled (not unsaved-changes?)}
-               (if (uuid? grocery-id) "Update Grocery" "Create Grocery"))
-            ($ Button {:html-type "button" :on-click #(.resetFields form)} "Reset")
-            ($ Button {:html-type "button" :danger true :on-click (partial on-delete token grocery-id)} "Delete"))
+         ($ form-actions {:form form
+                          :entity-id grocery-id
+                          :unsaved-changes? unsaved-changes?
+                          :on-return #(rfe/push-state :pigeon-scoops.grocery.routes/groceries)
+                          :on-delete (partial on-delete token grocery-id)})
          ($ Form.Item {:hidden true :name (stringify-keyword :grocery/id)}
             ($ Input))
          ($ Form.Item {:name (stringify-keyword :grocery/name) :label "Name" :rules (clj->js [{:required true :message "Item name"}])}
