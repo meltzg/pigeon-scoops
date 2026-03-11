@@ -5,6 +5,7 @@
    ["react-icons/io5" :refer [IoReceiptOutline]]
    ["react-icons/pi" :refer [PiCookingPot]]
    ["react-icons/fa" :refer [FaMoon FaSun]]
+   ["react-icons/md" :refer [MdMenuBook]]
    ["@ant-design/icons" :refer [HomeOutlined ShoppingCartOutlined]]
    [antd :refer [ConfigProvider Dropdown Flex Layout Menu Space Switch Tooltip Typography theme]]
    [pigeon-scoops.auth :refer [authenticator]]
@@ -21,7 +22,8 @@
   {:home #(rfe/push-state :pigeon-scoops.router/root)
    :recipes #(rfe/push-state :pigeon-scoops.recipe.routes/recipes)
    :groceries #(rfe/push-state :pigeon-scoops.grocery.routes/groceries)
-   :orders #(rfe/push-state :pigeon-scoops.user-order.routes/orders)})
+   :orders #(rfe/push-state :pigeon-scoops.user-order.routes/orders)
+   :menus #(rfe/push-state :pigeon-scoops.menu.routes/menus)})
 
 (def menu-items [{:key :home
                   :icon ($ HomeOutlined)
@@ -34,7 +36,10 @@
                   :label "Groceries"}
                  {:key :orders
                   :icon ($ IoReceiptOutline)
-                  :label "Orders"}])
+                  :label "Orders"}
+                 {:key :menus
+                  :icon ($ MdMenuBook)
+                  :label "Menus"}])
 
 (defn get-stored-settings []
   (let [stored-theme (js/localStorage.getItem "light-theme?")
