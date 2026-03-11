@@ -1,7 +1,8 @@
 (ns pigeon-scoops.user-order.forms
   (:require
    ["@ant-design/icons" :refer [ExportOutlined MinusCircleOutlined]]
-   [antd :refer [Button Flex Form Input InputNumber Space Spin]]
+   [antd :refer [Button Divider Flex Form Input InputNumber Spin]]
+   [pigeon-scoops.components.form-actions :refer [form-actions]]
    [pigeon-scoops.controls.constants-selector :refer [constants-selector]]
    [pigeon-scoops.controls.ingredients-selector :refer [ingredient->option
                                                         ingredients-selector
@@ -142,14 +143,11 @@
                :on-finish (partial on-finish order token all-values)
                :style {:width "100%"}
                :initial-values (clj->js initial-values :keyword-fn stringify-keyword)}
-         ($ Space {:align "start"}
-            ($ Button {:html-type "button"
-                       :disabled unsaved-changes?
-                       :on-click #(rfe/push-state :pigeon-scoops.user-order.routes/orders)} "Return to orders")
-            ($ Button {:type "primary" :html-type "submit" :disabled (not unsaved-changes?)}
-               (if (uuid? order-id) "Update order" "Create order"))
-            ($ Button {:html-type "button" :on-click #(.resetFields form)} "Reset")
-            ($ Button {:html-type "button" :danger true :on-click (partial on-delete token order-id)} "Delete"))
+         ($ form-actions {:form form
+                          :entity-id order-id
+                          :unsaved-changes? unsaved-changes?
+                          :on-return #(rfe/push-state :pigeon-scoops.user-order.routes/orders)
+                          :on-delete (partial on-delete token order-id)})
          ($ Form.Item {:hidden true :name (stringify-keyword :user-order/id)}
             ($ Input))
          ($ Form.Item {:name (stringify-keyword :user-order/note) :label "Note" :rules (clj->js [{:required true}])}
@@ -169,11 +167,11 @@
                                    field-name)
                          parsed-item (when (:order-item/ingredient-id item)
                                        (item-form-values->data item))]
-                     ($ Flex {:key key :direction "row"}
+                     ($ Flex {:key key :direction "row" :wrap true}
                         ($ Form.Item {:hidden true :name (clj->js [field-name (stringify-keyword :order-item/id)])}
                            ($ Input))
                         ($ Flex {:vertical true}
-                           ($ Space {:align "start"}
+                           ($ Flex {:align "start" :wrap true}
                               ($ ingredients-selector {:form-item-name (clj->js [field-name (stringify-keyword :order-item/ingredient-id)])
                                                        :ingredient-keys {:recipe :order-item/recipe-id}
                                                        :required? true})
@@ -187,16 +185,16 @@
                                                      :label "Status"
                                                      :constants-key :constants/order-statuses
                                                      :required? true})
-                              ($ Form.Item
-                                 ($ Button {:type "text"
-                                            :disabled (or (nil? (:order-item/id parsed-item))
-                                                          unsaved-changes?)
-                                            :icon ($ ExportOutlined)
-                                            :on-click #(rfe/push-state
-                                                        :pigeon-scoops.recipe.routes/recipe
-                                                        {:recipe-id (:order-item/recipe-id parsed-item)}
-                                                        {:amount (:order-item/amount parsed-item)
-                                                         :amount-unit (:order-item/amount-unit parsed-item)})})
-                                 ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove field-name)})))))))
+                              ($ Button {:type "text"
+                                         :disabled (or (nil? (:order-item/id parsed-item))
+                                                       unsaved-changes?)
+                                         :icon ($ ExportOutlined)
+                                         :on-click #(rfe/push-state
+                                                     :pigeon-scoops.recipe.routes/recipe
+                                                     {:recipe-id (:order-item/recipe-id parsed-item)}
+                                                     {:amount (:order-item/amount parsed-item)
+                                                      :amount-unit (:order-item/amount-unit parsed-item)})})
+                              ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove field-name)})
+                              ($ Divider))))))
                  ($ Form.Item
                     ($ Button {:type "dashed" :on-click (:add (js->clj funcs :keywordize-keys true))} "Add item")))))))))

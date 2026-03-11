@@ -1,7 +1,8 @@
 (ns pigeon-scoops.grocery.forms
   (:require
    ["@ant-design/icons" :refer [MinusCircleOutlined]]
-   [antd :refer [Button Card Flex Form Input InputNumber Space Spin]]
+   [antd :refer [Button Divider Flex Form Input InputNumber Spin]]
+   [pigeon-scoops.components.form-actions :refer [form-actions]]
    [pigeon-scoops.controls.constants-selector :refer [constants-selector]]
    [pigeon-scoops.fetchers :refer [delete-fetcher! post-fetcher! put-fetcher!]]
    [pigeon-scoops.hooks :refer [base-url invalidate-groceries use-grocery
@@ -140,14 +141,11 @@
                :on-finish (partial on-finish grocery token all-values)
                :style {:width "100%"}
                :initial-values (clj->js initial-values :keyword-fn stringify-keyword)}
-         ($ Space {:align "start"}
-            ($ Button {:html-type "button"
-                       :disabled unsaved-changes?
-                       :on-click #(rfe/push-state :pigeon-scoops.grocery.routes/groceries)} "Return to Groceries")
-            ($ Button {:type "primary" :html-type "submit" :disabled (not unsaved-changes?)}
-               (if (uuid? grocery-id) "Update Grocery" "Create Grocery"))
-            ($ Button {:html-type "button" :on-click #(.resetFields form)} "Reset")
-            ($ Button {:html-type "button" :danger true :on-click (partial on-delete token grocery-id)} "Delete"))
+         ($ form-actions {:form form
+                          :entity-id grocery-id
+                          :unsaved-changes? unsaved-changes?
+                          :on-return #(rfe/push-state :pigeon-scoops.grocery.routes/groceries)
+                          :on-delete (partial on-delete token grocery-id)})
          ($ Form.Item {:hidden true :name (stringify-keyword :grocery/id)}
             ($ Input))
          ($ Form.Item {:name (stringify-keyword :grocery/name) :label "Name" :rules (clj->js [{:required true :message "Item name"}])}
@@ -162,39 +160,34 @@
                  (for [field fields]
                    (let [{:keys [key] field-name :name} (js->clj field :keywordize-keys true)
                          {:keys [remove]} (js->clj funcs :keywordize-keys true)]
-                     ($ Card {:key key}
+                     ($ Flex {:key key :direction "row" :wrap true}
                         ($ Form.Item {:hidden true :name (clj->js [field-name (stringify-keyword :grocery-unit/id)])}
                            ($ Input))
-                        ($ Flex {:vertical true}
-                           ($ Space {:align "start"}
-                              ($ Form.Item {:name (clj->js [field-name (stringify-keyword :grocery-unit/source)])
-                                            :label "Source"
-                                            :rules (clj->js [{:required true}])}
-                                 ($ Input))
-                              ($ Form.Item {:name (clj->js [field-name (stringify-keyword :grocery-unit/unit-cost)])
-                                            :label "Unit Cost"
-                                            :rules (clj->js [{:required true}])}
-                                 ($ InputNumber))
-                              ($ Form.Item
-                                 ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove field-name)})))
-                           ($ Space {:align "start"}
-                              ($ Flex
-                                 ($ Form.Item {:name (clj->js [field-name (stringify-keyword :grocery-unit/unit-common)])}
-                                    ($ InputNumber {:placeholder "Common units"}))
-                                 ($ constants-selector {:form-item-name (clj->js [field-name (stringify-keyword :grocery-unit/unit-common-type)])
-                                                        :constants-key :constants/unit-types
-                                                        :valid-namespaces [:common]}))
-                              ($ Flex
-                                 ($ Form.Item {:name (clj->js [field-name (stringify-keyword :grocery-unit/unit-mass)])}
-                                    ($ InputNumber {:placeholder "Mass units"}))
-                                 ($ constants-selector {:form-item-name (clj->js [field-name (stringify-keyword :grocery-unit/unit-mass-type)])
-                                                        :constants-key :constants/unit-types
-                                                        :valid-namespaces [:mass]}))
-                              ($ Flex
-                                 ($ Form.Item {:name (clj->js [field-name (stringify-keyword :grocery-unit/unit-volume)])}
-                                    ($ InputNumber {:placeholder "Volume units"}))
-                                 ($ constants-selector {:form-item-name (clj->js [field-name (stringify-keyword :grocery-unit/unit-volume-type)])
-                                                        :constants-key :constants/unit-types
-                                                        :valid-namespaces [:volume]})))))))
+                        ($ Form.Item {:name (clj->js [field-name (stringify-keyword :grocery-unit/source)])
+                                      :label "Source"
+                                      :rules (clj->js [{:required true}])}
+                           ($ Input))
+                        ($ Form.Item {:name (clj->js [field-name (stringify-keyword :grocery-unit/unit-cost)])
+                                      :label "Unit Cost"
+                                      :rules (clj->js [{:required true}])}
+                           ($ InputNumber))
+                        ($ Form.Item {:name (clj->js [field-name (stringify-keyword :grocery-unit/unit-common)])}
+                           ($ InputNumber {:placeholder "Common units"}))
+                        ($ constants-selector {:form-item-name (clj->js [field-name (stringify-keyword :grocery-unit/unit-common-type)])
+                                               :constants-key :constants/unit-types
+                                               :valid-namespaces [:common]})
+                        ($ Form.Item {:name (clj->js [field-name (stringify-keyword :grocery-unit/unit-mass)])}
+                           ($ InputNumber {:placeholder "Mass units"}))
+                        ($ constants-selector {:form-item-name (clj->js [field-name (stringify-keyword :grocery-unit/unit-mass-type)])
+                                               :constants-key :constants/unit-types
+                                               :valid-namespaces [:mass]})
+                        ($ Form.Item {:name (clj->js [field-name (stringify-keyword :grocery-unit/unit-volume)])}
+                           ($ InputNumber {:placeholder "Volume units"}))
+                        ($ constants-selector {:form-item-name (clj->js [field-name (stringify-keyword :grocery-unit/unit-volume-type)])
+                                               :constants-key :constants/unit-types
+                                               :valid-namespaces [:volume]})
+                        ($ Form.Item
+                           ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove field-name)}))
+                        ($ Divider))))
                  ($ Form.Item
                     ($ Button {:type "dashed" :on-click (:add (js->clj funcs :keywordize-keys true))} "Add Unit")))))))))
