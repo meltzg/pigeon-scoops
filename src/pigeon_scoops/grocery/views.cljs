@@ -1,7 +1,7 @@
 (ns pigeon-scoops.grocery.views
   (:require
    ["@ant-design/icons" :refer [ExportOutlined FileAddOutlined]]
-   [antd :refer [Button Space Spin Table]]
+   [antd :refer [Button Space Spin Table Tag]]
    [clojure.string :as str]
    [pigeon-scoops.grocery.forms :refer [grocery-form]]
    [pigeon-scoops.hooks :refer [use-groceries]]
@@ -13,16 +13,45 @@
   (let [{:keys [grocery-id]} path]
     ($ grocery-form {:grocery-id grocery-id})))
 
-(def columns
+(defn make-columns [data]
   [{:title "Name"
     :dataIndex (stringify-keyword :grocery/name)
     :sorter (make-sorter :grocery/name)
+    :filterSearch true
+    :filters (->> data
+                  (map :grocery/name)
+                  (filter some?)
+                  (set)
+                  (sort)
+                  (map (fn [name] {:text name
+                                   :value name})))
+    :onFilter (fn [value record]
+                (str/includes? (str/lower-case (:grocery/name (js->clj record :keywordize-keys true)))
+                               (str/lower-case value)))
     :key :name}
    {:title "Department"
     :dataIndex (stringify-keyword :grocery/department)
     :render (fn [val]
-              (str/capitalize (name (keyword val))))
-    :key :public}
+              (let [val (keyword val)]
+                ($ Tag {:color (case val
+                                 :department/produce "green"
+                                 :department/dairy "blue"
+                                 :department/meat "red"
+                                 :department/bakery "orange"
+                                 :department/grocery "gray"
+                                 "gray")}
+                   (str/capitalize (name val)))))
+    :filterSearch true
+    :filters (->> data
+                  (map :grocery/department)
+                  (filter some?)
+                  (set)
+                  (sort)
+                  (map (fn [department] {:text (str/capitalize (name (keyword department)))
+                                         :value department})))
+    :onFilter (fn [value record]
+                (= value (name (keyword (:grocery/department (js->clj record :keywordize-keys true))))))
+    :key :department}
    {:title ($ Space
               "Actions"
               ($ Button {:type "text"
@@ -41,7 +70,7 @@
   (let [{:keys [groceries loading?]} (use-groceries)]
     (if loading?
       ($ Spin)
-      ($ Table {:columns (clj->js columns)
+      ($ Table {:columns (clj->js (make-columns groceries))
                 :dataSource (clj->js (map-indexed (fn [idx grocery] (assoc grocery :key idx))
                                                   (sort-by (comp str/lower-case :grocery/name) groceries))
                                      :keyword-fn stringify-keyword)

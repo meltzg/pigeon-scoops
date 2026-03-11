@@ -16,10 +16,21 @@
                     :scaled-amount amount
                     :scaled-amount-unit amount-unit})))
 
-(def columns
+(defn make-columns [data]
   [{:title "Name"
     :dataIndex (stringify-keyword :recipe/name)
     :sorter (make-sorter :recipe/name)
+    :filterSearch true
+    :filters (->> data
+                  (map :recipe/name)
+                  (filter some?)
+                  (set)
+                  (sort)
+                  (map (fn [name] {:text name
+                                   :value name})))
+    :onFilter (fn [value record]
+                (str/includes? (str/lower-case (:recipe/name (js->clj record :keywordize-keys true)))
+                               (str/lower-case value)))
     :key :name}
    {:title "Public"
     :dataIndex (stringify-keyword :recipe/public)
@@ -28,6 +39,10 @@
                   "Yes")
                ($ Tag {:color "red"}
                   "No"))
+    :filters [{:text "Yes" :value true}
+              {:text "No" :value false}]
+    :onFilter (fn [value record]
+                (= value (:recipe/public (js->clj record :keywordize-keys true))))
     :key :public}
    {:title ($ Space
               "Actions"
@@ -47,7 +62,7 @@
   (let [{:keys [recipes loading?]} (use-recipes)]
     (if loading?
       ($ Spin)
-      ($ Table {:columns (clj->js columns)
+      ($ Table {:columns (clj->js (make-columns (apply concat (vals recipes))))
                 :dataSource (clj->js (map-indexed (fn [idx recipe] (assoc recipe :key idx))
                                                   (sort-by #(str/lower-case (:recipe/name %)) (apply concat (vals recipes))))
                                      :keyword-fn stringify-keyword)
