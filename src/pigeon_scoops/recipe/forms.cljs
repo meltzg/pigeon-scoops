@@ -72,7 +72,6 @@
   (-> recipe
       (recipe-form-values->data)
       (select-keys [:recipe/name
-                    :recipe/public
                     :recipe/is-mystery
                     :recipe/source
                     :recipe/description
@@ -194,8 +193,6 @@
             ($ Input))
          ($ Form.Item {:label "Name" :name (stringify-keyword :recipe/name) :rules (clj->js [{:required true}])}
             ($ Input))
-         ($ Form.Item {:label "Public" :name (stringify-keyword :recipe/public)}
-            ($ Switch))
          ($ Form.Item {:label "Mystery Flavor" :name (stringify-keyword :recipe/is-mystery)}
             ($ Switch))
          ($ Form.Item {:label "Source" :name (stringify-keyword :recipe/source) :rules (clj->js [{:required true}])}

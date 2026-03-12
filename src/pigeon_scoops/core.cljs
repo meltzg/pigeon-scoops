@@ -1,9 +1,8 @@
 (ns pigeon-scoops.core
   (:require
    ["@auth0/auth0-react" :refer [Auth0Provider]]
-   ["react-icons/gi" :refer [GiIceCreamCone]]
    ["react-icons/io5" :refer [IoReceiptOutline]]
-   ["react-icons/pi" :refer [PiCookingPot]]
+   ["react-icons/pi" :refer [PiCookingPot PiBird PiIceCream PiStorefront]]
    ["react-icons/fa" :refer [FaMoon FaSun]]
    ["@ant-design/icons" :refer [HomeOutlined ShoppingCartOutlined]]
    [antd :refer [ConfigProvider Dropdown Flex Layout Menu Space Switch Tooltip Typography theme]]
@@ -87,8 +86,9 @@
           ($ Header
              ($ Flex {:justify "space-between" :align "center" :style {:height "100%"}}
                 ($ Typography.Title {:level 3 :style {:color "white"}}
-                   ($ GiIceCreamCone)
-                   "Pigeon Scoops Manager")
+                   ($ PiBird)
+                   ($ PiIceCream)
+                   ($ PiStorefront))
                 ($ Space
                    ($ Dropdown {:trigger (clj->js ["contextMenu"])
                                 :menu

@@ -44,12 +44,12 @@
 
 (defhook use-recipes []
   (let [{:keys [token]} (use-token)
+        opts (cond-> {:headers {"Accept" "application/transit+json"}}
+               token (assoc :token token))
         {:keys [data error isLoading]}
         (js->clj (useSWR [(str base-url "/recipes") token]
                          (fn [[url]]
-                           (when token
-                             (get-fetcher! url {:token token
-                                                :headers {"Accept" "application/transit+json"}}))))
+                           (get-fetcher! url opts)))
                  :keywordize-keys true)]
     {:recipes data
      :error   error
@@ -61,12 +61,13 @@
                        (js/URLSearchParams.
                         (clj->js {:amount scaled-amount
                                   :amount-unit (stringify-keyword scaled-amount-unit)})))
+        opts (cond-> {:headers {"Accept" "application/transit+json"}}
+               token (assoc :token token))
         {:keys [data error isLoading]}
         (js->clj (useSWR [(str base-url "/recipes/" recipe-id "?" (or query-params "")) token]
                          (fn [[url]]
-                           (when (and (uuid? recipe-id) token)
-                             (get-fetcher! url {:token token
-                                                :headers {"Accept" "application/transit+json"}}))))
+                           (when (uuid? recipe-id)
+                             (get-fetcher! url opts))))
                  :keywordize-keys true)]
     {:recipe data
      :error   error
@@ -94,12 +95,12 @@
 
 (defhook use-groceries []
   (let [{:keys [token]} (use-token)
+        opts (cond-> {:headers {"Accept" "application/transit+json"}}
+               token (assoc :token token))
         {:keys [data error isLoading]}
         (js->clj (useSWR [(str base-url "/groceries") token]
                          (fn [[url]]
-                           (when token
-                             (get-fetcher! url {:token token
-                                                :headers {"Accept" "application/transit+json"}}))))
+                           (get-fetcher! url opts)))
                  :keywordize-keys true)]
     {:groceries data
      :error     error
@@ -107,12 +108,13 @@
 
 (defhook use-grocery [grocery-id]
   (let [{:keys [token]} (use-token)
+        opts (cond-> {:headers {"Accept" "application/transit+json"}}
+               token (assoc :token token))
         {:keys [data error isLoading]}
         (js->clj (useSWR [(str base-url "/groceries/" grocery-id) token]
                          (fn [[url]]
-                           (when (and (uuid? grocery-id) token)
-                             (get-fetcher! url {:token token
-                                                :headers {"Accept" "application/transit+json"}}))))
+                           (when (uuid? grocery-id)
+                             (get-fetcher! url opts))))
                  :keywordize-keys true)]
     {:grocery data
      :error   error
