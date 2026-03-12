@@ -32,18 +32,6 @@
                 (str/includes? (str/lower-case (:recipe/name (js->clj record :keywordize-keys true)))
                                (str/lower-case value)))
     :key :name}
-   {:title "Public"
-    :dataIndex (stringify-keyword :recipe/public)
-    :render #(if %
-               ($ Tag {:color "green"}
-                  "Yes")
-               ($ Tag {:color "red"}
-                  "No"))
-    :filters [{:text "Yes" :value true}
-              {:text "No" :value false}]
-    :onFilter (fn [value record]
-                (= value (:recipe/public (js->clj record :keywordize-keys true))))
-    :key :public}
    {:title ($ Space
               "Actions"
               ($ Button {:type "text"
@@ -62,8 +50,8 @@
   (let [{:keys [recipes loading?]} (use-recipes)]
     (if loading?
       ($ Spin)
-      ($ Table {:columns (clj->js (make-columns (apply concat (vals recipes))))
+      ($ Table {:columns (clj->js (make-columns recipes))
                 :dataSource (clj->js (map-indexed (fn [idx recipe] (assoc recipe :key idx))
-                                                  (sort-by #(str/lower-case (:recipe/name %)) (apply concat (vals recipes))))
+                                                  (sort-by #(str/lower-case (:recipe/name %)) recipes))
                                      :keyword-fn stringify-keyword)
                 :bordered true}))))

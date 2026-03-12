@@ -30,7 +30,6 @@
   (let [{:keys [groceries] groceries-loading? :loading?} (use-groceries)
         {:keys [recipes] recipes-loading? :loading?} (use-recipes)
         valid-ingredients (set (keys ingredient-keys))
-        recipes (apply concat (vals recipes))
         [options set-options!] (uix/use-state [])
         [select-width set-select-width!] (uix/use-state "auto")]
     (uix/use-effect
