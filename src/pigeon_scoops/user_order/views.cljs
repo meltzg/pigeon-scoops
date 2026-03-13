@@ -5,7 +5,8 @@
    [clojure.string :as str]
    [pigeon-scoops.user-order.forms :refer [order-form]]
    [pigeon-scoops.hooks :refer [use-orders]]
-   [pigeon-scoops.utils :refer [make-sorter stringify-keyword]]
+   [pigeon-scoops.utils.table :refer [make-sorter]]
+   [pigeon-scoops.utils.transform :refer [stringify-keyword]]
    [reitit.frontend.easy :as rfe]
    [uix.core :as uix :refer [$ defui]]))
 

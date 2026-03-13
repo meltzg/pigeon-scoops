@@ -4,7 +4,8 @@
    ["@ant-design/icons" :refer [ExportOutlined FileAddOutlined]]
    [pigeon-scoops.hooks :refer [use-recipes]]
    [pigeon-scoops.recipe.forms :refer [recipe-form]]
-   [pigeon-scoops.utils :refer [make-sorter stringify-keyword]]
+   [pigeon-scoops.utils.table :refer [make-sorter]]
+   [pigeon-scoops.utils.transform :refer [stringify-keyword]]
    [uix.core :as uix :refer [$ defui]]
    [reitit.frontend.easy :as rfe]
    [clojure.string :as str]))

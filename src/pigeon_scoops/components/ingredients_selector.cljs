@@ -1,4 +1,4 @@
-(ns pigeon-scoops.controls.ingredients-selector
+(ns pigeon-scoops.components.ingredients-selector
   (:require
    [antd :refer [Form Select Spin]]
    [clojure.string :as str]
