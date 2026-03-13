@@ -11,4 +11,5 @@
                    :view       recipe-view
                    :parameters {:path  {:recipe-id (s/or :uuid uuid? :key keyword?)}
                                 :query {(ds/opt :amount)      number?
-                                        (ds/opt :amount-unit) keyword?}}}]])
+                                        (ds/opt :amount-unit) keyword?
+                                        (ds/opt :original-recipe) string?}}}]])
