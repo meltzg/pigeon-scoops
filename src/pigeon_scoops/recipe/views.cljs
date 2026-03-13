@@ -11,10 +11,12 @@
 
 (defui recipe-view [{:keys [path query]}]
   (let [{:keys [recipe-id]} path
-        {:keys [amount amount-unit]} query]
-    ($ recipe-form {:recipe-id recipe-id
+        {:keys [amount amount-unit original-recipe]} query]
+    ($ recipe-form {:key (str recipe-id "|" amount "|" amount-unit "|" original-recipe)
+                    :recipe-id recipe-id
                     :scaled-amount amount
-                    :scaled-amount-unit amount-unit})))
+                    :scaled-amount-unit amount-unit
+                    :original-recipe original-recipe})))
 
 (defn make-columns [data]
   [{:title "Name"

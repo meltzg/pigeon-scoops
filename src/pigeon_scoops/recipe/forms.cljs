@@ -2,6 +2,7 @@
   (:require
    ["@ant-design/icons" :refer [ExportOutlined MinusCircleOutlined]]
    [antd :refer [Button Divider Flex Form Input InputNumber Spin Switch Tabs]]
+   [clojure.edn :as edn]
    [clojure.string :as str]
    [pigeon-scoops.components.bom-table :refer [bom-view]]
    [pigeon-scoops.components.form-actions :refer [form-actions]]
@@ -124,9 +125,15 @@
       (.catch (fn [error]
                 (js/alert (str "Error deleting recipe: " (.-message error)))))))
 
-(defui recipe-form [{:keys [recipe-id scaled-amount scaled-amount-unit]}]
+(defui recipe-form [{:keys [recipe-id scaled-amount scaled-amount-unit original-recipe]}]
   (let [{:keys [token]} (use-token)
         {:keys [recipe loading?]} (use-recipe recipe-id scaled-amount scaled-amount-unit)
+        original-recipe (-> original-recipe
+                            (edn/read-string)
+                            (dissoc :recipe/id)
+                            (update :recipe/ingredients (fn [ingredients]
+                                                          (map #(dissoc % :ingredient/id) ingredients))))
+        recipe (or recipe original-recipe)
         {:keys [groceries]} (use-recipe-bom recipe-id
                                             (or scaled-amount
                                                 (:recipe/amount recipe))
@@ -188,7 +195,13 @@
                                     (set-scaled-amount! nil)
                                     (rfe/push-state :pigeon-scoops.recipe.routes/recipe
                                                     {:recipe-id (:recipe/id recipe)}))}
-               "Reset Scaling"))
+               "Reset Scaling")
+            ($ Button {:html-type "button"
+                       :disabled (or (= recipe-id :new) scaled-amount)
+                       :on-click #(rfe/push-state :pigeon-scoops.recipe.routes/recipe
+                                                  {:recipe-id :new}
+                                                  {:original-recipe recipe})}
+               "Remix"))
          ($ Form.Item {:hidden true :name (stringify-keyword :recipe/id)}
             ($ Input))
          ($ Form.Item {:label "Name" :name (stringify-keyword :recipe/name) :rules (clj->js [{:required true}])}
