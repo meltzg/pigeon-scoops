@@ -27,10 +27,11 @@
               (fn [ingredients]
                 (map #(-> %
                           (update :ingredient/amount-unit stringify-keyword)
-                          (assoc :ingredient/ingredient-id (ingredient->option
-                                                            {:grocery :ingredient/ingredient-grocery-id
-                                                             :recipe :ingredient/ingredient-recipe-id}
-                                                            %))
+                          (assoc :ingredient/ingredient-id
+                                 (ingredient->option
+                                  {:grocery :ingredient/ingredient-grocery-id
+                                   :recipe :ingredient/ingredient-recipe-id}
+                                  %))
                           (update-keys stringify-keyword))
                      ingredients)))
       (update-keys stringify-keyword)))
@@ -128,12 +129,7 @@
 (defui recipe-form [{:keys [recipe-id scaled-amount scaled-amount-unit original-recipe]}]
   (let [{:keys [token]} (use-token)
         {:keys [recipe loading?]} (use-recipe recipe-id scaled-amount scaled-amount-unit)
-        original-recipe (-> original-recipe
-                            (edn/read-string)
-                            (dissoc :recipe/id)
-                            (update :recipe/ingredients (fn [ingredients]
-                                                          (map #(dissoc % :ingredient/id) ingredients))))
-        recipe (or recipe original-recipe)
+        recipe (or recipe (edn/read-string original-recipe))
         {:keys [groceries]} (use-recipe-bom recipe-id
                                             (or scaled-amount
                                                 (:recipe/amount recipe))
@@ -200,7 +196,13 @@
                        :disabled (or (= recipe-id :new) scaled-amount)
                        :on-click #(rfe/push-state :pigeon-scoops.recipe.routes/recipe
                                                   {:recipe-id :new}
-                                                  {:original-recipe recipe})}
+                                                  {:original-recipe
+                                                   (-> recipe
+                                                       (dissoc :recipe/id)
+                                                       (update :recipe/ingredients
+                                                               (fn [ingredients]
+                                                                 (map (fn [i] (dissoc i :ingredient/id)) ingredients)))
+                                                       (assoc :recipe/source (str "Remix of " (-> js/window .-location .-href))))})}
                "Remix"))
          ($ Form.Item {:hidden true :name (stringify-keyword :recipe/id)}
             ($ Input))
@@ -268,4 +270,5 @@
                                 ($ Button {:type "dashed" :on-click (:add (js->clj funcs :keywordize-keys true))} "Add Ingredient")))))}
                     {:label "Bill of Materials"
                      :key :bom
+                     :disabled (not (uuid? recipe-id))
                      :children ($ bom-view {:groceries groceries})}])})))))
