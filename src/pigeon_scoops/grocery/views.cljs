@@ -5,7 +5,8 @@
    [clojure.string :as str]
    [pigeon-scoops.grocery.forms :refer [grocery-form]]
    [pigeon-scoops.hooks :refer [use-groceries]]
-   [pigeon-scoops.utils :refer [make-sorter stringify-keyword]]
+   [pigeon-scoops.utils.table :refer [make-filter make-sorter]]
+   [pigeon-scoops.utils.transform :refer [stringify-keyword]]
    [reitit.frontend.easy :as rfe]
    [uix.core :as uix :refer [$ defui]]))
 
@@ -14,21 +15,11 @@
     ($ grocery-form {:grocery-id grocery-id})))
 
 (defn make-columns [data]
-  [{:title "Name"
-    :dataIndex (stringify-keyword :grocery/name)
-    :sorter (make-sorter :grocery/name)
-    :filterSearch true
-    :filters (->> data
-                  (map :grocery/name)
-                  (filter some?)
-                  (set)
-                  (sort)
-                  (map (fn [name] {:text name
-                                   :value name})))
-    :onFilter (fn [value record]
-                (str/includes? (str/lower-case (:grocery/name (js->clj record :keywordize-keys true)))
-                               (str/lower-case value)))
-    :key :name}
+  [(merge {:title "Name"
+           :dataIndex (stringify-keyword :grocery/name)
+           :sorter (make-sorter :grocery/name)
+           :key :name}
+          (make-filter :grocery/name))
    {:title "Department"
     :dataIndex (stringify-keyword :grocery/department)
     :render (fn [val]

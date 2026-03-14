@@ -4,7 +4,7 @@
    ["swr$default" :as useSWR]
    [swr :refer [mutate]]
    [pigeon-scoops.fetchers :refer [get-fetcher!]]
-   [pigeon-scoops.utils :refer [stringify-keyword]]
+   [pigeon-scoops.utils.transform :refer [stringify-keyword]]
    [uix.core :as uix :refer [defhook]]
    [clojure.string :as str]))
 

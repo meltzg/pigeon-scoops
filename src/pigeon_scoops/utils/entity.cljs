@@ -1,4 +1,4 @@
-(ns pigeon-scoops.utils
+(ns pigeon-scoops.utils.entity
   (:require
    [clojure.set :as set]))
 
@@ -12,16 +12,3 @@
        (group-by #(if (original-ids (id-key %)) :update :new) $)
        (update $ :update (partial remove #((set (map make-comparable original-entities)) %)))
        (assoc $ :delete (set/difference original-ids updated-ids))))))
-
-(defn stringify-keyword [k]
-  (if (keyword? k)
-    (.substring (str k) 1)
-    k))
-
-(defn parse-keyword [s]
-  (when s (keyword s)))
-
-(defn make-sorter [key]
-  (fn [a b]
-    (let [[a b] (map #(js->clj % :keywordize-keys true) [a b])]
-      (compare (get a key) (get b key)))))

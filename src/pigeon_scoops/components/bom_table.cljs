@@ -4,7 +4,8 @@
    [clojure.string :as str]
    [goog.string :as gstring]
    [goog.string.format]
-   [pigeon-scoops.utils :refer [make-sorter stringify-keyword]]
+   [pigeon-scoops.utils.table :refer [make-sorter]]
+   [pigeon-scoops.utils.transform :refer [stringify-keyword]]
    [uix.core :refer [$ defui]]))
 
 (defn format-amount [amount amount-unit]

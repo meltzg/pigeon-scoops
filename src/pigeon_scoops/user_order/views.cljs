@@ -3,9 +3,10 @@
    ["@ant-design/icons" :refer [ExportOutlined FileAddOutlined]]
    [antd :refer [Button Space Spin Table Tag]]
    [clojure.string :as str]
-   [pigeon-scoops.user-order.forms :refer [order-form]]
    [pigeon-scoops.hooks :refer [use-orders]]
-   [pigeon-scoops.utils :refer [make-sorter stringify-keyword]]
+   [pigeon-scoops.user-order.forms :refer [order-form]]
+   [pigeon-scoops.utils.table :refer [make-filter make-sorter]]
+   [pigeon-scoops.utils.transform :refer [stringify-keyword]]
    [reitit.frontend.easy :as rfe]
    [uix.core :as uix :refer [$ defui]]))
 
@@ -14,21 +15,11 @@
     ($ order-form {:order-id order-id})))
 
 (defn make-columns [data]
-  [{:title "Note"
-    :dataIndex (stringify-keyword :user-order/note)
-    :sorter (make-sorter :user-order/note)
-    :filterSearch true
-    :filters (->> data
-                  (map :user-order/note)
-                  (filter some?)
-                  (set)
-                  (sort)
-                  (map (fn [note] {:text note
-                                   :value note})))
-    :onFilter (fn [value record]
-                (str/includes? (str/lower-case (:user-order/note (js->clj record :keywordize-keys true)))
-                               (str/lower-case value)))
-    :key :name}
+  [(merge {:title "Note"
+           :dataIndex (stringify-keyword :user-order/note)
+           :sorter (make-sorter :user-order/note)
+           :key :name}
+          (make-filter :user-order/note))
    {:title "Status"
     :dataIndex (stringify-keyword :user-order/status)
     :render (fn [val]

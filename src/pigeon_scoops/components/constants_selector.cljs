@@ -1,9 +1,9 @@
-(ns pigeon-scoops.controls.constants-selector
+(ns pigeon-scoops.components.constants-selector
   (:require
    [antd :refer [Form Select Spin]]
    [pigeon-scoops.components.select-options-sizer :refer [select-options-sizer]]
    [pigeon-scoops.hooks :refer [use-constants]]
-   [pigeon-scoops.utils :refer [parse-keyword stringify-keyword]]
+   [pigeon-scoops.utils.transform :refer [parse-keyword stringify-keyword]]
    [uix.core :as uix :refer [$ defui]]))
 
 (defui constants-selector [{:keys [form-item-name label constants-key valid-namespaces required? value on-change disabled?]}]
