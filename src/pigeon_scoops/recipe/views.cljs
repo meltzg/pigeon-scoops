@@ -1,14 +1,14 @@
 (ns pigeon-scoops.recipe.views
   (:require
-   [antd :refer [Button Space Spin Table Tag]]
    ["@ant-design/icons" :refer [ExportOutlined FileAddOutlined]]
+   [antd :refer [Button Space Spin Table]]
+   [clojure.string :as str]
    [pigeon-scoops.hooks :refer [use-recipes]]
    [pigeon-scoops.recipe.forms :refer [recipe-form]]
-   [pigeon-scoops.utils.table :refer [make-sorter]]
+   [pigeon-scoops.utils.table :refer [make-filter make-sorter]]
    [pigeon-scoops.utils.transform :refer [stringify-keyword]]
-   [uix.core :as uix :refer [$ defui]]
    [reitit.frontend.easy :as rfe]
-   [clojure.string :as str]))
+   [uix.core :as uix :refer [$ defui]]))
 
 (defui recipe-view [{:keys [path query]}]
   (let [{:keys [recipe-id]} path
@@ -19,22 +19,12 @@
                     :scaled-amount-unit amount-unit
                     :original-recipe original-recipe})))
 
-(defn make-columns [data]
-  [{:title "Name"
-    :dataIndex (stringify-keyword :recipe/name)
-    :sorter (make-sorter :recipe/name)
-    :filterSearch true
-    :filters (->> data
-                  (map :recipe/name)
-                  (filter some?)
-                  (set)
-                  (sort)
-                  (map (fn [name] {:text name
-                                   :value name})))
-    :onFilter (fn [value record]
-                (str/includes? (str/lower-case (:recipe/name (js->clj record :keywordize-keys true)))
-                               (str/lower-case value)))
-    :key :name}
+(defn make-columns []
+  [(merge {:title "Name"
+           :dataIndex (stringify-keyword :recipe/name)
+           :sorter (make-sorter :recipe/name)
+           :key :name}
+          (make-filter :recipe/name))
    {:title ($ Space
               "Actions"
               ($ Button {:type "text"
@@ -53,7 +43,7 @@
   (let [{:keys [recipes loading?]} (use-recipes)]
     (if loading?
       ($ Spin)
-      ($ Table {:columns (clj->js (make-columns recipes))
+      ($ Table {:columns (clj->js (make-columns))
                 :dataSource (clj->js (map-indexed (fn [idx recipe] (assoc recipe :key idx))
                                                   (sort-by #(str/lower-case (:recipe/name %)) recipes))
                                      :keyword-fn stringify-keyword)
