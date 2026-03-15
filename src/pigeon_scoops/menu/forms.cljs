@@ -20,18 +20,26 @@
       (update :menu/duration-type stringify-keyword)
       (update :menu/items
               (fn [items]
-                (mapv #(-> %
-                           (assoc :menu-item/ingredient-id (ingredient->option
-                                                            {:recipe :menu-item/recipe-id}
-                                                            %)))
-                      items)))))
+                (map #(-> %
+                          (assoc :menu-item/ingredient-id (ingredient->option
+                                                           {:recipe :menu-item/recipe-id}
+                                                           %)))
+                     items)))))
+
+(defn item-size-form-values->data [form-value]
+  (-> form-value
+      (js->clj :keywordize-keys true)
+      (update :menu-item-size/amount-unit parse-keyword)))
 
 (defn item-form-values->data [form-value]
   (-> form-value
       (js->clj :keywordize-keys true)
       ((partial parse-ingredient
                 :menu-item/ingredient-id
-                {:recipe :menu-item/recipe-id}))))
+                {:recipe :menu-item/recipe-id}))
+      (update :menu-item/sizes (fn [sizes]
+                                  (map item-size-form-values->data
+                                       sizes)))))
 
 (defn menu-form-values->data [form-value]
   (-> form-value
@@ -41,6 +49,17 @@
                             (map item-form-values->data
                                  items)))))
 
+(defn item-size->comparable
+  ([item-size]
+   (item-size->comparable item-size []))
+  ([item-size additional-keys]
+   (->> (-> item-size
+            (select-keys (concat [:menu-item-size/amount
+                                  :menu-item-size/amount-unit]
+                                 additional-keys)))
+        (remove (comp nil? second))
+        (into {}))))
+
 (defn item->comparable
   ([item]
    (item->comparable item []))
@@ -48,7 +67,8 @@
    (->> (-> item
             (item-form-values->data)
             (select-keys (concat [:menu-item/recipe-id]
-                                 additional-keys)))
+                                 additional-keys))
+            (update :menu-item/sizes #(map item-size->comparable %)))
         (remove (comp nil? second))
         (into {}))))
 
@@ -59,7 +79,7 @@
                          :menu/active
                          :menu/repeats
                          :menu/duration
-                         :menu/duration-type 
+                         :menu/duration-type
                          :menu/items])
            (update :menu/items #(map item->comparable %)))
        (remove (comp nil? second))
@@ -146,7 +166,7 @@
                           :entity-id menu-id
                           :unsaved-changes? unsaved-changes?
                           :on-delete (partial on-delete token menu-id)
-                          :on-return #(rfe/push-state :pigeon-scoops.menu.routes/menus)}) 
+                          :on-return #(rfe/push-state :pigeon-scoops.menu.routes/menus)})
          ($ Form.Item {:hidden true :name (stringify-keyword :menu/id)}
             ($ Input))
          ($ Form.Item {:name (stringify-keyword :menu/name) :label "Name" :rules (clj->js [{:required true}])}
@@ -168,14 +188,14 @@
                          {:keys [remove]} (js->clj funcs :keywordize-keys true)]
                      ($ Card {:key key}
                         ($ Flex {:direction "row" :wrap true}
-                        ($ Form.Item {:hidden true :name (clj->js [field-name (stringify-keyword :menu-item/id)])}
-                           ($ Input))
-                        ($ Flex {:vertical true}
-                           ($ Flex {:wrap true :align "start"}
-                              ($ ingredients-selector {:form-item-name (clj->js [field-name (stringify-keyword :menu-item/ingredient-id)])
-                                                       :ingredient-keys {:recipe :menu-item/recipe-id}
-                                                       :required? true}) 
-                              ($ Form.Item 
-                                 ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove field-name)}))))))))
+                           ($ Form.Item {:hidden true :name (clj->js [field-name (stringify-keyword :menu-item/id)])}
+                              ($ Input))
+                           ($ Flex {:vertical true}
+                              ($ Flex {:wrap true :align "start"}
+                                 ($ ingredients-selector {:form-item-name (clj->js [field-name (stringify-keyword :menu-item/ingredient-id)])
+                                                          :ingredient-keys {:recipe :menu-item/recipe-id}
+                                                          :required? true})
+                                 ($ Form.Item
+                                    ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove field-name)}))))))))
                  ($ Form.Item
                     ($ Button {:type "dashed" :on-click (:add (js->clj funcs :keywordize-keys true))} "Add item")))))))))

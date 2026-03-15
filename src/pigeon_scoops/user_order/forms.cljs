@@ -19,13 +19,13 @@
       (update :user-order/status stringify-keyword)
       (update :user-order/items
               (fn [items]
-                (mapv #(-> %
-                           (update :order-item/amount-unit stringify-keyword)
-                           (update :order-item/status stringify-keyword)
-                           (assoc :order-item/ingredient-id (ingredient->option
-                                                             {:recipe :order-item/recipe-id}
-                                                             %)))
-                      items)))))
+                (map #(-> %
+                          (update :order-item/amount-unit stringify-keyword)
+                          (update :order-item/status stringify-keyword)
+                          (assoc :order-item/ingredient-id (ingredient->option
+                                                            {:recipe :order-item/recipe-id}
+                                                            %)))
+                     items)))))
 
 (defn item-form-values->data [form-value]
   (-> form-value
