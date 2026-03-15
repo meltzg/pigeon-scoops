@@ -5,7 +5,8 @@
    [clojure.string :as str]
    [pigeon-scoops.hooks :refer [use-menus]]
    [pigeon-scoops.menu.forms :refer [menu-form]]
-   [pigeon-scoops.utils :refer [make-sorter parse-keyword stringify-keyword]]
+   [pigeon-scoops.utils.transform :refer [parse-keyword stringify-keyword]]
+   [pigeon-scoops.utils.table :refer [make-filter make-sorter]]
    [reitit.frontend.easy :as rfe]
    [uix.core :refer [$ defui] :as uix]))
 
@@ -14,10 +15,11 @@
     ($ menu-form {:menu-id menu-id})))
 
 (def columns
-  [{:title "Name"
-    :dataIndex (stringify-keyword :menu/name)
-    :sorter (make-sorter :menu/name)
-    :key :name}
+  [(merge {:title "Name"
+           :dataIndex (stringify-keyword :menu/name)
+           :sorter (make-sorter :menu/name)
+           :key :name}
+          (make-filter :menu/name))
    {:title "Active"
     :dataIndex (stringify-keyword :menu/active)
     :render #(if %

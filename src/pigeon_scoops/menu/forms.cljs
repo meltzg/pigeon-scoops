@@ -1,14 +1,17 @@
 (ns pigeon-scoops.menu.forms
   (:require
-   ["@ant-design/icons" :refer [ExportOutlined MinusCircleOutlined]]
-   [antd :refer [Button Flex Form Input InputNumber Space Spin Switch]]
-   [pigeon-scoops.controls.constants-selector :refer [constants-selector]]
-   [pigeon-scoops.controls.ingredients-selector :refer [ingredient->option
-                                                        ingredients-selector
-                                                        parse-ingredient]]
+   ["@ant-design/icons" :refer [MinusCircleOutlined]]
+   [antd :refer [Button Card Flex Form Input InputNumber Spin Switch]]
+   [cljs.pprint :refer [pprint]]
+   [pigeon-scoops.components.constants-selector :refer [constants-selector]]
+   [pigeon-scoops.components.form-actions :refer [form-actions]]
+   [pigeon-scoops.components.ingredients-selector :refer [ingredient->option
+                                                          ingredients-selector
+                                                          parse-ingredient]]
    [pigeon-scoops.fetchers :refer [delete-fetcher! post-fetcher! put-fetcher!]]
    [pigeon-scoops.hooks :refer [base-url invalidate-menus use-menu use-token]]
-   [pigeon-scoops.utils :refer [determine-ops parse-keyword stringify-keyword]]
+   [pigeon-scoops.utils.entity :refer [determine-ops]]
+   [pigeon-scoops.utils.transform :refer [parse-keyword stringify-keyword]]
    [reitit.frontend.easy :as rfe]
    [uix.core :as uix :refer [$ defui]]))
 
@@ -18,8 +21,6 @@
       (update :menu/items
               (fn [items]
                 (mapv #(-> %
-                           (update :menu-item/amount-unit stringify-keyword)
-                           (update :menu-item/status stringify-keyword)
                            (assoc :menu-item/ingredient-id (ingredient->option
                                                             {:recipe :menu-item/recipe-id}
                                                             %)))
@@ -28,8 +29,6 @@
 (defn item-form-values->data [form-value]
   (-> form-value
       (js->clj :keywordize-keys true)
-      (update :menu-item/amount-unit parse-keyword)
-      (update :menu-item/status parse-keyword)
       ((partial parse-ingredient
                 :menu-item/ingredient-id
                 {:recipe :menu-item/recipe-id}))))
@@ -37,7 +36,7 @@
 (defn menu-form-values->data [form-value]
   (-> form-value
       (js->clj :keywordize-keys true)
-      (update :menu/status parse-keyword)
+      (update :menu/duration-type parse-keyword)
       (update :menu/items (fn [items]
                             (map item-form-values->data
                                  items)))))
@@ -48,10 +47,7 @@
   ([item additional-keys]
    (->> (-> item
             (item-form-values->data)
-            (select-keys (concat [:menu-item/amount
-                                  :menu-item/amount-unit
-                                  :menu-item/status
-                                  :menu-item/recipe-id]
+            (select-keys (concat [:menu-item/recipe-id]
                                  additional-keys)))
         (remove (comp nil? second))
         (into {}))))
@@ -59,8 +55,11 @@
 (defn menu->comparable [menu]
   (->> (-> menu
            (menu-form-values->data)
-           (select-keys [:menu/note
-                         :menu/status
+           (select-keys [:menu/name
+                         :menu/active
+                         :menu/repeats
+                         :menu/duration
+                         :menu/duration-type 
                          :menu/items])
            (update :menu/items #(map item->comparable %)))
        (remove (comp nil? second))
@@ -133,6 +132,7 @@
 
     (uix/use-effect
      (fn []
+       (pprint (map menu->comparable [menu all-values]))
        (set-unsaved-changes! (apply not= (map menu->comparable [menu all-values]))))
      [menu all-values])
 
@@ -142,21 +142,18 @@
                :on-finish (partial on-finish menu token all-values)
                :style {:width "100%"}
                :initial-values (clj->js initial-values :keyword-fn stringify-keyword)}
-         ($ Space {:align "start"}
-            ($ Button {:html-type "button"
-                       :disabled unsaved-changes?
-                       :on-click #(rfe/push-state :pigeon-scoops.menu.routes/menus)} "Return to menus")
-            ($ Button {:type "primary" :html-type "submit" :disabled (not unsaved-changes?)}
-               (if (uuid? menu-id) "Update menu" "Create menu"))
-            ($ Button {:html-type "button" :on-click #(.resetFields form)} "Reset")
-            ($ Button {:html-type "button" :danger true :on-click (partial on-delete token menu-id)} "Delete"))
+         ($ form-actions {:form form
+                          :entity-id menu-id
+                          :unsaved-changes? unsaved-changes?
+                          :on-delete (partial on-delete token menu-id)
+                          :on-return #(rfe/push-state :pigeon-scoops.menu.routes/menus)}) 
          ($ Form.Item {:hidden true :name (stringify-keyword :menu/id)}
             ($ Input))
          ($ Form.Item {:name (stringify-keyword :menu/name) :label "Name" :rules (clj->js [{:required true}])}
             ($ Input))
          ($ Form.Item {:name (stringify-keyword :menu/active) :label "Active" :valuePropName "checked"}
             ($ Switch))
-         ($ Flex
+         ($ Flex {:wrap true}
             ($ Form.Item {:name (stringify-keyword :menu/repeats) :label "Repeats" :valuePropName "checked"}
                ($ Switch))
             ($ Form.Item {:name (stringify-keyword :menu/duration) :label "Duration"}
@@ -168,40 +165,17 @@
               ($ :div
                  (for [field fields]
                    (let [{:keys [key] field-name :name} (js->clj field :keywordize-keys true)
-                         {:keys [remove]} (js->clj funcs :keywordize-keys true)
-                         item (get (js->clj (.getFieldValue form (clj->js [[(stringify-keyword :menu/items)]]))
-                                            :keywordize-keys true)
-                                   field-name)
-                         parsed-item (when (:menu-item/ingredient-id item)
-                                       (item-form-values->data item))]
-                     ($ Flex {:key key :direction "row"}
+                         {:keys [remove]} (js->clj funcs :keywordize-keys true)]
+                     ($ Card {:key key}
+                        ($ Flex {:direction "row" :wrap true}
                         ($ Form.Item {:hidden true :name (clj->js [field-name (stringify-keyword :menu-item/id)])}
                            ($ Input))
                         ($ Flex {:vertical true}
-                           ($ Space {:align "start"}
+                           ($ Flex {:wrap true :align "start"}
                               ($ ingredients-selector {:form-item-name (clj->js [field-name (stringify-keyword :menu-item/ingredient-id)])
                                                        :ingredient-keys {:recipe :menu-item/recipe-id}
-                                                       :required? true})
-                              ($ Form.Item {:name (clj->js [field-name (stringify-keyword :menu-item/amount)])
-                                            :rules (clj->js [{:required true}])}
-                                 ($ InputNumber {:placeholder "Amount"}))
-                              ($ constants-selector {:form-item-name (clj->js [field-name (stringify-keyword :menu-item/amount-unit)])
-                                                     :constants-key :constants/unit-types
-                                                     :required? true})
-                              ($ constants-selector {:form-item-name (clj->js [field-name (stringify-keyword :menu-item/status)])
-                                                     :label "Status"
-                                                     :constants-key :constants/menu-statuses
-                                                     :required? true})
-                              ($ Form.Item
-                                 ($ Button {:type "text"
-                                            :disabled (or (nil? (:menu-item/id parsed-item))
-                                                          unsaved-changes?)
-                                            :icon ($ ExportOutlined)
-                                            :on-click #(rfe/push-state
-                                                        :pigeon-scoops.recipe.routes/recipe
-                                                        {:recipe-id (:menu-item/recipe-id parsed-item)}
-                                                        {:amount (:menu-item/amount parsed-item)
-                                                         :amount-unit (:menu-item/amount-unit parsed-item)})})
-                                 ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove field-name)})))))))
+                                                       :required? true}) 
+                              ($ Form.Item 
+                                 ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove field-name)}))))))))
                  ($ Form.Item
                     ($ Button {:type "dashed" :on-click (:add (js->clj funcs :keywordize-keys true))} "Add item")))))))))
