@@ -184,18 +184,17 @@
             (fn [fields funcs]
               ($ :div
                  (for [field fields]
-                   (let [{:keys [key] field-name :name} (js->clj field :keywordize-keys true)
-                         {:keys [remove]} (js->clj funcs :keywordize-keys true)]
+                   (let [{:keys [key] item-name :name} (js->clj field :keywordize-keys true)
+                         {remove-item :remove} (js->clj funcs :keywordize-keys true)]
                      ($ Card {:key key}
-                        ($ Flex {:direction "row" :wrap true}
-                           ($ Form.Item {:hidden true :name (clj->js [field-name (stringify-keyword :menu-item/id)])}
-                              ($ Input))
-                           ($ Flex {:vertical true}
-                              ($ Flex {:wrap true :align "start"}
-                                 ($ ingredients-selector {:form-item-name (clj->js [field-name (stringify-keyword :menu-item/ingredient-id)])
-                                                          :ingredient-keys {:recipe :menu-item/recipe-id}
-                                                          :required? true})
-                                 ($ Form.Item
-                                    ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove field-name)}))))))))
+                        ($ Form.Item {:hidden true :name (clj->js [item-name (stringify-keyword :menu-item/id)])}
+                           ($ Input))
+                        ($ Flex {:vertical true}
+                           ($ Flex {:wrap true :align "start"}
+                              ($ ingredients-selector {:form-item-name (clj->js [item-name (stringify-keyword :menu-item/ingredient-id)])
+                                                       :ingredient-keys {:recipe :menu-item/recipe-id}
+                                                       :required? true})
+                              ($ Form.Item
+                                 ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove-item item-name)})))))))
                  ($ Form.Item
                     ($ Button {:type "dashed" :on-click (:add (js->clj funcs :keywordize-keys true))} "Add item")))))))))
