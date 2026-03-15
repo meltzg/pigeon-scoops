@@ -1,7 +1,7 @@
 (ns pigeon-scoops.menu.forms
   (:require
    ["@ant-design/icons" :refer [MinusCircleOutlined]]
-   [antd :refer [Button Card Flex Form Input InputNumber Spin Switch]]
+   [antd :refer [Button Card Divider Flex Form Input InputNumber Spin Switch]]
    [cljs.pprint :refer [pprint]]
    [pigeon-scoops.components.constants-selector :refer [constants-selector]]
    [pigeon-scoops.components.form-actions :refer [form-actions]]
@@ -38,8 +38,8 @@
                 :menu-item/ingredient-id
                 {:recipe :menu-item/recipe-id}))
       (update :menu-item/sizes (fn [sizes]
-                                  (map item-size-form-values->data
-                                       sizes)))))
+                                 (map item-size-form-values->data
+                                      sizes)))))
 
 (defn menu-form-values->data [form-value]
   (-> form-value
@@ -181,20 +181,42 @@
             ($ constants-selector {:form-item-name (stringify-keyword :menu/duration-type)
                                    :constants-key :constants/menu-durations}))
          ($ Form.List {:name (stringify-keyword :menu/items)}
-            (fn [fields funcs]
+            (fn [item-fields item-funcs]
               ($ :div
-                 (for [field fields]
-                   (let [{:keys [key] item-name :name} (js->clj field :keywordize-keys true)
-                         {remove-item :remove} (js->clj funcs :keywordize-keys true)]
-                     ($ Card {:key key}
-                        ($ Form.Item {:hidden true :name (clj->js [item-name (stringify-keyword :menu-item/id)])}
-                           ($ Input))
-                        ($ Flex {:vertical true}
-                           ($ Flex {:wrap true :align "start"}
-                              ($ ingredients-selector {:form-item-name (clj->js [item-name (stringify-keyword :menu-item/ingredient-id)])
-                                                       :ingredient-keys {:recipe :menu-item/recipe-id}
-                                                       :required? true})
-                              ($ Form.Item
-                                 ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove-item item-name)})))))))
-                 ($ Form.Item
-                    ($ Button {:type "dashed" :on-click (:add (js->clj funcs :keywordize-keys true))} "Add item")))))))))
+                 (for [item-field item-fields]
+                   (let [{:keys [key] item-name :name} (js->clj item-field :keywordize-keys true)
+                         {remove-item :remove} (js->clj item-funcs :keywordize-keys true)]
+                     ($ :div {:key key}
+                        ($ Card
+                           ($ Form.Item {:hidden true :name (clj->js [item-name (stringify-keyword :menu-item/id)])}
+                              ($ Input))
+                           ($ Flex {:wrap true :vertical true}
+                              ($ Flex {:wrap true}
+                                 ($ ingredients-selector {:form-item-name (clj->js [item-name (stringify-keyword :menu-item/ingredient-id)])
+                                                          :ingredient-keys {:recipe :menu-item/recipe-id}
+                                                          :required? true})
+                                 ($ Form.Item
+                                    ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove-item item-name)})))
+                              ($ Form.List {:name (clj->js [item-name (stringify-keyword :menu-item/sizes)])}
+                                 (fn [size-fields size-funcs]
+                                   ($ :div
+                                      (for [size-field size-fields]
+                                        (let [{:keys [key] size-name :name} (js->clj size-field :keywordize-keys true)
+                                              {remove-size :remove} (js->clj size-funcs :keywordize-keys true)]
+                                          ($ Flex {:key key :wrap true}
+                                             ($ Form.Item {:hidden true :name (clj->js [item-name (stringify-keyword :menu-item/sizes) size-name (stringify-keyword :menu-item-size/id)])}
+                                                ($ Input))
+                                             ($ Flex {:wrap true}
+                                                ($ Form.Item {:name (clj->js [size-name (stringify-keyword :menu-item-size/amount)])
+                                                              :rules (clj->js [{:required true}])}
+                                                   ($ InputNumber {:placeholder "Amount"}))
+                                                ($ constants-selector {:constants-key :constants/unit-types
+                                                                       :required? true
+                                                                       :form-item-name (clj->js [size-name (stringify-keyword :menu-item-size/amount-unit)])})
+                                                ($ Form.Item
+                                                   ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove-size size-name)})))
+                                             ($ Divider))))
+                                      ($ Form.Item
+                                         ($ Button {:type "dashed" :on-click (:add (js->clj size-funcs :keywordize-keys true))} "Add size")))))))
+                        ($ Form.Item
+                           ($ Button {:type "dashed" :on-click (:add (js->clj item-funcs :keywordize-keys true))} "Add item"))))))))))))
