@@ -66,9 +66,10 @@
   ([item additional-keys]
    (->> (-> item
             (item-form-values->data)
-            (select-keys (concat [:menu-item/recipe-id]
+            (select-keys (concat [:menu-item/recipe-id
+                                  :menu-item/sizes]
                                  additional-keys))
-            (update :menu-item/sizes #(map item-size->comparable %)))
+            (update :menu-item/sizes #(map (fn [s] (item-size->comparable s additional-keys)) %)))
         (remove (comp nil? second))
         (into {}))))
 
@@ -91,7 +92,7 @@
         menu-item-ops (-> (determine-ops :menu-item/id
                                          (:menu/items initial-menu)
                                          (:menu/items menu)
-                                         #(item->comparable % [:menu-item/id]))
+                                         #(item->comparable % [:menu-item/id :menu-item-size/id]))
                           (update-vals (fn [vals]
                                          (map #(if (map? %)
                                                  (->> %
@@ -115,13 +116,55 @@
           (put-fetcher! (str base-url "/menus/" @menu-id) {:token token :body menu :headers headers}))
         (.then (fn [_]
                  (js/Promise.all (clj->js (concat
-                                           (map #(post-fetcher! (str base-url "/menus/" @menu-id "/items")
-                                                                {:token token :body % :headers headers})
+                                           (map #(-> (post-fetcher! (str base-url "/menus/" @menu-id "/items")
+                                                                    {:token token :body % :headers headers})
+                                                     (.then (fn [resp]
+                                                              (js/Promise.all
+                                                               (clj->js
+                                                                (map (fn [size]
+                                                                       (post-fetcher! (str base-url "/menus/" @menu-id "/sizes")
+                                                                                      {:token token
+                                                                                       :headers headers
+                                                                                       :body (assoc size :menu-item-size/menu-item-id (uuid (:id resp)))}))
+                                                                     (:menu-item/sizes %)))))))
                                                 (:new menu-item-ops))
-                                           (map #(put-fetcher! (str base-url "/menus/" @menu-id "/items")
-                                                               {:token token :body % :headers headers}) (:update menu-item-ops))
+                                           (map #(-> (put-fetcher! (str base-url "/menus/" @menu-id "/items")
+                                                                   {:token token :body % :headers headers})
+                                                     (.then (fn [_]
+                                                              (let [size-ops (determine-ops :menu-item-size/id
+                                                                                            (->> initial-menu
+                                                                                                 :menu/items
+                                                                                                 (filter (fn [original-item] (= (:menu-item/id original-item)
+                                                                                                                                (:menu-item/id %))))
+                                                                                                 (first)
+                                                                                                 :menu-item/sizes)
+                                                                                            (:menu-item/sizes %))]
+                                                                (pprint size-ops)
+                                                                (js/Promise.all
+                                                                 (clj->js
+                                                                  (concat
+                                                                   (map (fn [size]
+                                                                          (post-fetcher! (str base-url "/menus/" @menu-id "/sizes")
+                                                                                         {:token token
+                                                                                          :headers headers
+                                                                                          :body (assoc size :menu-item-size/menu-item-id (:menu-item/id %))}))
+                                                                        (:new size-ops))
+                                                                   (map (fn [size]
+                                                                          (put-fetcher! (str base-url "/menus/" @menu-id "/sizes")
+                                                                                        {:token token
+                                                                                         :headers headers
+                                                                                         :body (assoc size :menu-item-size/menu-item-id (:menu-item/id %))}))
+                                                                        (:update size-ops))
+                                                                   (map (fn [size-id]
+                                                                          (delete-fetcher! (str base-url "/menus/" @menu-id "/sizes")
+                                                                                           {:token token
+                                                                                            :headers headers
+                                                                                            :body {:menu-item-size/id size-id}}))
+                                                                        (:delete size-ops)))))))))
+                                                (:update menu-item-ops))
                                            (map #(delete-fetcher! (str base-url "/menus/" @menu-id "/items")
-                                                                  {:token token :body {:menu-item/id %} :headers headers}) (:delete menu-item-ops)))))))
+                                                                  {:token token :body {:menu-item/id %} :headers headers})
+                                                (:delete menu-item-ops)))))))
         (.then #(invalidate-menus))
         (.catch (fn [e]
                   (js/alert (str "Error saving menu: " (.-message e))))))))
@@ -152,7 +195,6 @@
 
     (uix/use-effect
      (fn []
-       (pprint (map menu->comparable [menu all-values]))
        (set-unsaved-changes! (apply not= (map menu->comparable [menu all-values]))))
      [menu all-values])
 
@@ -204,7 +246,7 @@
                                         (let [{:keys [key] size-name :name} (js->clj size-field :keywordize-keys true)
                                               {remove-size :remove} (js->clj size-funcs :keywordize-keys true)]
                                           ($ Flex {:key key :wrap true}
-                                             ($ Form.Item {:hidden true :name (clj->js [item-name (stringify-keyword :menu-item/sizes) size-name (stringify-keyword :menu-item-size/id)])}
+                                             ($ Form.Item {:hidden true :name (clj->js [size-name (stringify-keyword :menu-item-size/id)])}
                                                 ($ Input))
                                              ($ Flex {:wrap true}
                                                 ($ Form.Item {:name (clj->js [size-name (stringify-keyword :menu-item-size/amount)])
@@ -217,6 +259,6 @@
                                                    ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove-size size-name)})))
                                              ($ Divider))))
                                       ($ Form.Item
-                                         ($ Button {:type "dashed" :on-click (:add (js->clj size-funcs :keywordize-keys true))} "Add size")))))))
-                        ($ Form.Item
-                           ($ Button {:type "dashed" :on-click (:add (js->clj item-funcs :keywordize-keys true))} "Add item"))))))))))))
+                                         ($ Button {:type "dashed" :on-click (:add (js->clj size-funcs :keywordize-keys true))} "Add size"))))))))))
+                 ($ Form.Item
+                    ($ Button {:type "dashed" :on-click (:add (js->clj item-funcs :keywordize-keys true))} "Add item")))))))))
