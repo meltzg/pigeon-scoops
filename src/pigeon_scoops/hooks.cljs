@@ -153,3 +153,33 @@
 (defn invalidate-orders []
   (mutate (fn [key]
             (str/starts-with? (first key) (str base-url "/orders")))))
+
+(defhook use-menus []
+  (let [{:keys [token]} (use-token)
+        {:keys [data error isLoading]}
+        (js->clj (useSWR [(str base-url "/menus") token]
+                         (fn [[url]]
+                           (when token
+                             (get-fetcher! url {:token token
+                                                :headers {"Accept" "application/transit+json"}}))))
+                 :keywordize-keys true)]
+    {:menus data
+     :error     error
+     :loading?  isLoading}))
+
+(defhook use-menu [menu-id]
+  (let [{:keys [token]} (use-token)
+        {:keys [data error isLoading]}
+        (js->clj (useSWR [(str base-url "/menus/" menu-id) token]
+                         (fn [[url]]
+                           (when (and (uuid? menu-id) token)
+                             (get-fetcher! url {:token token
+                                                :headers {"Accept" "application/transit+json"}}))))
+                 :keywordize-keys true)]
+    {:menu data
+     :error   error
+     :loading? isLoading}))
+
+(defn invalidate-menus []
+  (mutate (fn [key]
+            (str/starts-with? (first key) (str base-url "/menus")))))

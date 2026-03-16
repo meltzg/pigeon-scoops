@@ -19,13 +19,13 @@
       (update :user-order/status stringify-keyword)
       (update :user-order/items
               (fn [items]
-                (mapv #(-> %
-                           (update :order-item/amount-unit stringify-keyword)
-                           (update :order-item/status stringify-keyword)
-                           (assoc :order-item/ingredient-id (ingredient->option
-                                                             {:recipe :order-item/recipe-id}
-                                                             %)))
-                      items)))))
+                (map #(-> %
+                          (update :order-item/amount-unit stringify-keyword)
+                          (update :order-item/status stringify-keyword)
+                          (assoc :order-item/ingredient-id (ingredient->option
+                                                            {:recipe :order-item/recipe-id}
+                                                            %)))
+                     items)))))
 
 (defn item-form-values->data [form-value]
   (-> form-value
@@ -171,31 +171,29 @@
                      ($ Flex {:key key :direction "row" :wrap true}
                         ($ Form.Item {:hidden true :name (clj->js [field-name (stringify-keyword :order-item/id)])}
                            ($ Input))
-                        ($ Flex {:vertical true}
-                           ($ Flex {:align "start" :wrap true}
-                              ($ ingredients-selector {:form-item-name (clj->js [field-name (stringify-keyword :order-item/ingredient-id)])
-                                                       :ingredient-keys {:recipe :order-item/recipe-id}
-                                                       :required? true})
-                              ($ Form.Item {:name (clj->js [field-name (stringify-keyword :order-item/amount)])
-                                            :rules (clj->js [{:required true}])}
-                                 ($ InputNumber {:placeholder "Amount"}))
-                              ($ constants-selector {:form-item-name (clj->js [field-name (stringify-keyword :order-item/amount-unit)])
-                                                     :constants-key :constants/unit-types
-                                                     :required? true})
-                              ($ constants-selector {:form-item-name (clj->js [field-name (stringify-keyword :order-item/status)])
-                                                     :label "Status"
-                                                     :constants-key :constants/order-statuses
-                                                     :required? true})
-                              ($ Button {:type "text"
-                                         :disabled (or (nil? (:order-item/id parsed-item))
-                                                       unsaved-changes?)
-                                         :icon ($ ExportOutlined)
-                                         :on-click #(rfe/push-state
-                                                     :pigeon-scoops.recipe.routes/recipe
-                                                     {:recipe-id (:order-item/recipe-id parsed-item)}
-                                                     {:amount (:order-item/amount parsed-item)
-                                                      :amount-unit (:order-item/amount-unit parsed-item)})})
-                              ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove field-name)})
-                              ($ Divider))))))
+                        ($ ingredients-selector {:form-item-name (clj->js [field-name (stringify-keyword :order-item/ingredient-id)])
+                                                 :ingredient-keys {:recipe :order-item/recipe-id}
+                                                 :required? true})
+                        ($ Form.Item {:name (clj->js [field-name (stringify-keyword :order-item/amount)])
+                                      :rules (clj->js [{:required true}])}
+                           ($ InputNumber {:placeholder "Amount"}))
+                        ($ constants-selector {:form-item-name (clj->js [field-name (stringify-keyword :order-item/amount-unit)])
+                                               :constants-key :constants/unit-types
+                                               :required? true})
+                        ($ constants-selector {:form-item-name (clj->js [field-name (stringify-keyword :order-item/status)])
+                                               :label "Status"
+                                               :constants-key :constants/order-statuses
+                                               :required? true})
+                        ($ Button {:type "text"
+                                   :disabled (or (nil? (:order-item/id parsed-item))
+                                                 unsaved-changes?)
+                                   :icon ($ ExportOutlined)
+                                   :on-click #(rfe/push-state
+                                               :pigeon-scoops.recipe.routes/recipe
+                                               {:recipe-id (:order-item/recipe-id parsed-item)}
+                                               {:amount (:order-item/amount parsed-item)
+                                                :amount-unit (:order-item/amount-unit parsed-item)})})
+                        ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove field-name)})
+                        ($ Divider))))
                  ($ Form.Item
                     ($ Button {:type "dashed" :on-click (:add (js->clj funcs :keywordize-keys true))} "Add item")))))))))
