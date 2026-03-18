@@ -48,7 +48,7 @@
    {:title "End Time"
     :dataIndex (stringify-keyword :menu/end-time)
     :sorter (make-sorter :menu/end-time)
-    :render #(.toLocaleString %)
+    :render #(when %(.toLocaleString %))
     :key :end-time}
    {:title ($ Space
               "Actions"

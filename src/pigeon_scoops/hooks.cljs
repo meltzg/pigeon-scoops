@@ -157,7 +157,8 @@
 (defhook use-menus []
   (let [{:keys [token]} (use-token)
         {:keys [data error isLoading]}
-        (js->clj (useSWR [(str base-url "/menus") token]
+        (js->clj (useSWR [(str base-url "/menus?" (js/URLSearchParams.
+                                                   (clj->js {:include-inactive true}))) token]
                          (fn [[url]]
                            (when token
                              (get-fetcher! url {:token token
