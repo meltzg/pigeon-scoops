@@ -184,3 +184,20 @@
 (defn invalidate-menus []
   (mutate (fn [key]
             (str/starts-with? (first key) (str base-url "/menus")))))
+
+(defhook use-accounts []
+  (let [{:keys [token]} (use-token)
+        {:keys [data error isLoading]}
+        (js->clj (useSWR [(str base-url "/account") token]
+                         (fn [[url]]
+                           (when token
+                             (get-fetcher! url {:token token
+                                                :headers {"Accept" "application/transit+json"}}))))
+                 :keywordize-keys true)]
+    {:accounts data
+     :error     error
+     :loading?  isLoading}))
+
+(defn invalidate-accounts []
+  (mutate (fn [key]
+            (str/starts-with? (first key) (str base-url "/account")))))
