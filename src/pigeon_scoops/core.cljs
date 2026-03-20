@@ -2,7 +2,7 @@
   (:require
    ["@auth0/auth0-react" :refer [Auth0Provider]]
    ["react-icons/io5" :refer [IoReceiptOutline]]
-   ["react-icons/pi" :refer [PiCookingPot PiBird PiIceCream PiStorefront]]
+   ["react-icons/pi" :refer [PiCookingPot PiBird PiIceCream PiStorefront PiUserGear]]
    ["react-icons/fa" :refer [FaMoon FaSun]]
    ["react-icons/md" :refer [MdMenuBook]]
    ["@ant-design/icons" :refer [HomeOutlined ShoppingCartOutlined]]
@@ -22,7 +22,8 @@
    :recipes #(rfe/push-state :pigeon-scoops.recipe.routes/recipes)
    :groceries #(rfe/push-state :pigeon-scoops.grocery.routes/groceries)
    :orders #(rfe/push-state :pigeon-scoops.user-order.routes/orders)
-   :menus #(rfe/push-state :pigeon-scoops.menu.routes/menus)})
+   :menus #(rfe/push-state :pigeon-scoops.menu.routes/menus)
+   :accounts #(rfe/push-state :pigeon-scoops.accounts.routes/accounts)})
 
 (def menu-items [{:key :home
                   :icon ($ HomeOutlined)
@@ -38,7 +39,10 @@
                   :label "Orders"}
                  {:key :menus
                   :icon ($ MdMenuBook)
-                  :label "Menus"}])
+                  :label "Menus"}
+                 {:key :accounts
+                  :icon ($ PiUserGear)
+                  :label "User Management"}])
 
 (defn get-stored-settings []
   (let [stored-theme (js/localStorage.getItem "light-theme?")

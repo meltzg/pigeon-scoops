@@ -3,6 +3,7 @@
             [pigeon-scoops.recipe.routes :as recipe]
             [pigeon-scoops.user-order.routes :as order]
             [pigeon-scoops.menu.routes :as menu]
+            [pigeon-scoops.accounts.routes :as accounts]
             [reitit.coercion.spec :as rss]
             [reitit.frontend :as rf]
             [reitit.frontend.easy :as rfe]
@@ -19,7 +20,8 @@
    grocery/routes
    order/routes
    recipe/routes
-   menu/routes])
+   menu/routes
+   accounts/routes])
 
 (defui with-router [{:keys [children]}]
   (let [router (uix/use-memo #(rf/router routes {:data {:coercion rss/coercion}}) [routes])
