@@ -21,6 +21,14 @@
            :sorter (make-sorter :user-order/note)
            :key :name}
           (make-filter :user-order/note))
+   {:title "Created At"
+    :dataIndex (stringify-keyword :user-order/created-at)
+    :render (fn [val]
+              (let [date (js/Date. val)]
+                (.toLocaleString date)))
+    :sorter (make-sorter :user-order/created-at)
+    :defaultSortOrder "descend"
+    :key :created-at}
    {:title "Status"
     :dataIndex (stringify-keyword :user-order/status)
     :render (fn [val]
