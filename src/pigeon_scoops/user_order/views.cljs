@@ -1,8 +1,9 @@
 (ns pigeon-scoops.user-order.views
   (:require
    ["@ant-design/icons" :refer [ExportOutlined FileAddOutlined]]
-   [antd :refer [Button Space Spin Table Tag]]
+   [antd :refer [Button Space Spin Table]]
    [clojure.string :as str]
+   [pigeon-scoops.components.status-tag :refer [status-tag]]
    [pigeon-scoops.hooks :refer [use-orders]]
    [pigeon-scoops.user-order.forms :refer [order-form]]
    [pigeon-scoops.utils.table :refer [make-filter make-sorter]]
@@ -24,13 +25,7 @@
     :dataIndex (stringify-keyword :user-order/status)
     :render (fn [val]
               (let [val (keyword val)]
-                ($ Tag {:color (case val
-                                 :status/draft "orange"
-                                 :status/submitted "blue"
-                                 :status/in-progress "purple"
-                                 :status/complete "green"
-                                 "gray")}
-                   (str/capitalize (name val)))))
+                ($ status-tag {:status val})))
     :filters (->> data
                   (map :user-order/status)
                   (filter some?)

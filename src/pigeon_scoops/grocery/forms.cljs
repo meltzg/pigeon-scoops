@@ -99,10 +99,10 @@
                                            (map #(post-fetcher! (str base-url "/groceries/" @grocery-id "/units")
                                                                 {:token token :body % :headers headers})
                                                 (:new grocery-unit-ops))
-                                           (map #(put-fetcher! (str base-url "/groceries/" @grocery-id "/units")
+                                           (map #(put-fetcher! (str base-url "/groceries/" @grocery-id "/units/" (:grocery-unit/id %))
                                                                {:token token :body % :headers headers}) (:update grocery-unit-ops))
-                                           (map #(delete-fetcher! (str base-url "/groceries/" @grocery-id "/units")
-                                                                  {:token token :body {:grocery-unit/id %} :headers headers}) (:delete grocery-unit-ops)))))))
+                                           (map #(delete-fetcher! (str base-url "/groceries/" @grocery-id "/units/" %)
+                                                                  {:token token :headers headers}) (:delete grocery-unit-ops)))))))
         (.then #(invalidate-groceries))
         (.catch (fn [e]
                   (js/alert (str "Error saving grocery: " (.-message e))))))))
