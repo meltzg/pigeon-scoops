@@ -111,10 +111,10 @@
                                            (map #(post-fetcher! (str base-url "/recipes/" @recipe-id "/ingredients")
                                                                 {:token token :body % :headers headers})
                                                 (:new ingredient-ops))
-                                           (map #(put-fetcher! (str base-url "/recipes/" @recipe-id "/ingredients")
+                                           (map #(put-fetcher! (str base-url "/recipes/" @recipe-id "/ingredients/" (:ingredient/id %))
                                                                {:token token :body % :headers headers}) (:update ingredient-ops))
-                                           (map #(delete-fetcher! (str base-url "/recipes/" @recipe-id "/ingredients")
-                                                                  {:token token :body {:ingredient/id %} :headers headers}) (:delete ingredient-ops)))))))
+                                           (map #(delete-fetcher! (str base-url "/recipes/" @recipe-id "/ingredients/" %)
+                                                                  {:token token :headers headers}) (:delete ingredient-ops)))))))
         (.then #(invalidate-recipes))
         (.catch (fn [e]
                   (js/alert (str "Error saving recipe: " (.-message e))))))))

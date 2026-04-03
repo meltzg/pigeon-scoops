@@ -47,6 +47,9 @@
 (defn get-fetcher! [url opts]
   (base-fetcher! url :get opts))
 
+(defn patch-fetcher! [url opts]
+  (base-fetcher! url :patch opts))
+
 (defn post-fetcher! [url opts]
   (base-fetcher! url :post opts))
 

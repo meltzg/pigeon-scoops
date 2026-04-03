@@ -1,13 +1,15 @@
 (ns pigeon-scoops.user-order.forms
   (:require
    ["@ant-design/icons" :refer [ExportOutlined MinusCircleOutlined]]
-   [antd :refer [Button Divider Flex Form Input InputNumber Spin]]
-   [pigeon-scoops.components.form-actions :refer [form-actions]]
+   [antd :refer [Button Divider Flex Form Input InputNumber Spin Typography]]
    [pigeon-scoops.components.constants-selector :refer [constants-selector]]
+   [pigeon-scoops.components.form-actions :refer [form-actions]]
    [pigeon-scoops.components.ingredients-selector :refer [ingredient->option
                                                           ingredients-selector
                                                           parse-ingredient]]
-   [pigeon-scoops.fetchers :refer [delete-fetcher! post-fetcher! put-fetcher!]]
+   [pigeon-scoops.components.status-tag :refer [status-tag]]
+   [pigeon-scoops.fetchers :refer [delete-fetcher! patch-fetcher!
+                                   post-fetcher! put-fetcher!]]
    [pigeon-scoops.hooks :refer [base-url invalidate-orders use-order use-token]]
    [pigeon-scoops.utils.entity :refer [determine-ops]]
    [pigeon-scoops.utils.transform :refer [parse-keyword stringify-keyword]]
@@ -16,7 +18,6 @@
 
 (defn order-data->form-values [order]
   (-> order
-      (update :user-order/status stringify-keyword)
       (update :user-order/items
               (fn [items]
                 (map #(-> %
@@ -39,7 +40,6 @@
 (defn order-form-values->data [form-value]
   (-> form-value
       (js->clj :keywordize-keys true)
-      (update :user-order/status parse-keyword)
       (update :user-order/items (fn [items]
                                   (map item-form-values->data
                                        items)))))
@@ -62,7 +62,6 @@
   (->> (-> order
            (order-form-values->data)
            (select-keys [:user-order/note
-                         :user-order/status
                          :user-order/items])
            (update :user-order/items #(map item->comparable %)))
        (remove (comp nil? second))
@@ -98,13 +97,27 @@
           (put-fetcher! (str base-url "/orders/" @order-id) {:token token :body order :headers headers}))
         (.then (fn [_]
                  (js/Promise.all (clj->js (concat
-                                           (map #(post-fetcher! (str base-url "/orders/" @order-id "/items")
-                                                                {:token token :body % :headers headers})
+                                           (map #(-> (post-fetcher! (str base-url "/orders/" @order-id "/items")
+                                                                    {:token token :body % :headers headers})
+                                                     (.then (fn [{:keys [id]}]
+                                                              (patch-fetcher! (str base-url "/orders/" @order-id "/items/" id "/status")
+                                                                              {:token token
+                                                                               :body {:order-item/status (or (:order-item/status %)
+                                                                                                             :status/draft)}
+                                                                               :headers headers}))))
                                                 (:new order-item-ops))
-                                           (map #(put-fetcher! (str base-url "/orders/" @order-id "/items")
-                                                               {:token token :body % :headers headers}) (:update order-item-ops))
-                                           (map #(delete-fetcher! (str base-url "/orders/" @order-id "/items")
-                                                                  {:token token :body {:order-item/id %} :headers headers}) (:delete order-item-ops)))))))
+                                           (mapcat #(vector
+                                                     (-> (patch-fetcher! (str base-url "/orders/" @order-id "/items/" (:order-item/id %) "/status")
+                                                                         {:token token
+                                                                          :body {:order-item/status (:order-item/status %)}
+                                                                          :headers headers})
+                                                         (.then (fn [_]
+                                                                  (patch-fetcher! (str base-url "/orders/" @order-id "/items/" (:order-item/id %))
+                                                                                  {:token token :body % :headers headers})))))
+                                                   (:update order-item-ops))
+                                           (map #(delete-fetcher! (str base-url "/orders/" @order-id "/items/" %)
+                                                                  {:token token :headers headers})
+                                                (:delete order-item-ops)))))))
         (.then #(invalidate-orders))
         (.catch (fn [e]
                   (js/alert (str "Error saving order: " (.-message e))))))))
@@ -153,10 +166,10 @@
             ($ Input))
          ($ Form.Item {:name (stringify-keyword :user-order/note) :label "Note" :rules (clj->js [{:required true}])}
             ($ Input))
-         ($ constants-selector {:form-item-name (stringify-keyword :user-order/status)
-                                :label "Status"
-                                :constants-key :constants/order-statuses
-                                :required? true})
+         ($ Flex {:gap "0.25rem"}
+            ($ Typography "Status:")
+            (when order
+              ($ status-tag {:status (:user-order/status order)})))
          ($ Form.List {:name (stringify-keyword :user-order/items)}
             (fn [fields funcs]
               ($ :div
@@ -182,8 +195,7 @@
                                                :required? true})
                         ($ constants-selector {:form-item-name (clj->js [field-name (stringify-keyword :order-item/status)])
                                                :label "Status"
-                                               :constants-key :constants/order-statuses
-                                               :required? true})
+                                               :constants-key :constants/order-statuses})
                         ($ Button {:type "text"
                                    :disabled (or (nil? (:order-item/id parsed-item))
                                                  unsaved-changes?)
