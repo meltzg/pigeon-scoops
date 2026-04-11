@@ -154,11 +154,17 @@
   (mutate (fn [key]
             (str/starts-with? (first key) (str base-url "/orders")))))
 
-(defhook use-menus []
-  (let [{:keys [token]} (use-token)
+(defhook use-menus
+  ([]
+   (use-menus true false))
+  ([include-inactive? detailed?] 
+   (let [{:keys [token]} (use-token)
         {:keys [data error isLoading]}
         (js->clj (useSWR [(str base-url "/menus?" (js/URLSearchParams.
-                                                   (clj->js {:include-inactive true}))) token]
+                                                   (clj->js {:include-inactive include-inactive?})))
+                          token
+                          include-inactive?
+                          detailed?]
                          (fn [[url]]
                            (when token
                              (get-fetcher! url {:token token
@@ -166,7 +172,7 @@
                  :keywordize-keys true)]
     {:menus data
      :error     error
-     :loading?  isLoading}))
+     :loading?  isLoading})))
 
 (defhook use-menu [menu-id]
   (let [{:keys [token]} (use-token)
