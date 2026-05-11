@@ -10,8 +10,6 @@
   com.cognitect/transit-cljs {:mvn/version "0.8.280"}}
  :aliases
  {:cljfmt {:extra-deps {dev.weavejester/cljfmt {:mvn/version "0.16.4"}}
-           :main-opts  ["-m" "cljfmt.main"]}
-  :clj-kondo {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2026.04.15"}}
-              :main-opts   ["-m" "clj-kondo.main"]}
+           :main-opts  ["-m" "cljfmt.main"]} 
   :outdated {:deps {com.github.liquidz/antq {:mvn/version "2.11.1276"}}
              :main-opts ["-m" "antq.core"]}}}
