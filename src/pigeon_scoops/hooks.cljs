@@ -13,7 +13,6 @@
     "http://localhost:8080/v1"                              ;; Development URL
     "https://api.pigeon-scoops.com/v1"))                    ;; Production URL
 
-
 (defhook use-token []
   (let [{:keys [getAccessTokenSilently isAuthenticated]} (js->clj (useAuth0) :keywordize-keys true)
         [token set-token!] (uix/use-state nil)

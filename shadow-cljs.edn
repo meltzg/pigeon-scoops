@@ -1,4 +1,4 @@
-{:lein     true
+{:deps     true
  :dev-http {3000 "resources/public"}
  :builds   {:app {:target     :browser
                   :output-dir "resources/public/cljs-out"
