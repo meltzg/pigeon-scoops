@@ -123,10 +123,12 @@
   (mutate (fn [key]
             (str/starts-with? (first key) (str base-url "/groceries")))))
 
-(defhook use-orders []
+(defhook use-orders [detailed?]
   (let [{:keys [token]} (use-token)
         {:keys [data error isLoading]}
-        (js->clj (useSWR [(str base-url "/orders") token]
+        (js->clj (useSWR [(str base-url "/orders?" (js/URLSearchParams.
+                                                    (clj->js {:detailed detailed?})))
+                          token detailed?]
                          (fn [[url]]
                            (when token
                              (get-fetcher! url {:token token
@@ -149,18 +151,24 @@
      :error   error
      :loading? isLoading}))
 
+(defhook use-active-order []
+  (let [{:keys [orders]} (use-orders true)]
+    (->> orders
+         (filter #(#{:status/draft :status/submitted} (:user-order/status %)))
+         (sort-by :user-order/created-at >)
+         (first))))
+
 (defn invalidate-orders []
   (mutate (fn [key]
             (str/starts-with? (first key) (str base-url "/orders")))))
 
 (defhook use-menus
-  ([]
-   (use-menus true false))
-  ([include-inactive? detailed?] 
-   (let [{:keys [token]} (use-token)
+  [include-inactive? detailed?]
+  (let [{:keys [token]} (use-token)
         {:keys [data error isLoading]}
         (js->clj (useSWR [(str base-url "/menus?" (js/URLSearchParams.
-                                                   (clj->js {:include-inactive include-inactive?})))
+                                                   (clj->js {:include-inactive include-inactive?
+                                                              :detailed detailed?})))
                           token
                           include-inactive?
                           detailed?]
@@ -171,7 +179,7 @@
                  :keywordize-keys true)]
     {:menus data
      :error     error
-     :loading?  isLoading})))
+     :loading?  isLoading}))
 
 (defhook use-menu [menu-id]
   (let [{:keys [token]} (use-token)
