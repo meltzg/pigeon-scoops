@@ -1,10 +1,12 @@
 (ns pigeon-scoops.storefront.forms
   (:require
-   [antd :refer [Card
+   [antd :refer [Button
+                 Card
                  Divider
                  Flex
                  Form
                  Input
+                 InputNumber
                  Spin
                  Typography]]
    [pigeon-scoops.hooks :refer [use-recipes
@@ -12,7 +14,8 @@
                                 use-menus
                                 use-token]]
    [pigeon-scoops.utils.transform :refer [parse-keyword stringify-keyword]]
-   [uix.core :refer [$ defui] :as uix]))
+   [uix.core :refer [$ defui] :as uix]
+   [clojure.pprint :refer [pprint]]))
 
 (defn menu-order-data->storefront-form-values [menus active-order]
   (let [menu-items (mapcat :menu/items menus)
@@ -39,7 +42,8 @@
       (js->clj :keywordize-keys true)
       (update :menu-item-size/amount-unit parse-keyword)))
 
-(defn item-form-value->data [form-value]
+(defn storefront-form-values->data [form-value]
+  (prn "item form value" form-value)
   (-> form-value
       (js->clj :keywordize-keys true)
       (update :storefront/items #(map (fn [item]
@@ -47,6 +51,9 @@
                                                 (fn [sizes]
                                                   (map item-size-form-value->data sizes))))
                                       %))))
+
+(defn on-finish [order token values]
+  (pprint (storefront-form-values->data values)))
 
 (defui storefront-form []
   (let [{:keys [token]} (use-token)
@@ -59,26 +66,29 @@
 
     (uix/use-effect
      (fn []
-       (when (and menus (not order-loading?))
+       (when (and menus (not order-loading?) (not recipes-loading?))
          (let [form-values (menu-order-data->storefront-form-values menus active-order)]
            (.setFieldsValue form (clj->js form-values :keyword-fn stringify-keyword))
            (set-initial-values! form-values))))
-     [form menus order-loading? active-order])
+     [form menus order-loading? active-order recipes-loading?])
 
     (if (or menues-loading? order-loading?)
       ($ Spin)
       ($ Form {:form form
+               :on-finish (partial on-finish active-order token)
                :style {:width "100%"}
-               :initial-values (clj->js initial-values :keyword-fn stringify-keyword)}
+               :initial-values (clj->js initial-values :keyword-fn stringify-keyword)} 
          ($ Form.List {:name (stringify-keyword :storefront/items)}
             (fn [item-fields _]
               ($ Card {:title "Current Flavors"}
+                 ($ Button {:html-type "submit" :type "primary"} "Submit Order")
+                 ($ Divider)
                  (for [item-field item-fields]
                    (let [{:keys [key] item-name :name} (js->clj item-field :keywordize-keys true)
                          parsed-item (->> item-name
                                           (get (js->clj (.getFieldValue form (clj->js [[(stringify-keyword :storefront/items)]]))
                                                         :keywordize-keys true))
-                                          (item-form-value->data))
+                                          (storefront-form-values->data))
                          recipe (first (filter #(= (:recipe/id %)
                                                    (:menu-item/recipe-id parsed-item))
                                                recipes))]
@@ -99,7 +109,7 @@
                                                                        :keywordize-keys true))
                                                          :menu-item/sizes
                                                          (#(get % size-name)))]
-                                    ($ Flex {:key key :wrap true}
+                                    ($ Flex {:key key :wrap true :gap "small"}
                                        ($ Typography (str (:menu-item-size/amount parsed-size)
                                                           (-> parsed-size
                                                               :menu-item-size/amount-unit
@@ -111,4 +121,6 @@
                                           ($ Input))
                                        ($ Form.Item {:hidden true :name (clj->js [size-name (stringify-keyword :menu-item-size/amount-unit)])}
                                           ($ Input))
+                                       ($ Form.Item {:name (clj->js [size-name (stringify-keyword :menu-item-size/order-quantity)])}
+                                          ($ InputNumber {:min 0}))
                                        ($ Divider)))))))))))))))))
