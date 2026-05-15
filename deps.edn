@@ -1,7 +1,7 @@
 {:paths ["src" "dev" "resources"],
  :deps
- {org.clojure/clojure {:mvn/version "1.12.4"},
-  thheller/shadow-cljs {:mvn/version "3.4.9"},
+ {org.clojure/clojure {:mvn/version "1.12.5"},
+  thheller/shadow-cljs {:mvn/version "3.4.10"},
   com.pitch/uix.core {:mvn/version "1.4.9"},
   com.pitch/uix.dom {:mvn/version "1.4.9"},
   cljs-ajax/cljs-ajax {:mvn/version "0.8.4"},

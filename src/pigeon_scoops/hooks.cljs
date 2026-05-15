@@ -14,7 +14,7 @@
     "https://api.pigeon-scoops.com/v1"))                    ;; Production URL
 
 (defhook use-token []
-  (let [{:keys [getAccessTokenSilently isAuthenticated]} (js->clj (useAuth0) :keywordize-keys true)
+  (let [{:keys [getAccessTokenSilently isAuthenticated user]} (js->clj (useAuth0) :keywordize-keys true)
         [token set-token!] (uix/use-state nil)
         [loading? set-loading!] (uix/use-state true)]
     (uix/use-effect
@@ -27,6 +27,7 @@
          (set-loading! false)))
      [getAccessTokenSilently isAuthenticated])
     {:token    token
+     :user user
      :loading? loading?}))
 
 (defhook use-constants []
@@ -152,11 +153,12 @@
      :loading? isLoading}))
 
 (defhook use-active-order []
-  (let [{:keys [orders]} (use-orders true)]
-    (->> orders
-         (filter #(#{:status/draft :status/submitted} (:user-order/status %)))
-         (sort-by :user-order/created-at >)
-         (first))))
+  (let [{:keys [orders loading?]} (use-orders true)]
+    {:active-order (->> orders
+                        (filter #(#{:status/draft :status/submitted} (:user-order/status %)))
+                        (sort-by :user-order/created-at >)
+                        (first))
+     :loading? loading?}))
 
 (defn invalidate-orders []
   (mutate (fn [key]
@@ -168,7 +170,7 @@
         {:keys [data error isLoading]}
         (js->clj (useSWR [(str base-url "/menus?" (js/URLSearchParams.
                                                    (clj->js {:include-inactive include-inactive?
-                                                              :detailed detailed?})))
+                                                             :detailed detailed?})))
                           token
                           include-inactive?
                           detailed?]

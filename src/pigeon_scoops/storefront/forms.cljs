@@ -1,27 +1,20 @@
 (ns pigeon-scoops.storefront.forms
   (:require
-   [antd :refer [Button
-                 Card
-                 Divider
-                 Flex
-                 Form
-                 Input
-                 InputNumber
-                 Spin
+   [antd :refer [Button Card Divider Flex Form Input InputNumber Spin
                  Typography]]
-   [pigeon-scoops.hooks :refer [use-recipes
-                                use-active-order
-                                use-menus
-                                use-token]]
+   [clojure.pprint :refer [pprint]]
+   [pigeon-scoops.fetchers :refer [delete-fetcher! patch-fetcher!
+                                   post-fetcher!]]
+   [pigeon-scoops.hooks :refer [base-url invalidate-orders use-active-order
+                                use-menus use-recipes use-token]]
    [pigeon-scoops.utils.transform :refer [parse-keyword stringify-keyword]]
-   [uix.core :refer [$ defui] :as uix]
-   [clojure.pprint :refer [pprint]]))
+   [uix.core :refer [$ defui] :as uix]))
 
 (defn menu-order-data->storefront-form-values [menus active-order]
   (let [menu-items (mapcat :menu/items menus)
         size->order-item (->> active-order
                               :user-order/items
-                              (map #(vector (:order-item/menu-item-size-id %)))
+                              (map #(vector (:order-item/menu-item-size-id %) %))
                               (into {}))]
     {:storefront/items (map
                         (fn [menu-item]
@@ -29,10 +22,11 @@
                                   #(map (fn [size]
                                           (-> size
                                               (assoc :menu-item-size/order-quantity
-                                                 (get-in size->order-item
-                                                         [(:menu-item-size/id size)
-                                                          :order-item/amount]
-                                                         0))
+                                                     (/ (get-in size->order-item
+                                                                [(:menu-item-size/id size)
+                                                                 :order-item/amount]
+                                                                0)
+                                                        (:menu-item-size/amount size)))
                                               (update :menu-item-size/amount-unit stringify-keyword)))
                                         %)))
                         menu-items)}))
@@ -43,7 +37,6 @@
       (update :menu-item-size/amount-unit parse-keyword)))
 
 (defn storefront-form-values->data [form-value]
-  (prn "item form value" form-value)
   (-> form-value
       (js->clj :keywordize-keys true)
       (update :storefront/items #(map (fn [item]
@@ -52,11 +45,62 @@
                                                   (map item-size-form-value->data sizes))))
                                       %))))
 
-(defn on-finish [order token values]
-  (pprint (storefront-form-values->data values)))
+(defn on-finish [order token user values]
+  (let [size->order-item (->> order
+                              :user-order/items
+                              (map #(vector (:order-item/menu-item-size-id %) %))
+                              (into {}))
+        storefront-sizes (->> values
+                              storefront-form-values->data
+                              :storefront/items
+                              (mapcat (fn [item]
+                                        (map #(assoc % :menu-item-size/menu-item-id (:menu-item/id item)
+                                                     :menu-item-size/menu-id (:menu-item/menu-id item)
+                                                     :menu-item-size/recipe-id (:menu-item/recipe-id item))
+                                             (:menu-item/sizes item)))))
+        headers {"Content-Type" "application/transit+json"}]
+    (pprint storefront-sizes)
+    (-> (js/Promise.resolve (if order
+                              (:user-order/id order)
+                              (-> (post-fetcher!
+                                   (str base-url "/orders")
+                                   {:token token
+                                    :headers headers
+                                    :body {:user-order/note (str (:name user) " " (->> (js/Date.now)
+                                                                                       (js/Date.)
+                                                                                       (.toISOString)))}})
+                                  (.then :id))))
+        (.then (fn [order-id]
+                 (js/Promise.all
+                  (map (fn [menu-size]
+                         (let [existing-order-item (get size->order-item (:menu-item-size/id menu-size))
+                               body {:order-item/menu-item-size-id (:menu-item-size/id menu-size)
+                                     :order-item/recipe-id (:menu-item-size/recipe-id menu-size)
+                                     :order-item/amount (* (:menu-item-size/order-quantity menu-size)
+                                                           (:menu-item-size/amount menu-size))
+                                     :order-item/amount-unit (:menu-item-size/amount-unit menu-size)}]
+                           (cond (and existing-order-item (zero? (:menu-item-size/order-quantity menu-size)))
+                                 (delete-fetcher! (str base-url "/orders/" order-id "/items/" (:order-item/id existing-order-item))
+                                                  {:token token})
+                                 (and existing-order-item
+                                      (not= (* (:menu-item-size/order-quantity menu-size)
+                                               (:menu-item-size/amount menu-size))
+                                            (:order-item/amount existing-order-item)))
+                                 (patch-fetcher! (str base-url "/orders/" order-id "/items/" (:order-item/id existing-order-item))
+                                                 {:token token
+                                                  :headers headers
+                                                  :body body})
+                                 (and (not existing-order-item)
+                                      (pos? (:menu-item-size/order-quantity menu-size)))
+                                 (post-fetcher! (str base-url "/orders/" order-id "/items")
+                                                {:token token
+                                                 :headers headers
+                                                 :body body}))))
+                       storefront-sizes))))
+        (.then invalidate-orders))))
 
 (defui storefront-form []
-  (let [{:keys [token]} (use-token)
+  (let [{:keys [token user]} (use-token)
         {:keys [menus] menues-loading? :loading?} (use-menus false true)
         {:keys [active-order] order-loading? :loading?} (use-active-order)
         {:keys [recipes] recipes-loading? :loading?} (use-recipes)
@@ -75,9 +119,9 @@
     (if (or menues-loading? order-loading?)
       ($ Spin)
       ($ Form {:form form
-               :on-finish (partial on-finish active-order token)
+               :on-finish (partial on-finish active-order token user)
                :style {:width "100%"}
-               :initial-values (clj->js initial-values :keyword-fn stringify-keyword)} 
+               :initial-values (clj->js initial-values :keyword-fn stringify-keyword)}
          ($ Form.List {:name (stringify-keyword :storefront/items)}
             (fn [item-fields _]
               ($ Card {:title "Current Flavors"}
@@ -92,12 +136,14 @@
                          recipe (first (filter #(= (:recipe/id %)
                                                    (:menu-item/recipe-id parsed-item))
                                                recipes))]
-                     ($ Card {:key key :title (:recipe/name recipe)} 
+                     ($ Card {:key key :title (:recipe/name recipe)}
                         ($ Card.Meta {:description (:recipe/description recipe)})
                         ($ Divider)
                         ($ Form.Item {:hidden true :name (clj->js [item-name (stringify-keyword :menu-item/menu-id)])}
                            ($ Input))
                         ($ Form.Item {:hidden true :name (clj->js [item-name (stringify-keyword :menu-item/id)])}
+                           ($ Input))
+                        ($ Form.Item {:hidden true :name (clj->js [item-name (stringify-keyword :menu-item/recipe-id)])}
                            ($ Input))
                         ($ Form.List {:name (clj->js [item-name (stringify-keyword :menu-item/sizes)])}
                            (fn [size-fields _]

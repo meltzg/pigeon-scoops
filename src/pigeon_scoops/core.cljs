@@ -5,7 +5,7 @@
    ["react-icons/pi" :refer [PiCookingPot PiBird PiIceCream PiStorefront PiUserGear]]
    ["react-icons/fa" :refer [FaMoon FaSun]]
    ["react-icons/md" :refer [MdMenuBook]]
-   ["@ant-design/icons" :refer [HomeOutlined ShoppingCartOutlined]]
+   ["@ant-design/icons" :refer [ShoppingCartOutlined]]
    [antd :refer [ConfigProvider Dropdown Flex Layout Menu Space Switch Tooltip Typography theme]]
    [pigeon-scoops.auth :refer [authenticator]]
    [pigeon-scoops.router :refer [router-context with-router]]
