@@ -12,25 +12,31 @@
    [uix.core :refer [$ defui] :as uix]))
 
 (defn menu-order-data->storefront-form-values [menus active-order]
-  (let [menu-items (mapcat :menu/items menus)
+  (let [menus (->> menus
+                   (map #(vector (:menu/id %) %))
+                   (into {}))
         size->order-item (->> active-order
                               :user-order/items
                               (map #(vector (:order-item/menu-item-size-id %) %))
                               (into {}))]
-    {:storefront/items (map
-                        (fn [menu-item]
-                          (update menu-item :menu-item/sizes
-                                  #(map (fn [size]
-                                          (-> size
-                                              (assoc :menu-item-size/order-quantity
-                                                     (/ (get-in size->order-item
-                                                                [(:menu-item-size/id size)
-                                                                 :order-item/amount]
-                                                                0)
-                                                        (:menu-item-size/amount size)))
-                                              (update :menu-item-size/amount-unit stringify-keyword)))
-                                        %)))
-                        menu-items)}))
+    {:storefront/items (->> menus
+                            (vals)
+                            (mapcat :menu/items)
+                            (map
+                             (fn [menu-item]
+                               (-> menu-item
+                                   (assoc :menu-item/end-time (get-in menus [(:menu-item/menu-id menu-item) :menu/end-time]))
+                                   (update  :menu-item/sizes
+                                            #(map (fn [size]
+                                                    (-> size
+                                                        (assoc :menu-item-size/order-quantity
+                                                               (/ (get-in size->order-item
+                                                                          [(:menu-item-size/id size)
+                                                                           :order-item/amount]
+                                                                          0)
+                                                                  (:menu-item-size/amount size)))
+                                                        (update :menu-item-size/amount-unit stringify-keyword)))
+                                                  %))))))}))
 
 (defn item-size-form-value->data [form-value]
   (-> form-value
@@ -126,8 +132,7 @@
         {:keys [active-order] order-loading? :loading?} (use-active-order)
         {:keys [recipes] recipes-loading? :loading?} (use-recipes)
         [form] (Form.useForm)
-        [initial-values set-initial-values!] (uix/use-state nil)
-        [unsaved-changes? set-unsaved-changes!] (uix/use-state false)]
+        [initial-values set-initial-values!] (uix/use-state nil)]
 
     (uix/use-effect
      (fn []
@@ -169,9 +174,15 @@
                                                    (:menu-item/recipe-id parsed-item))
                                                recipes))]
                      ($ Card {:key key :title (:recipe/name recipe)}
-                        ($ Card.Meta {:description (:recipe/description recipe)})
+                        ($ Card.Meta {:description ($ :div
+                                                      (str "Accepting orders until " (:menu-item/end-time parsed-item))
+                                                      ($ :br)
+                                                      ($ :br)
+                                                      (:recipe/description recipe))})
                         ($ Divider)
                         ($ Form.Item {:hidden true :name (clj->js [item-name (stringify-keyword :menu-item/menu-id)])}
+                           ($ Input))
+                        ($ Form.Item {:hidden true :name (clj->js [item-name (stringify-keyword :menu-item/end-time)])}
                            ($ Input))
                         ($ Form.Item {:hidden true :name (clj->js [item-name (stringify-keyword :menu-item/id)])}
                            ($ Input))
