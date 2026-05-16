@@ -1,13 +1,14 @@
 (ns pigeon-scoops.storefront.forms
   (:require
+   ["@ant-design/icons" :refer [ExportOutlined]]
    [antd :refer [Button Card Divider Flex Form Input InputNumber Spin
                  Typography]]
-   [clojure.pprint :refer [pprint]]
    [pigeon-scoops.fetchers :refer [delete-fetcher! patch-fetcher!
                                    post-fetcher!]]
    [pigeon-scoops.hooks :refer [base-url invalidate-orders use-active-order
                                 use-menus use-recipes use-token]]
    [pigeon-scoops.utils.transform :refer [parse-keyword stringify-keyword]]
+   [reitit.frontend.easy :as rfe]
    [uix.core :refer [$ defui] :as uix]))
 
 (defn menu-order-data->storefront-form-values [menus active-order]
@@ -59,7 +60,6 @@
                                                      :menu-item-size/recipe-id (:menu-item/recipe-id item))
                                              (:menu-item/sizes item)))))
         headers {"Content-Type" "application/transit+json"}]
-    (pprint storefront-sizes)
     (-> (js/Promise.resolve (if order
                               (:user-order/id order)
                               (-> (post-fetcher!
@@ -69,7 +69,7 @@
                                     :body {:user-order/note (str (:name user) " " (->> (js/Date.now)
                                                                                        (js/Date.)
                                                                                        (.toISOString)))}})
-                                  (.then :id))))
+                                  (.then #(:id %)))))
         (.then (fn [order-id]
                  (js/Promise.all
                   (map (fn [menu-size]
@@ -82,22 +82,43 @@
                            (cond (and existing-order-item (zero? (:menu-item-size/order-quantity menu-size)))
                                  (delete-fetcher! (str base-url "/orders/" order-id "/items/" (:order-item/id existing-order-item))
                                                   {:token token})
-                                 (and existing-order-item
-                                      (not= (* (:menu-item-size/order-quantity menu-size)
-                                               (:menu-item-size/amount menu-size))
-                                            (:order-item/amount existing-order-item)))
-                                 (patch-fetcher! (str base-url "/orders/" order-id "/items/" (:order-item/id existing-order-item))
-                                                 {:token token
-                                                  :headers headers
-                                                  :body body})
+                                 existing-order-item
+                                 (-> (patch-fetcher! (str base-url "/orders/" order-id "/items/" (:order-item/id existing-order-item))
+                                                     {:token token
+                                                      :headers headers
+                                                      :body body})
+                                     (.then (fn []
+                                              (patch-fetcher! (str base-url "/orders/" order-id "/items/" (:order-item/id existing-order-item) "/status")
+                                                              {:token token
+                                                               :headers headers
+                                                               :body {:order-item/status :status/submitted}}))))
                                  (and (not existing-order-item)
                                       (pos? (:menu-item-size/order-quantity menu-size)))
-                                 (post-fetcher! (str base-url "/orders/" order-id "/items")
-                                                {:token token
-                                                 :headers headers
-                                                 :body body}))))
+                                 (-> (post-fetcher! (str base-url "/orders/" order-id "/items")
+                                                    {:token token
+                                                     :headers headers
+                                                     :body body})
+                                     (.then (fn [{:keys [id]}]
+                                              (patch-fetcher! (str base-url "/orders/" order-id "/items/" id "/status")
+                                                              {:token token
+                                                               :headers headers
+                                                               :body {:order-item/status :status/submitted}})))))))
                        storefront-sizes))))
-        (.then invalidate-orders))))
+        (.then (fn []
+                 (when (and order (every? #(zero? (:menu-item-size/order-quantity %)) storefront-sizes))
+                   (delete-fetcher! (str base-url "/orders/" (:user-order/id order))
+                                    {:token token}))))
+        (.finally invalidate-orders))))
+
+(defn on-reopen [order token]
+  (-> (js/Promise.all
+       (map (fn [item]
+              (patch-fetcher! (str base-url "/orders/" (:user-order/id order) "/items/" (:order-item/id item) "/status")
+                              {:token token
+                               :headers {"Content-Type" "application/transit+json"}
+                               :body {:order-item/status :status/draft}}))
+            (:user-order/items order)))
+      (.finally invalidate-orders)))
 
 (defui storefront-form []
   (let [{:keys [token user]} (use-token)
@@ -120,12 +141,23 @@
       ($ Spin)
       ($ Form {:form form
                :on-finish (partial on-finish active-order token user)
+               :disabled (= (:user-order/status active-order) :status/submitted)
                :style {:width "100%"}
                :initial-values (clj->js initial-values :keyword-fn stringify-keyword)}
          ($ Form.List {:name (stringify-keyword :storefront/items)}
             (fn [item-fields _]
               ($ Card {:title "Current Flavors"}
-                 ($ Button {:html-type "submit" :type "primary"} "Submit Order")
+                 ($ Flex {:gap "small"}
+                    (if (= (:user-order/status active-order) :status/submitted)
+                      ($ Button {:disabled false :type "primary" :on-click #(on-reopen active-order token)} "Edit Order")
+                      ($ Button {:disabled false :html-type "submit" :type "primary"} "Submit Order"))
+                    (when active-order
+                      ($ Button {:disabled false
+                                 :icon ($ ExportOutlined)
+                                 :on-click #(rfe/push-state
+                                             :pigeon-scoops.user-order.routes/order
+                                             {:order-id (:user-order/id active-order)})}
+                         "View Order")))
                  ($ Divider)
                  (for [item-field item-fields]
                    (let [{:keys [key] item-name :name} (js->clj item-field :keywordize-keys true)

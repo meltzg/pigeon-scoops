@@ -175,9 +175,8 @@
                           include-inactive?
                           detailed?]
                          (fn [[url]]
-                           (when token
-                             (get-fetcher! url {:token token
-                                                :headers {"Accept" "application/transit+json"}}))))
+                           (get-fetcher! url {:token token
+                                              :headers {"Accept" "application/transit+json"}})))
                  :keywordize-keys true)]
     {:menus data
      :error     error
