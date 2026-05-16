@@ -14,7 +14,7 @@
     "https://api.pigeon-scoops.com/v1"))                    ;; Production URL
 
 (defhook use-token []
-  (let [{:keys [getAccessTokenSilently isAuthenticated]} (js->clj (useAuth0) :keywordize-keys true)
+  (let [{:keys [getAccessTokenSilently isAuthenticated user]} (js->clj (useAuth0) :keywordize-keys true)
         [token set-token!] (uix/use-state nil)
         [loading? set-loading!] (uix/use-state true)]
     (uix/use-effect
@@ -27,6 +27,7 @@
          (set-loading! false)))
      [getAccessTokenSilently isAuthenticated])
     {:token    token
+     :user user
      :loading? loading?}))
 
 (defhook use-constants []
@@ -123,10 +124,12 @@
   (mutate (fn [key]
             (str/starts-with? (first key) (str base-url "/groceries")))))
 
-(defhook use-orders []
+(defhook use-orders [detailed?]
   (let [{:keys [token]} (use-token)
         {:keys [data error isLoading]}
-        (js->clj (useSWR [(str base-url "/orders") token]
+        (js->clj (useSWR [(str base-url "/orders?" (js/URLSearchParams.
+                                                    (clj->js {:detailed detailed?})))
+                          token detailed?]
                          (fn [[url]]
                            (when token
                              (get-fetcher! url {:token token
@@ -149,19 +152,31 @@
      :error   error
      :loading? isLoading}))
 
+(defhook use-active-order []
+  (let [{:keys [orders loading?]} (use-orders true)]
+    {:active-order (->> orders
+                        (filter #(#{:status/draft :status/submitted} (:user-order/status %)))
+                        (sort-by :user-order/created-at >)
+                        (first))
+     :loading? loading?}))
+
 (defn invalidate-orders []
   (mutate (fn [key]
             (str/starts-with? (first key) (str base-url "/orders")))))
 
-(defhook use-menus []
+(defhook use-menus
+  [include-inactive? detailed?]
   (let [{:keys [token]} (use-token)
         {:keys [data error isLoading]}
         (js->clj (useSWR [(str base-url "/menus?" (js/URLSearchParams.
-                                                   (clj->js {:include-inactive true}))) token]
+                                                   (clj->js {:include-inactive include-inactive?
+                                                             :detailed detailed?})))
+                          token
+                          include-inactive?
+                          detailed?]
                          (fn [[url]]
-                           (when token
-                             (get-fetcher! url {:token token
-                                                :headers {"Accept" "application/transit+json"}}))))
+                           (get-fetcher! url {:token token
+                                              :headers {"Accept" "application/transit+json"}})))
                  :keywordize-keys true)]
     {:menus data
      :error     error

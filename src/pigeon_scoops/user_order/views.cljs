@@ -59,7 +59,7 @@
                                      {:order-id (:user-order/id (js->clj order :keywordize-keys true))})}))}])
 
 (defui orders-table []
-  (let [{:keys [orders loading?]} (use-orders)]
+  (let [{:keys [orders loading?]} (use-orders false)]
     (if loading?
       ($ Spin)
       ($ Table {:columns (clj->js (make-columns orders))

@@ -5,7 +5,7 @@
    ["react-icons/pi" :refer [PiCookingPot PiBird PiIceCream PiStorefront PiUserGear]]
    ["react-icons/fa" :refer [FaMoon FaSun]]
    ["react-icons/md" :refer [MdMenuBook]]
-   ["@ant-design/icons" :refer [HomeOutlined ShoppingCartOutlined]]
+   ["@ant-design/icons" :refer [ShoppingCartOutlined]]
    [antd :refer [ConfigProvider Dropdown Flex Layout Menu Space Switch Tooltip Typography theme]]
    [pigeon-scoops.auth :refer [authenticator]]
    [pigeon-scoops.router :refer [router-context with-router]]
@@ -18,16 +18,16 @@
 (def Sider (.-Sider Layout))
 
 (def menu-on-clicks
-  {:home #(rfe/push-state :pigeon-scoops.router/root)
+  {:storefront #(rfe/push-state :pigeon-scoops.router/root)
    :recipes #(rfe/push-state :pigeon-scoops.recipe.routes/recipes)
    :groceries #(rfe/push-state :pigeon-scoops.grocery.routes/groceries)
    :orders #(rfe/push-state :pigeon-scoops.user-order.routes/orders)
    :menus #(rfe/push-state :pigeon-scoops.menu.routes/menus)
    :accounts #(rfe/push-state :pigeon-scoops.accounts.routes/accounts)})
 
-(def menu-items [{:key :home
-                  :icon ($ HomeOutlined)
-                  :label "Home"}
+(def menu-items [{:key :storefront
+                  :icon ($ PiStorefront)
+                  :label "Storefront"}
                  {:key :recipes
                   :icon ($ PiCookingPot)
                   :label "Recipes"}

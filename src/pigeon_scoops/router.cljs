@@ -1,9 +1,10 @@
 (ns pigeon-scoops.router
-  (:require [pigeon-scoops.grocery.routes :as grocery]
-            [pigeon-scoops.recipe.routes :as recipe]
-            [pigeon-scoops.user-order.routes :as order]
+  (:require [pigeon-scoops.accounts.routes :as accounts]
+            [pigeon-scoops.grocery.routes :as grocery]
             [pigeon-scoops.menu.routes :as menu]
-            [pigeon-scoops.accounts.routes :as accounts]
+            [pigeon-scoops.recipe.routes :as recipe]
+            [pigeon-scoops.storefront.forms :refer [storefront-form]]
+            [pigeon-scoops.user-order.routes :as order]
             [reitit.coercion.spec :as rss]
             [reitit.frontend :as rf]
             [reitit.frontend.easy :as rfe]
@@ -11,12 +12,9 @@
 
 (def router-context (uix/create-context))
 
-(defui item [props]
-  ($ :div (str (js->clj props :keywordize-keys true))))
-
 (def routes
   [["/" {:name ::root
-         :view item}]
+         :view storefront-form}]
    grocery/routes
    order/routes
    recipe/routes
