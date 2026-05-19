@@ -1,12 +1,14 @@
 (ns pigeon-scoops.menu.views
   (:require
-   ["@ant-design/icons" :refer [ExportOutlined FileAddOutlined]]
+   ["@ant-design/icons" :refer [FileAddOutlined]]
+   ["react-icons/md" :refer [MdDeleteForever]]
    [antd :refer [Button Space Spin Table Tag]]
    [clojure.string :as str]
-   [pigeon-scoops.hooks :refer [use-menus]]
+   [pigeon-scoops.fetchers :refer [delete-fetcher!]]
+   [pigeon-scoops.hooks :refer [base-url invalidate-menus use-menus use-token]]
    [pigeon-scoops.menu.forms :refer [menu-form]]
-   [pigeon-scoops.utils.transform :refer [parse-keyword stringify-keyword]]
    [pigeon-scoops.utils.table :refer [make-filter make-sorter]]
+   [pigeon-scoops.utils.transform :refer [parse-keyword stringify-keyword]]
    [reitit.frontend.easy :as rfe]
    [uix.core :refer [$ defui] :as uix]))
 
@@ -14,9 +16,13 @@
   (let [{:keys [menu-id]} path]
     ($ menu-form {:menu-id menu-id})))
 
-(def columns
+(defn make-columns [token]
   [(merge {:title "Name"
            :dataIndex (stringify-keyword :menu/name)
+           :render (fn [_ record]
+                     (let [record (js->clj record :keywordize-keys true)]
+                       ($ :a {:href (rfe/href :pigeon-scoops.menu.routes/menu {:menu-id (:menu/id record)})}
+                          (:menu/name record))))
            :sorter (make-sorter :menu/name)
            :key :name}
           (make-filter :menu/name))
@@ -56,19 +62,27 @@
                          :icon ($ FileAddOutlined)
                          :on-click #(rfe/push-state
                                      :pigeon-scoops.menu.routes/menu
-                                     {:menu-id :new})}))
+                                     {:menu-id :new})}
+                 "New Menu"))
     :render (fn [_ menu]
               ($ Button {:type "text"
-                         :icon ($ ExportOutlined)
-                         :on-click #(rfe/push-state
-                                     :pigeon-scoops.menu.routes/menu
-                                     {:menu-id (:menu/id (js->clj menu :keywordize-keys true))})}))}])
+                         :icon ($ MdDeleteForever {:size 25})
+                         :danger true
+                         :on-click #(-> menu
+                                        (js->clj :keywordize-keys true)
+                                        :menu/id
+                                        ((fn [menu-id]
+                                           (-> (delete-fetcher! (str base-url "/menus/" menu-id)
+                                                                {:token token})
+                                               (.then (fn []
+                                                        (invalidate-menus)))))))}))}])
 
 (defui menu-table []
-  (let [{:keys [menus loading?]} (use-menus true false)]
-    (if loading?
+  (let [{:keys [menus loading?]} (use-menus true false)
+        {:keys [token] token-loading? :loading?} (use-token)]
+    (if (or loading? token-loading?)
       ($ Spin)
-      ($ Table {:columns (clj->js columns)
+      ($ Table {:columns (clj->js (make-columns token))
                 :dataSource (clj->js (map-indexed (fn [idx menu] (assoc menu :key idx))
                                                   (sort-by #(str/lower-case (:menu/name %)) menus))
                                      :keyword-fn stringify-keyword)

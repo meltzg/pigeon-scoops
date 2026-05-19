@@ -1,9 +1,12 @@
 (ns pigeon-scoops.recipe.views
   (:require
-   ["@ant-design/icons" :refer [ExportOutlined FileAddOutlined]]
+   ["@ant-design/icons" :refer [FileAddOutlined]]
+   ["react-icons/md" :refer [MdDeleteForever]]
    [antd :refer [Button Space Spin Table]]
    [clojure.string :as str]
-   [pigeon-scoops.hooks :refer [use-recipes]]
+   [pigeon-scoops.fetchers :refer [delete-fetcher!]]
+   [pigeon-scoops.hooks :refer [base-url invalidate-recipes use-recipes
+                                use-token]]
    [pigeon-scoops.recipe.forms :refer [recipe-form]]
    [pigeon-scoops.utils.table :refer [make-filter make-sorter]]
    [pigeon-scoops.utils.transform :refer [stringify-keyword]]
@@ -19,9 +22,13 @@
                     :scaled-amount-unit amount-unit
                     :original-recipe original-recipe})))
 
-(defn make-columns []
+(defn make-columns [token]
   [(merge {:title "Name"
            :dataIndex (stringify-keyword :recipe/name)
+           :render (fn [_ record]
+                     (let [record (js->clj record :keywordize-keys true)]
+                       ($ :a {:href (rfe/href :pigeon-scoops.recipe.routes/recipe {:recipe-id (:recipe/id record)})}
+                          (:recipe/name record))))
            :sorter (make-sorter :recipe/name)
            :key :name}
           (make-filter :recipe/name))
@@ -31,19 +38,27 @@
                          :icon ($ FileAddOutlined)
                          :on-click #(rfe/push-state
                                      :pigeon-scoops.recipe.routes/recipe
-                                     {:recipe-id :new})}))
+                                     {:recipe-id :new})}
+                 "New Recipe"))
     :render (fn [_ recipe]
               ($ Button {:type "text"
-                         :icon ($ ExportOutlined)
-                         :on-click #(rfe/push-state
-                                     :pigeon-scoops.recipe.routes/recipe
-                                     {:recipe-id (:recipe/id (js->clj recipe :keywordize-keys true))})}))}])
+                         :icon ($ MdDeleteForever {:size 25})
+                         :danger true
+                         :on-click #(-> recipe
+                                        (js->clj :keywordize-keys true)
+                                        :recipe/id
+                                        ((fn [recipe-id]
+                                           (-> (delete-fetcher! (str base-url "/recipes/" recipe-id)
+                                                                {:token token})
+                                               (.then (fn []
+                                                        (invalidate-recipes)))))))}))}])
 
 (defui recipes-table []
-  (let [{:keys [recipes loading?]} (use-recipes)]
-    (if loading?
+  (let [{:keys [recipes loading?]} (use-recipes)
+        {:keys [token] token-loading? :loading?} (use-token)]
+    (if (or loading? token-loading?)
       ($ Spin)
-      ($ Table {:columns (clj->js (make-columns))
+      ($ Table {:columns (clj->js (make-columns token))
                 :dataSource (clj->js (map-indexed (fn [idx recipe] (assoc recipe :key idx))
                                                   (sort-by #(str/lower-case (:recipe/name %)) recipes))
                                      :keyword-fn stringify-keyword)
