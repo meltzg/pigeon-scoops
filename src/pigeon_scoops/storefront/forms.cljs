@@ -170,13 +170,20 @@
                                           (get (js->clj (.getFieldValue form (clj->js [[(stringify-keyword :storefront/items)]]))
                                                         :keywordize-keys true))
                                           (storefront-form-values->data))
+                         menu (->> menus
+                                   (filter #(= (:menu/id %) (:menu-item/menu-id parsed-item)))
+                                   (first))
                          recipe (first (filter #(= (:recipe/id %)
                                                    (:menu-item/recipe-id parsed-item))
                                                recipes))]
-                     ($ Card {:key key :title (:recipe/name recipe)}
+                     ($ Card {:key key :title ($ :a {:href (rfe/href :pigeon-scoops.recipe.routes/recipe {:recipe-id (:recipe/id recipe)})}
+                                                 (:recipe/name recipe))}
                         ($ Card.Meta {:description ($ :div
                                                       (str "Accepting orders until " (:menu-item/end-time parsed-item))
                                                       ($ :br)
+                                                      (if (:menu/repeats menu)
+                                                        "This item will reopen for new orders after the current expiration."
+                                                        "Limited time only!")
                                                       ($ :br)
                                                       (:recipe/description recipe))})
                         ($ Divider)
