@@ -4,7 +4,7 @@
    ["react-icons/io5" :refer [IoReceiptOutline]]
    ["react-icons/pi" :refer [PiCookingPot PiBird PiIceCream PiStorefront PiUserGear]]
    ["react-icons/fa" :refer [FaMoon FaSun]]
-   ["react-icons/md" :refer [MdMenuBook]]
+   ["react-icons/md" :refer [MdMenuBook MdFactory]]
    ["@ant-design/icons" :refer [ShoppingCartOutlined]]
    [antd :refer [ConfigProvider Dropdown Flex Layout Menu Space Switch Tooltip Typography theme]]
    [pigeon-scoops.auth :refer [authenticator]]
@@ -23,6 +23,7 @@
    :groceries #(rfe/push-state :pigeon-scoops.grocery.routes/groceries)
    :orders #(rfe/push-state :pigeon-scoops.user-order.routes/orders)
    :menus #(rfe/push-state :pigeon-scoops.menu.routes/menus)
+   :production #(rfe/push-state :pigeon-scoops.production.routes/production)
    :accounts #(rfe/push-state :pigeon-scoops.accounts.routes/accounts)})
 
 (def menu-items [{:key :storefront
@@ -40,6 +41,9 @@
                  {:key :menus
                   :icon ($ MdMenuBook)
                   :label "Menus"}
+                 {:key :production
+                  :icon ($ MdFactory)
+                  :label "Production"}
                  {:key :accounts
                   :icon ($ PiUserGear)
                   :label "User Management"}])
