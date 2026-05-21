@@ -215,3 +215,19 @@
 (defn invalidate-accounts []
   (mutate (fn [key]
             (str/starts-with? (first key) (str base-url "/account")))))
+
+(defhook use-production-items [separate-sizes?]
+  (let [{:keys [token]} (use-token)
+        {:keys [data error isLoading]}
+        (js->clj (useSWR [(str base-url "/production?"
+                               (js/URLSearchParams.
+                                (clj->js {:separate-sizes separate-sizes?})))
+                          token]
+                         (fn [[url]]
+                           (when token
+                             (get-fetcher! url {:token token
+                                                :headers {"Accept" "application/transit+json"}}))))
+                 :keywordize-keys true)]
+    {:production-items data
+     :error            error
+     :loading?         isLoading}))
