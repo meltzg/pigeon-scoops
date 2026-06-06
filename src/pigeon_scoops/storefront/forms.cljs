@@ -5,7 +5,7 @@
                  Typography]]
    [pigeon-scoops.fetchers :refer [delete-fetcher! patch-fetcher!
                                    post-fetcher!]]
-   [pigeon-scoops.hooks :refer [base-url invalidate-orders use-active-order
+   [pigeon-scoops.hooks :refer [base-url invalidate-orders! use-active-order
                                 use-menus use-recipes use-token]]
    [pigeon-scoops.utils.transform :refer [parse-keyword stringify-keyword]]
    [reitit.frontend.easy :as rfe]
@@ -52,7 +52,7 @@
                                                   (map item-size-form-value->data sizes))))
                                       %))))
 
-(defn on-finish [order token user values]
+(defn storefront-save-ops [order values]
   (let [size->order-item (->> order
                               :user-order/items
                               (map #(vector (:order-item/menu-item-size-id %) %))
@@ -64,7 +64,12 @@
                                         (map #(assoc % :menu-item-size/menu-item-id (:menu-item/id item)
                                                      :menu-item-size/menu-id (:menu-item/menu-id item)
                                                      :menu-item-size/recipe-id (:menu-item/recipe-id item))
-                                             (:menu-item/sizes item)))))
+                                             (:menu-item/sizes item)))))]
+    {:size->order-item size->order-item
+     :storefront-sizes storefront-sizes}))
+
+(defn on-finish! [order token user values]
+  (let [{:keys [size->order-item storefront-sizes]} (storefront-save-ops order values)
         headers {"Content-Type" "application/transit+json"}]
     (-> (js/Promise.resolve (if order
                               (:user-order/id order)
@@ -114,9 +119,9 @@
                  (when (and order (every? #(zero? (:menu-item-size/order-quantity %)) storefront-sizes))
                    (delete-fetcher! (str base-url "/orders/" (:user-order/id order))
                                     {:token token}))))
-        (.finally invalidate-orders))))
+        (.finally invalidate-orders!))))
 
-(defn on-reopen [order token]
+(defn on-reopen! [order token]
   (-> (js/Promise.all
        (map (fn [item]
               (patch-fetcher! (str base-url "/orders/" (:user-order/id order) "/items/" (:order-item/id item) "/status")
@@ -124,7 +129,7 @@
                                :headers {"Content-Type" "application/transit+json"}
                                :body {:order-item/status :status/draft}}))
             (:user-order/items order)))
-      (.finally invalidate-orders)))
+      (.finally invalidate-orders!)))
 
 (defui storefront-form []
   (let [{:keys [token user]} (use-token)
@@ -145,7 +150,7 @@
     (if (or menues-loading? order-loading?)
       ($ Spin)
       ($ Form {:form form
-               :on-finish (partial on-finish active-order token user)
+               :on-finish (partial on-finish! active-order token user)
                :disabled (= (:user-order/status active-order) :status/submitted)
                :style {:width "100%"}
                :initial-values (clj->js initial-values :keyword-fn stringify-keyword)}
@@ -154,7 +159,7 @@
               ($ Card {:title "Current Flavors"}
                  ($ Flex {:gap "small"}
                     (if (= (:user-order/status active-order) :status/submitted)
-                      ($ Button {:disabled false :type "primary" :on-click #(on-reopen active-order token)} "Edit Order")
+                      ($ Button {:disabled false :type "primary" :on-click #(on-reopen! active-order token)} "Edit Order")
                       ($ Button {:disabled false :html-type "submit" :type "primary"} "Submit Order"))
                     (when active-order
                       ($ Button {:disabled false

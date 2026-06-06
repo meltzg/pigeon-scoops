@@ -10,7 +10,7 @@
    [pigeon-scoops.components.status-tag :refer [status-tag]]
    [pigeon-scoops.fetchers :refer [delete-fetcher! patch-fetcher!
                                    post-fetcher! put-fetcher!]]
-   [pigeon-scoops.hooks :refer [base-url invalidate-orders use-order use-token]]
+   [pigeon-scoops.hooks :refer [base-url invalidate-orders! use-order use-token]]
    [pigeon-scoops.utils.entity :refer [determine-ops]]
    [pigeon-scoops.utils.transform :refer [parse-keyword stringify-keyword]]
    [reitit.frontend.easy :as rfe]
@@ -67,9 +67,8 @@
        (remove (comp nil? second))
        (into {})))
 
-(defn on-finish [initial-order token values]
+(defn order-save-ops [initial-order values]
   (let [order (order-form-values->data values)
-        order-id (atom (:user-order/id order))
         order-item-ops (-> (determine-ops :order-item/id
                                           (:user-order/items initial-order)
                                           (:user-order/items order)
@@ -80,7 +79,13 @@
                                                        (remove (comp nil? second))
                                                        (into {}))
                                                   %)
-                                               vals))))
+                                               vals))))]
+    {:order order
+     :order-item-ops order-item-ops}))
+
+(defn on-finish! [initial-order token values]
+  (let [{:keys [order order-item-ops]} (order-save-ops initial-order values)
+        order-id (atom (:user-order/id order))
         headers {"Content-Type" "application/transit+json"}]
     (-> (if (nil? @order-id)
           (-> (post-fetcher!
@@ -118,14 +123,14 @@
                                            (map #(delete-fetcher! (str base-url "/orders/" @order-id "/items/" %)
                                                                   {:token token :headers headers})
                                                 (:delete order-item-ops)))))))
-        (.then #(invalidate-orders))
+        (.then #(invalidate-orders!))
         (.catch (fn [e]
                   (js/alert (str "Error saving order: " (.-message e))))))))
 
-(defn on-delete [token order-id]
+(defn on-delete! [token order-id]
   (-> (delete-fetcher! (str base-url "/orders/" order-id) {:token token})
       (.then (fn [_]
-               (invalidate-orders)
+               (invalidate-orders!)
                (rfe/push-state :pigeon-scoops.user-order.routes/orders)))
       (.catch (fn [error]
                 (js/alert (str "Error deleting order: " (.-message error)))))))
@@ -154,14 +159,14 @@
     (if (or loading? (and (not= order-id :new) (not (uuid? order-id))))
       ($ Spin)
       ($ Form {:form form
-               :on-finish (partial on-finish order token all-values)
+               :on-finish (partial on-finish! order token all-values)
                :style {:width "100%"}
                :initial-values (clj->js initial-values :keyword-fn stringify-keyword)}
          ($ form-actions {:form form
                           :entity-id order-id
                           :unsaved-changes? unsaved-changes?
                           :on-return #(rfe/push-state :pigeon-scoops.user-order.routes/orders)
-                          :on-delete (partial on-delete token order-id)})
+                          :on-delete (partial on-delete! token order-id)})
          ($ Form.Item {:hidden true :name (stringify-keyword :user-order/id)}
             ($ Input))
          ($ Form.Item {:name (stringify-keyword :user-order/note) :label "Note" :rules (clj->js [{:required true}])}

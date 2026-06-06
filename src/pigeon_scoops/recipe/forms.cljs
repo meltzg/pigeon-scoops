@@ -11,7 +11,7 @@
                                                           ingredients-selector
                                                           parse-ingredient]]
    [pigeon-scoops.fetchers :refer [delete-fetcher! post-fetcher! put-fetcher!]]
-   [pigeon-scoops.hooks :refer [base-url invalidate-recipes use-recipe
+   [pigeon-scoops.hooks :refer [base-url invalidate-recipes! use-recipe
                                 use-recipe-bom use-token]]
    [pigeon-scoops.utils.entity :refer [determine-ops]]
    [pigeon-scoops.utils.transform :refer [parse-keyword stringify-keyword]]
@@ -85,13 +85,18 @@
                     :recipe/ingredients])
       (update :recipe/ingredients #(map ingredient->comparable %))))
 
-(defn on-finish [initial-recipe token values]
+(defn recipe-save-ops [initial-recipe values]
   (let [recipe (recipe-form-values->data values)
-        recipe-id (atom (:recipe/id recipe))
         ingredient-ops (determine-ops :ingredient/id
                                       (:recipe/ingredients initial-recipe)
                                       (:recipe/ingredients recipe)
-                                      #(ingredient->comparable % [:ingredient/id]))
+                                      #(ingredient->comparable % [:ingredient/id]))]
+    {:recipe recipe
+     :ingredient-ops ingredient-ops}))
+
+(defn on-finish! [initial-recipe token values]
+  (let [{:keys [recipe ingredient-ops]} (recipe-save-ops initial-recipe values)
+        recipe-id (atom (:recipe/id recipe))
         headers {"Content-Type" "application/transit+json"}]
     (-> (if (nil? @recipe-id)
           (-> (post-fetcher!
@@ -115,14 +120,14 @@
                                                                {:token token :body % :headers headers}) (:update ingredient-ops))
                                            (map #(delete-fetcher! (str base-url "/recipes/" @recipe-id "/ingredients/" %)
                                                                   {:token token :headers headers}) (:delete ingredient-ops)))))))
-        (.then #(invalidate-recipes))
+        (.then #(invalidate-recipes!))
         (.catch (fn [e]
                   (js/alert (str "Error saving recipe: " (.-message e))))))))
 
-(defn on-delete [token recipe-id]
+(defn on-delete! [token recipe-id]
   (-> (delete-fetcher! (str base-url "/recipes/" recipe-id) {:token token})
       (.then (fn [_]
-               (invalidate-recipes)
+               (invalidate-recipes!)
                (rfe/push-state :pigeon-scoops.recipe.routes/recipes)))
       (.catch (fn [error]
                 (js/alert (str "Error deleting recipe: " (.-message error)))))))
@@ -161,7 +166,7 @@
     (if (or loading? (and (not= recipe-id :new) (not (uuid? recipe-id))))
       ($ Spin)
       ($ Form {:form form
-               :on-finish (partial on-finish recipe token all-values)
+               :on-finish (partial on-finish! recipe token all-values)
                :style {:width "100%"}
                :disabled scaled-amount
                :initial-values (clj->js initial-values :keyword-fn stringify-keyword)}
@@ -170,7 +175,7 @@
                              :entity-id recipe-id
                              :unsaved-changes? unsaved-changes?
                              :on-return #(rfe/push-state :pigeon-scoops.recipe.routes/recipes)
-                             :on-delete (partial on-delete token recipe-id)})
+                             :on-delete (partial on-delete! token recipe-id)})
             ($ InputNumber {:placeholder "Scale Amount"
                             :value scaled-amount
                             :disabled false

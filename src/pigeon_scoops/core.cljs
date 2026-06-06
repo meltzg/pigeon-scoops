@@ -48,7 +48,7 @@
                   :icon ($ PiUserGear)
                   :label "User Management"}])
 
-(defn get-stored-settings []
+(defn get-stored-settings! []
   (let [stored-theme (js/localStorage.getItem "light-theme?")
         stored-prefer-sys-theme (js/localStorage.getItem "prefer-system-theme?")]
     {:light-theme? (if (nil? stored-theme)
@@ -59,7 +59,7 @@
                           (= stored-prefer-sys-theme "true"))}))
 
 (defui content []
-  (let [{:keys [light-theme? prefer-sys-theme?]} (get-stored-settings)
+  (let [{:keys [light-theme? prefer-sys-theme?]} (get-stored-settings!)
         {:keys [route]} (uix/use-context router-context)
         [light-theme? set-light-theme!] (uix/use-state light-theme?)
         set-light-theme! (fn [is-light?]
@@ -73,7 +73,7 @@
     (uix/use-effect
      (fn []
        (let [{stored-theme :light-theme?
-              stored-prefer-sys-theme :prefer-sys-theme?} (get-stored-settings)]
+              stored-prefer-sys-theme :prefer-sys-theme?} (get-stored-settings!)]
          (set-light-theme! stored-theme)
          (set-prefer-sys-theme! stored-prefer-sys-theme)))
      [])

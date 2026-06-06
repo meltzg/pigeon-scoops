@@ -5,7 +5,7 @@
    [pigeon-scoops.components.form-actions :refer [form-actions]]
    [pigeon-scoops.components.constants-selector :refer [constants-selector]]
    [pigeon-scoops.fetchers :refer [delete-fetcher! post-fetcher! put-fetcher!]]
-   [pigeon-scoops.hooks :refer [base-url invalidate-groceries use-grocery
+   [pigeon-scoops.hooks :refer [base-url invalidate-groceries! use-grocery
                                 use-token]]
    [pigeon-scoops.utils.entity :refer [determine-ops]]
    [pigeon-scoops.utils.transform :refer [parse-keyword stringify-keyword]]
@@ -66,9 +66,8 @@
        (remove (comp nil? second))
        (into {})))
 
-(defn on-finish [initial-grocery token values]
+(defn grocery-save-ops [initial-grocery values]
   (let [grocery (grocery-form-values->data values)
-        grocery-id (atom (:grocery/id grocery))
         grocery-unit-ops (-> (determine-ops :grocery-unit/id
                                             (:grocery/units initial-grocery)
                                             (:grocery/units grocery)
@@ -79,7 +78,13 @@
                                                          (remove (comp nil? second))
                                                          (into {}))
                                                     %)
-                                                 vals))))
+                                                 vals))))]
+    {:grocery grocery
+     :grocery-unit-ops grocery-unit-ops}))
+
+(defn on-finish! [initial-grocery token values]
+  (let [{:keys [grocery grocery-unit-ops]} (grocery-save-ops initial-grocery values)
+        grocery-id (atom (:grocery/id grocery))
         headers {"Content-Type" "application/transit+json"}]
     (-> (if (nil? @grocery-id)
           (-> (post-fetcher!
@@ -103,14 +108,14 @@
                                                                {:token token :body % :headers headers}) (:update grocery-unit-ops))
                                            (map #(delete-fetcher! (str base-url "/groceries/" @grocery-id "/units/" %)
                                                                   {:token token :headers headers}) (:delete grocery-unit-ops)))))))
-        (.then #(invalidate-groceries))
+        (.then #(invalidate-groceries!))
         (.catch (fn [e]
                   (js/alert (str "Error saving grocery: " (.-message e))))))))
 
-(defn on-delete [token grocery-id]
+(defn on-delete! [token grocery-id]
   (-> (delete-fetcher! (str base-url "/groceries/" grocery-id) {:token token})
       (.then (fn [_]
-               (invalidate-groceries)
+               (invalidate-groceries!)
                (rfe/push-state :pigeon-scoops.grocery.routes/groceries)))
       (.catch (fn [error]
                 (js/alert (str "Error deleting grocery: " (.-message error)))))))
@@ -139,14 +144,14 @@
     (if (or loading? (and (not= grocery-id :new) (not (uuid? grocery-id))))
       ($ Spin)
       ($ Form {:form form
-               :on-finish (partial on-finish grocery token all-values)
+               :on-finish (partial on-finish! grocery token all-values)
                :style {:width "100%"}
                :initial-values (clj->js initial-values :keyword-fn stringify-keyword)}
          ($ form-actions {:form form
                           :entity-id grocery-id
                           :unsaved-changes? unsaved-changes?
                           :on-return #(rfe/push-state :pigeon-scoops.grocery.routes/groceries)
-                          :on-delete (partial on-delete token grocery-id)})
+                          :on-delete (partial on-delete! token grocery-id)})
          ($ Form.Item {:hidden true :name (stringify-keyword :grocery/id)}
             ($ Input))
          ($ Form.Item {:name (stringify-keyword :grocery/name) :label "Name" :rules (clj->js [{:required true :message "Item name"}])}

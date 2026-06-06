@@ -8,4 +8,7 @@
                   :devtools   {:preloads [preload devtools.preload]}
                   :dev {:compiler-options {:closure-defines {goog.DEBUG true}}}
 
-                  :release {:compiler-options {:closure-defines {goog.DEBUG false}}}}}}
+                  :release {:compiler-options {:closure-defines {goog.DEBUG false}}}}
+             :test {:target    :node-test
+                    :output-to "target/node-tests.js"
+                    :ns-regexp "-test$"}}}

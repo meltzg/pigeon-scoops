@@ -5,7 +5,7 @@
    [antd :refer [Button Space Spin Table]]
    [clojure.string :as str]
    [pigeon-scoops.fetchers :refer [delete-fetcher!]]
-   [pigeon-scoops.hooks :refer [base-url invalidate-recipes use-recipes
+   [pigeon-scoops.hooks :refer [base-url invalidate-recipes! use-recipes
                                 use-token]]
    [pigeon-scoops.recipe.forms :refer [recipe-form]]
    [pigeon-scoops.utils.table :refer [make-filter make-sorter]]
@@ -51,7 +51,7 @@
                                            (-> (delete-fetcher! (str base-url "/recipes/" recipe-id)
                                                                 {:token token})
                                                (.then (fn []
-                                                        (invalidate-recipes)))))))}))}])
+                                                        (invalidate-recipes!)))))))}))}])
 
 (defui recipes-table []
   (let [{:keys [recipes loading?]} (use-recipes)

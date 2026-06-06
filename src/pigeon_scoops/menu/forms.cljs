@@ -2,14 +2,13 @@
   (:require
    ["@ant-design/icons" :refer [MinusCircleOutlined]]
    [antd :refer [Button Card Divider Flex Form Input InputNumber Spin Switch]]
-   [cljs.pprint :refer [pprint]]
    [pigeon-scoops.components.constants-selector :refer [constants-selector]]
    [pigeon-scoops.components.form-actions :refer [form-actions]]
    [pigeon-scoops.components.ingredients-selector :refer [ingredient->option
                                                           ingredients-selector
                                                           parse-ingredient]]
    [pigeon-scoops.fetchers :refer [delete-fetcher! post-fetcher! put-fetcher!]]
-   [pigeon-scoops.hooks :refer [base-url invalidate-menus use-menu use-token]]
+   [pigeon-scoops.hooks :refer [base-url invalidate-menus! use-menu use-token]]
    [pigeon-scoops.utils.entity :refer [determine-ops]]
    [pigeon-scoops.utils.transform :refer [parse-keyword stringify-keyword]]
    [reitit.frontend.easy :as rfe]
@@ -86,9 +85,8 @@
        (remove (comp nil? second))
        (into {})))
 
-(defn on-finish [initial-menu token values]
+(defn menu-save-ops [initial-menu values]
   (let [menu (menu-form-values->data values)
-        menu-id (atom (:menu/id menu))
         menu-item-ops (-> (determine-ops :menu-item/id
                                          (:menu/items initial-menu)
                                          (:menu/items menu)
@@ -99,7 +97,13 @@
                                                       (remove (comp nil? second))
                                                       (into {}))
                                                  %)
-                                              vals))))
+                                              vals))))]
+    {:menu menu
+     :menu-item-ops menu-item-ops}))
+
+(defn on-finish! [initial-menu token values]
+  (let [{:keys [menu menu-item-ops]} (menu-save-ops initial-menu values)
+        menu-id (atom (:menu/id menu))
         headers {"Content-Type" "application/transit+json"}]
     (-> (if (nil? @menu-id)
           (-> (post-fetcher!
@@ -139,7 +143,6 @@
                                                                                                  (first)
                                                                                                  :menu-item/sizes)
                                                                                             (:menu-item/sizes %))]
-                                                                (pprint size-ops)
                                                                 (js/Promise.all
                                                                  (clj->js
                                                                   (concat
@@ -164,14 +167,14 @@
                                            (map #(delete-fetcher! (str base-url "/menus/" @menu-id "/items/" %)
                                                                   {:token token :headers headers})
                                                 (:delete menu-item-ops)))))))
-        (.then #(invalidate-menus))
+        (.then #(invalidate-menus!))
         (.catch (fn [e]
                   (js/alert (str "Error saving menu: " (.-message e))))))))
 
-(defn on-delete [token menu-id]
+(defn on-delete! [token menu-id]
   (-> (delete-fetcher! (str base-url "/menus/" menu-id) {:token token})
       (.then (fn [_]
-               (invalidate-menus)
+               (invalidate-menus!)
                (rfe/push-state :pigeon-scoops.menu.routes/menus)))
       (.catch (fn [error]
                 (js/alert (str "Error deleting menu: " (.-message error)))))))
@@ -200,13 +203,13 @@
     (if (or loading? (and (not= menu-id :new) (not (uuid? menu-id))))
       ($ Spin)
       ($ Form {:form form
-               :on-finish (partial on-finish menu token all-values)
+               :on-finish (partial on-finish! menu token all-values)
                :style {:width "100%"}
                :initial-values (clj->js initial-values :keyword-fn stringify-keyword)}
          ($ form-actions {:form form
                           :entity-id menu-id
                           :unsaved-changes? unsaved-changes?
-                          :on-delete (partial on-delete token menu-id)
+                          :on-delete (partial on-delete! token menu-id)
                           :on-return #(rfe/push-state :pigeon-scoops.menu.routes/menus)})
          ($ Form.Item {:hidden true :name (stringify-keyword :menu/id)}
             ($ Input))

@@ -5,7 +5,7 @@
    [antd :refer [Button Space Spin Table Tag]]
    [clojure.string :as str]
    [pigeon-scoops.fetchers :refer [delete-fetcher!]]
-   [pigeon-scoops.hooks :refer [base-url invalidate-menus use-menus use-token]]
+   [pigeon-scoops.hooks :refer [base-url invalidate-menus! use-menus use-token]]
    [pigeon-scoops.menu.forms :refer [menu-form]]
    [pigeon-scoops.utils.table :refer [make-filter make-sorter]]
    [pigeon-scoops.utils.transform :refer [parse-keyword stringify-keyword]]
@@ -75,7 +75,7 @@
                                            (-> (delete-fetcher! (str base-url "/menus/" menu-id)
                                                                 {:token token})
                                                (.then (fn []
-                                                        (invalidate-menus)))))))}))}])
+                                                        (invalidate-menus!)))))))}))}])
 
 (defui menu-table []
   (let [{:keys [menus loading?]} (use-menus true false)

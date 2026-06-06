@@ -3,7 +3,7 @@
    [antd :refer [Button Flex Select Spin Table]]
    [clojure.string :as str]
    [pigeon-scoops.fetchers :refer [put-fetcher!]]
-   [pigeon-scoops.hooks :refer [base-url invalidate-accounts use-accounts
+   [pigeon-scoops.hooks :refer [base-url invalidate-accounts! use-accounts
                                 use-constants use-token]]
    [pigeon-scoops.utils.table :refer [make-filter make-sorter]]
    [pigeon-scoops.utils.transform :refer [stringify-keyword]]
@@ -30,7 +30,7 @@
                                                  {:token token
                                                   :headers {"Content-Type" "application/transit+json"}
                                                   :body {:roles (mapv keyword (js->clj selected-roles))}})
-                                   (.then (fn [_] (invalidate-accounts))))}
+                                   (.then (fn [_] (invalidate-accounts!))))}
             "Update")
          ($ Button {:disabled actions-disabled?
                     :on-click #(set-selected-roles! (clj->js (:account/roles account)))}
