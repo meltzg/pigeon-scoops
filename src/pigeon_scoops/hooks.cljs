@@ -231,3 +231,7 @@
     {:production-items data
      :error            error
      :loading?         isLoading}))
+
+(defn invalidate-production-items! []
+  (mutate (fn [key]
+            (str/starts-with? (first key) (str base-url "/production")))))
