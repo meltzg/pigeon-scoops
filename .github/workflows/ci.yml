@@ -1,4 +1,4 @@
-name: Clojure CI Test
+name: Clojure CI
 
 on:
   push:
@@ -7,13 +7,29 @@ on:
     branches: [ "main" ]
 
 jobs:
-  test:
-
+  lint:
     runs-on: ubuntu-latest
-
-    env: # Environment variable for the entire job
+    env:
       CI_ENV: true
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Java 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: 'temurin'
+      - uses: DeLaGuardo/setup-clojure@master
+        with:
+          cli: latest
+      - name: Formatting
+        run: clojure -M:cljfmt check
+      - name: Linting
+        run: clojure -M:clj-kondo --lint src --lint test --lint dev
 
+  test:
+    runs-on: ubuntu-latest
+    env:
+      CI_ENV: true
     steps:
       - uses: actions/checkout@v6
       - name: Set up Java 21
