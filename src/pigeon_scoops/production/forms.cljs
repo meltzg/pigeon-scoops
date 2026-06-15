@@ -4,7 +4,7 @@
 
 (defn format-amount [amount amount-unit]
   (when amount
-    (str amount (name amount-unit))))
+    (str amount (name (keyword amount-unit)))))
 
 (defn index-by-id [id-key entities]
   (->> entities

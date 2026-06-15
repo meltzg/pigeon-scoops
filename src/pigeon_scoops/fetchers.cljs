@@ -36,8 +36,13 @@
            (fn [response]
              (cond
                (not (.-ok response))
-               (throw (ex-info "Fetch error" {:status (.-status response)
-                                              :status-text (.-statusText response)}))
+               (-> (.text response)
+                   (.then (fn [body]
+                            (let [content-type (-> response .-headers (.get "Content-Type") (.split ";") (first) (.trim))
+                                  parsed-body (try (decode-body content-type body) (catch :default _ nil))]
+                              (js/Promise.reject (ex-info "Fetch error" {:status (.-status response)
+                                                                         :status-text (.-statusText response)
+                                                                         :body parsed-body}))))))
                (and (not= (.-status response) 204) (not= (-> response .-headers (.get "Content-Length")) "0"))
                (let [content-type (-> response .-headers (.get "Content-Type") (.split ";") (first) (.trim))]
                  (-> response

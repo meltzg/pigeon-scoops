@@ -25,11 +25,13 @@
                                     :menu-item-size/amount-unit :unit/each}]}]})
 
 (deftest menu-data->form-values-test
-  (testing "stringifies the duration type and derives an ingredient-id option per item"
+  (testing "stringifies the duration type, derives ingredient-id options, and adds limited-quantity? per size"
     (is (= (-> api-menu
                (assoc :menu/duration-type "duration/days")
-               (assoc-in [:menu/items 0 :menu-item/ingredient-id] (str "recipe:" recipe-id)))
-           (forms/menu-data->form-values api-menu)))))
+               (assoc-in [:menu/items 0 :menu-item/ingredient-id] (str "recipe:" recipe-id))
+               (assoc-in [:menu/items 0 :menu-item/sizes 0 :menu-item-size/limited-quantity?] false))
+           (update (forms/menu-data->form-values api-menu)
+                   :menu/items (fn [items] (mapv #(update % :menu-item/sizes vec) items)))))))
 
 (deftest menu-form-values->data-test
   (testing "parses Form values into API-shaped menu data"

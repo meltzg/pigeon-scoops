@@ -22,13 +22,28 @@
                 (map #(-> %
                           (assoc :menu-item/ingredient-id (ingredient->option
                                                            {:recipe :menu-item/recipe-id}
-                                                           %)))
+                                                           %))
+                          (update :menu-item/sizes
+                                  (fn [sizes]
+                                    (map (fn [size]
+                                           (let [aq (:menu-item-size/available-quantity size)]
+                                             (assoc size :menu-item-size/limited-quantity?
+                                                    (boolean (and (some? aq) (>= aq 0))))))
+                                         sizes))))
                      items)))))
 
 (defn item-size-form-values->data [form-value]
-  (-> form-value
-      (js->clj :keywordize-keys true)
-      (update :menu-item-size/amount-unit parse-keyword)))
+  (let [clj-value (-> form-value
+                      (js->clj :keywordize-keys true)
+                      (update :menu-item-size/amount-unit parse-keyword))
+        has-toggle? (contains? clj-value :menu-item-size/limited-quantity?)
+        limited? (:menu-item-size/limited-quantity? clj-value)]
+    (-> clj-value
+        (cond-> has-toggle?
+          (assoc :menu-item-size/available-quantity (if limited?
+                                                      (:menu-item-size/available-quantity clj-value)
+                                                      -1)))
+        (dissoc :menu-item-size/limited-quantity?))))
 
 (defn item-form-values->data [form-value]
   (-> form-value
@@ -54,7 +69,8 @@
   ([item-size additional-keys]
    (->> (-> item-size
             (select-keys (concat [:menu-item-size/amount
-                                  :menu-item-size/amount-unit]
+                                  :menu-item-size/amount-unit
+                                  :menu-item-size/available-quantity]
                                  additional-keys)))
         (remove (comp nil? second))
         (into {}))))
@@ -179,6 +195,36 @@
       (.catch (fn [error]
                 (js/alert (str "Error deleting menu: " (.-message error)))))))
 
+(defui ^:private item-size-form [{:keys [item-name size-name remove-size form]}]
+  (let [limited-quantity-path (clj->js [(stringify-keyword :menu/items)
+                                        item-name
+                                        (stringify-keyword :menu-item/sizes)
+                                        size-name
+                                        (stringify-keyword :menu-item-size/limited-quantity?)])
+        limited? (Form.useWatch limited-quantity-path form)]
+    ($ Flex {:wrap true}
+       ($ Form.Item {:hidden true :name (clj->js [size-name (stringify-keyword :menu-item-size/id)])}
+          ($ Input))
+       ($ Flex {:wrap true}
+          ($ Form.Item {:name (clj->js [size-name (stringify-keyword :menu-item-size/amount)])
+                        :rules (clj->js [{:required true}])}
+             ($ InputNumber {:placeholder "Amount"}))
+          ($ constants-selector {:constants-key :constants/unit-types
+                                 :required? true
+                                 :form-item-name (clj->js [size-name (stringify-keyword :menu-item-size/amount-unit)])})
+          ($ Form.Item {:name (clj->js [size-name (stringify-keyword :menu-item-size/limited-quantity?)])
+                        :label "Limited"
+                        :valuePropName "checked"}
+             ($ Switch))
+          (when limited?
+            ($ Form.Item {:name (clj->js [size-name (stringify-keyword :menu-item-size/available-quantity)])
+                          :label "Qty"
+                          :rules (clj->js [{:required true :min 0 :type "number"}])}
+               ($ InputNumber {:placeholder "Qty" :min 0 :precision 0})))
+          ($ Form.Item
+             ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove-size size-name)})))
+       ($ Divider))))
+
 (defui menu-form [{:keys [menu-id]}]
   (let [{:keys [token]} (use-token)
         {:keys [menu loading?]} (use-menu menu-id)
@@ -248,19 +294,11 @@
                                       (for [size-field size-fields]
                                         (let [{:keys [key] size-name :name} (js->clj size-field :keywordize-keys true)
                                               {remove-size :remove} (js->clj size-funcs :keywordize-keys true)]
-                                          ($ Flex {:key key :wrap true}
-                                             ($ Form.Item {:hidden true :name (clj->js [size-name (stringify-keyword :menu-item-size/id)])}
-                                                ($ Input))
-                                             ($ Flex {:wrap true}
-                                                ($ Form.Item {:name (clj->js [size-name (stringify-keyword :menu-item-size/amount)])
-                                                              :rules (clj->js [{:required true}])}
-                                                   ($ InputNumber {:placeholder "Amount"}))
-                                                ($ constants-selector {:constants-key :constants/unit-types
-                                                                       :required? true
-                                                                       :form-item-name (clj->js [size-name (stringify-keyword :menu-item-size/amount-unit)])})
-                                                ($ Form.Item
-                                                   ($ Button {:type "text" :danger true :icon ($ MinusCircleOutlined) :on-click #(remove-size size-name)})))
-                                             ($ Divider))))
+                                          ($ item-size-form {:key key
+                                                             :item-name item-name
+                                                             :size-name size-name
+                                                             :remove-size remove-size
+                                                             :form form})))
                                       ($ Form.Item
                                          ($ Button {:type "dashed" :on-click (:add (js->clj size-funcs :keywordize-keys true))} "Add size"))))))))))
                  ($ Form.Item

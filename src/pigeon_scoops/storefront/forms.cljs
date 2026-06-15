@@ -5,8 +5,9 @@
                  Typography]]
    [pigeon-scoops.fetchers :refer [delete-fetcher! patch-fetcher!
                                    post-fetcher!]]
-   [pigeon-scoops.hooks :refer [base-url invalidate-orders! use-active-order
-                                use-menus use-recipes use-token]]
+   [pigeon-scoops.hooks :refer [base-url invalidate-menus! invalidate-orders!
+                                use-active-order use-menus use-recipes
+                                use-token]]
    [pigeon-scoops.utils.transform :refer [parse-keyword stringify-keyword]]
    [reitit.frontend.easy :as rfe]
    [uix.core :refer [$ defui] :as uix]))
@@ -58,7 +59,7 @@
                               (map #(vector (:order-item/menu-item-size-id %) %))
                               (into {}))
         storefront-sizes (->> values
-                              storefront-form-values->data
+                              (storefront-form-values->data)
                               :storefront/items
                               (mapcat (fn [item]
                                         (map #(assoc % :menu-item-size/menu-item-id (:menu-item/id item)
@@ -119,7 +120,11 @@
                  (when (and order (every? #(zero? (:menu-item-size/order-quantity %)) storefront-sizes))
                    (delete-fetcher! (str base-url "/orders/" (:user-order/id order))
                                     {:token token}))))
-        (.finally invalidate-orders!))))
+        (.catch (fn [e]
+                  (js/alert (or (-> e ex-data :body :message)
+                                (.-message e)
+                                "Error submitting order"))))
+        (.finally (comp invalidate-orders! invalidate-menus!)))))
 
 (defn on-reopen! [order token]
   (-> (js/Promise.all
@@ -129,7 +134,7 @@
                                :headers {"Content-Type" "application/transit+json"}
                                :body {:order-item/status :status/draft}}))
             (:user-order/items order)))
-      (.finally invalidate-orders!)))
+      (.finally (comp invalidate-orders! invalidate-menus!))))
 
 (defui storefront-form []
   (let [{:keys [token user]} (use-token)
@@ -216,6 +221,10 @@
                                                               :menu-item-size/amount-unit
                                                               (parse-keyword)
                                                               (name))))
+                                       ($ Typography (let [aq (:menu-item-size/available-quantity parsed-size)]
+                                                       (if (and (some? aq) (>= aq 0))
+                                                         (str aq " available")
+                                                         "Unlimited")))
                                        ($ Form.Item {:hidden true :name (clj->js [size-name (stringify-keyword :menu-item-size/id)])}
                                           ($ Input))
                                        ($ Form.Item {:hidden true :name (clj->js [size-name (stringify-keyword :menu-item-size/amount)])}
