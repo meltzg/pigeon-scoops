@@ -1,7 +1,7 @@
-{:paths ["src" "dev" "resources"],
+{:paths ["src" "dev" "test" "resources"],
  :deps
  {org.clojure/clojure {:mvn/version "1.12.5"},
-  thheller/shadow-cljs {:mvn/version "3.4.10"},
+  thheller/shadow-cljs {:mvn/version "3.4.11"},
   com.pitch/uix.core {:mvn/version "1.4.9"},
   com.pitch/uix.dom {:mvn/version "1.4.9"},
   cljs-ajax/cljs-ajax {:mvn/version "0.8.4"},
@@ -10,6 +10,9 @@
   com.cognitect/transit-cljs {:mvn/version "0.8.280"}}
  :aliases
  {:cljfmt {:extra-deps {dev.weavejester/cljfmt {:mvn/version "0.16.4"}}
-           :main-opts  ["-m" "cljfmt.main"]} 
+           :main-opts  ["-m" "cljfmt.main"]}
+  :clj-kondo    {:extra-paths ["dev" "test"]
+                 :extra-deps  {clj-kondo/clj-kondo {:mvn/version "2026.05.25"}}
+                 :main-opts   ["-m" "clj-kondo.main"]}
   :outdated {:deps {com.github.liquidz/antq {:mvn/version "2.11.1276"}}
              :main-opts ["-m" "antq.core"]}}}

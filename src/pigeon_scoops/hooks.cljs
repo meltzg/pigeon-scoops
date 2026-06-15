@@ -89,7 +89,7 @@
      :error   error
      :loading? isLoading}))
 
-(defn invalidate-recipes []
+(defn invalidate-recipes! []
   (mutate (fn [key]
             (str/starts-with? (first key) (str base-url "/recipes")))))
 
@@ -120,7 +120,7 @@
      :error   error
      :loading? isLoading}))
 
-(defn invalidate-groceries []
+(defn invalidate-groceries! []
   (mutate (fn [key]
             (str/starts-with? (first key) (str base-url "/groceries")))))
 
@@ -160,7 +160,7 @@
                         (first))
      :loading? loading?}))
 
-(defn invalidate-orders []
+(defn invalidate-orders! []
   (mutate (fn [key]
             (str/starts-with? (first key) (str base-url "/orders")))))
 
@@ -195,7 +195,7 @@
      :error   error
      :loading? isLoading}))
 
-(defn invalidate-menus []
+(defn invalidate-menus! []
   (mutate (fn [key]
             (str/starts-with? (first key) (str base-url "/menus")))))
 
@@ -212,6 +212,26 @@
      :error     error
      :loading?  isLoading}))
 
-(defn invalidate-accounts []
+(defn invalidate-accounts! []
   (mutate (fn [key]
             (str/starts-with? (first key) (str base-url "/account")))))
+
+(defhook use-production-items [separate-sizes?]
+  (let [{:keys [token]} (use-token)
+        {:keys [data error isLoading]}
+        (js->clj (useSWR [(str base-url "/production?"
+                               (js/URLSearchParams.
+                                (clj->js {:separate-sizes separate-sizes?})))
+                          token]
+                         (fn [[url]]
+                           (when token
+                             (get-fetcher! url {:token token
+                                                :headers {"Accept" "application/transit+json"}}))))
+                 :keywordize-keys true)]
+    {:production-items data
+     :error            error
+     :loading?         isLoading}))
+
+(defn invalidate-production-items! []
+  (mutate (fn [key]
+            (str/starts-with? (first key) (str base-url "/production")))))

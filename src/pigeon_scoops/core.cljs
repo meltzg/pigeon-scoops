@@ -4,7 +4,7 @@
    ["react-icons/io5" :refer [IoReceiptOutline]]
    ["react-icons/pi" :refer [PiCookingPot PiBird PiIceCream PiStorefront PiUserGear]]
    ["react-icons/fa" :refer [FaMoon FaSun]]
-   ["react-icons/md" :refer [MdMenuBook]]
+   ["react-icons/md" :refer [MdMenuBook MdFactory]]
    ["@ant-design/icons" :refer [ShoppingCartOutlined]]
    [antd :refer [ConfigProvider Dropdown Flex Layout Menu Space Switch Tooltip Typography theme]]
    [pigeon-scoops.auth :refer [authenticator]]
@@ -23,6 +23,7 @@
    :groceries #(rfe/push-state :pigeon-scoops.grocery.routes/groceries)
    :orders #(rfe/push-state :pigeon-scoops.user-order.routes/orders)
    :menus #(rfe/push-state :pigeon-scoops.menu.routes/menus)
+   :production #(rfe/push-state :pigeon-scoops.production.routes/production)
    :accounts #(rfe/push-state :pigeon-scoops.accounts.routes/accounts)})
 
 (def menu-items [{:key :storefront
@@ -40,11 +41,14 @@
                  {:key :menus
                   :icon ($ MdMenuBook)
                   :label "Menus"}
+                 {:key :production
+                  :icon ($ MdFactory)
+                  :label "Production"}
                  {:key :accounts
                   :icon ($ PiUserGear)
                   :label "User Management"}])
 
-(defn get-stored-settings []
+(defn get-stored-settings! []
   (let [stored-theme (js/localStorage.getItem "light-theme?")
         stored-prefer-sys-theme (js/localStorage.getItem "prefer-system-theme?")]
     {:light-theme? (if (nil? stored-theme)
@@ -55,7 +59,7 @@
                           (= stored-prefer-sys-theme "true"))}))
 
 (defui content []
-  (let [{:keys [light-theme? prefer-sys-theme?]} (get-stored-settings)
+  (let [{:keys [light-theme? prefer-sys-theme?]} (get-stored-settings!)
         {:keys [route]} (uix/use-context router-context)
         [light-theme? set-light-theme!] (uix/use-state light-theme?)
         set-light-theme! (fn [is-light?]
@@ -69,7 +73,7 @@
     (uix/use-effect
      (fn []
        (let [{stored-theme :light-theme?
-              stored-prefer-sys-theme :prefer-sys-theme?} (get-stored-settings)]
+              stored-prefer-sys-theme :prefer-sys-theme?} (get-stored-settings!)]
          (set-light-theme! stored-theme)
          (set-prefer-sys-theme! stored-prefer-sys-theme)))
      [])

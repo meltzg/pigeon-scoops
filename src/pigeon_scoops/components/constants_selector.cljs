@@ -14,7 +14,7 @@
      (fn []
        (when-not loading?
          (let [grouped-types (update-keys (->> constants
-                                               constants-key
+                                               (constants-key)
                                                (group-by namespace))
                                           keyword)
                valid-type-categories (or valid-namespaces (keys grouped-types))]

@@ -6,7 +6,7 @@
    [clojure.string :as str]
    [pigeon-scoops.fetchers :refer [delete-fetcher!]]
    [pigeon-scoops.grocery.forms :refer [grocery-form]]
-   [pigeon-scoops.hooks :refer [base-url invalidate-groceries use-groceries
+   [pigeon-scoops.hooks :refer [base-url invalidate-groceries! use-groceries
                                 use-token]]
    [pigeon-scoops.utils.table :refer [make-filter make-sorter]]
    [pigeon-scoops.utils.transform :refer [stringify-keyword]]
@@ -69,7 +69,7 @@
                                            (-> (delete-fetcher! (str base-url "/groceries/" grocery-id)
                                                                 {:token token})
                                                (.then (fn []
-                                                        (invalidate-groceries)))))))}))}])
+                                                        (invalidate-groceries!)))))))}))}])
 
 (defui groceries-table []
   (let [{:keys [groceries loading?]} (use-groceries)
