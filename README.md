@@ -1,6 +1,6 @@
 # pigeon-scoops
 
-FIXME: description
+Frontend for recipe/order/menu manager using pigeon-scoops-backend
 
 ## Installation
 
